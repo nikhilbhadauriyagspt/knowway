@@ -476,61 +476,6 @@ export default function Hero() {
           </div>
         </div>
       </div>
-
-      {/* =====================================================
-          BOTTOM CATEGORY BAR
-      ====================================================== */}
-
-      <div
-        className="
-          absolute bottom-0 left-0 right-0 z-30
-          border-t border-[#E5E9F1]
-          bg-white/90 backdrop-blur-xs
-        "
-      >
-        <div
-          className="
-            mx-auto flex min-h-[68px] xl:min-h-[78px] max-w-[1350px]
-            flex-col items-center justify-center
-            gap-3 xl:gap-4 px-6
-            md:flex-row md:justify-between
-          "
-        >
-          <p className="text-[10px] xl:text-[11px] font-semibold uppercase tracking-[0.18em] text-[#9AA3B1]">
-            Explore popular learning areas
-          </p>
-
-          <div className="flex flex-wrap items-center justify-center gap-x-5 xl:gap-x-7 gap-y-2">
-            <span className="text-[11px] xl:text-[12px] font-bold tracking-wide text-[#687386]">
-              DESIGN
-            </span>
-
-            <span className="h-1 w-1 rounded-full bg-[#C6CCD6]" />
-
-            <span className="text-[11px] xl:text-[12px] font-bold tracking-wide text-[#687386]">
-              AI
-            </span>
-
-            <span className="h-1 w-1 rounded-full bg-[#C6CCD6]" />
-
-            <span className="text-[11px] xl:text-[12px] font-bold tracking-wide text-[#687386]">
-              DEVELOPMENT
-            </span>
-
-            <span className="h-1 w-1 rounded-full bg-[#C6CCD6]" />
-
-            <span className="text-[11px] xl:text-[12px] font-bold tracking-wide text-[#687386]">
-              BUSINESS
-            </span>
-
-            <span className="h-1 w-1 rounded-full bg-[#C6CCD6]" />
-
-            <span className="text-[11px] xl:text-[12px] font-bold tracking-wide text-[#687386]">
-              CREATIVE
-            </span>
-          </div>
-        </div>
-      </div>
     </section>
   );
 }

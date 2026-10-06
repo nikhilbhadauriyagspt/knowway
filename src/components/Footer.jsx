@@ -1,159 +1,117 @@
-import { Compass, Heart, Mail, ArrowRight } from 'lucide-react'
+import React from "react";
+import {
+  BookOpen,
+  ArrowUpRight,
+  Instagram,
+  Linkedin,
+  Youtube,
+} from "lucide-react";
 
 export default function Footer() {
-  const currentYear = new Date().getFullYear()
-
-  const footerSections = [
-    {
-      title: 'Programs',
-      links: [
-        { name: 'Digital Marketing Track', href: '#courses' },
-        { name: 'Creative & Video Editing', href: '#courses' },
-        { name: 'Web & Tech Mastery', href: '#courses' },
-        { name: 'Stock Market & Finance', href: '#courses' },
-      ],
-    },
-    {
-      title: 'Platform',
-      links: [
-        { name: 'All Bundles', href: '#packages' },
-        { name: 'Verify Certificate', href: '#verify' },
-        { name: 'Affiliate Program', href: '#affiliate' },
-        { name: 'Community Hub', href: '#community' },
-      ],
-    },
-    {
-      title: 'Company',
-      links: [
-        { name: 'About Knowway', href: '#about' },
-        { name: 'Top Mentors', href: '#mentors' },
-        { name: 'Success Stories', href: '#reviews' },
-        { name: 'Contact & Support', href: '#contact' },
-      ],
-    },
-    {
-      title: 'Legal',
-      links: [
-        { name: 'Privacy Policy', href: '#privacy' },
-        { name: 'Terms of Service', href: '#terms' },
-        { name: 'Refund Policy', href: '#refund' },
-        { name: 'Security', href: '#security' },
-      ],
-    },
-  ]
-
   return (
-    <footer className="w-full bg-white border-t border-slate-200">
-      {/* Full Width Footer Content */}
-      <div className="w-full px-4 sm:px-8 lg:px-12 xl:px-16 pt-16 pb-12">
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-6 gap-10 lg:gap-8 mb-12">
-          {/* Brand & Newsletter Column */}
-          <div className="lg:col-span-2 space-y-4">
-            <a href="#" className="flex items-center gap-2.5">
-              <div className="w-9 h-9 rounded-xl bg-slate-950 text-white flex items-center justify-center shadow-sm">
-                <Compass className="w-5 h-5 text-indigo-400" />
+    <footer className="border-t border-[#E7ECF3] bg-[#FBFCFF]">
+      <div className="mx-auto max-w-[1540px] px-5 sm:px-8 lg:px-12">
+        {/* TOP */}
+        <div className="grid gap-10 py-12 lg:grid-cols-[1.2fr_.8fr_.8fr] lg:py-14">
+
+          {/* BRAND */}
+          <div className="max-w-[520px]">
+            <div className="flex items-center gap-3">
+              <div className="flex h-11 w-11 items-center justify-center rounded-[14px] bg-[#315FD8] text-white">
+                <BookOpen size={21} />
               </div>
-              <span className="font-extrabold text-xl tracking-tight text-slate-900">
-                Know<span className="text-indigo-600">way</span>
-              </span>
-            </a>
-            <p className="text-sm text-slate-500 leading-relaxed max-w-sm">
-              Empowering next-gen creators and professionals with in-demand practical digital skills, mentorship, and certification.
+
+              <div>
+                <p className="text-[18px] font-bold text-[#171D2B]">
+                  LearnSpace
+                </p>
+                <p className="text-[10px] tracking-[0.16em] text-[#8B95A7]">
+                  LEARN • GROW • BUILD
+                </p>
+              </div>
+            </div>
+
+            <p className="mt-5 max-w-[470px] text-[13px] leading-6 text-[#6C778A]">
+              Simple learning paths, practical digital skills and useful
+              knowledge designed to help you keep progressing.
             </p>
 
-            {/* Newsletter Subscription */}
-            <div className="pt-2">
-              <p className="text-xs font-semibold text-slate-800 uppercase tracking-wider mb-2">
-                Stay updated with new tracks
-              </p>
-              <form onSubmit={(e) => e.preventDefault()} className="flex items-center gap-2 max-w-sm">
-                <div className="relative flex-1">
-                  <Mail className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
-                  <input
-                    type="email"
-                    placeholder="Enter your email address"
-                    className="w-full pl-9 pr-3 py-2 text-sm bg-slate-50 border border-slate-200 rounded-xl text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 focus:border-indigo-600 transition"
-                  />
-                </div>
-                <button
-                  type="submit"
-                  className="px-3.5 py-2 bg-slate-900 hover:bg-slate-800 text-white text-sm font-medium rounded-xl transition-colors inline-flex items-center justify-center cursor-pointer"
-                  aria-label="Subscribe"
-                >
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-              </form>
+            <a
+              href="/courses"
+              className="mt-6 inline-flex items-center gap-2 text-[12px] font-semibold text-[#315FD8]"
+            >
+              Explore Courses
+              <ArrowUpRight size={14} />
+            </a>
+          </div>
+
+          {/* QUICK LINKS */}
+          <div>
+            <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-[#8A94A6]">
+              Quick Links
+            </p>
+
+            <div className="mt-5 space-y-3">
+              {["Home", "Explore", "Categories", "Packages", "About"].map(
+                (item) => (
+                  <a
+                    key={item}
+                    href="#"
+                    className="block text-[13px] text-[#59657A] transition hover:text-[#315FD8]"
+                  >
+                    {item}
+                  </a>
+                )
+              )}
             </div>
           </div>
 
-          {/* Navigation Links Columns */}
-          {footerSections.map((section) => (
-            <div key={section.title} className="space-y-3">
-              <h4 className="text-xs font-semibold text-slate-900 tracking-wider uppercase">
-                {section.title}
-              </h4>
-              <ul className="space-y-2.5">
-                {section.links.map((link) => (
-                  <li key={link.name}>
-                    <a
-                      href={link.href}
-                      className="text-sm text-slate-500 hover:text-indigo-600 transition-colors"
-                    >
-                      {link.name}
-                    </a>
-                  </li>
-                ))}
-              </ul>
+          {/* SUPPORT */}
+          <div>
+            <p className="text-[12px] font-bold uppercase tracking-[0.14em] text-[#8A94A6]">
+              Support
+            </p>
+
+            <div className="mt-5 space-y-3">
+              {["FAQ", "Contact", "Privacy Policy", "Terms & Conditions"].map(
+                (item) => (
+                  <a
+                    key={item}
+                    href="#"
+                    className="block text-[13px] text-[#59657A] transition hover:text-[#315FD8]"
+                  >
+                    {item}
+                  </a>
+                )
+              )}
             </div>
-          ))}
+          </div>
         </div>
 
-        {/* Bottom Bar */}
-        <div className="pt-8 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-4">
-          <p className="text-xs text-slate-500 flex items-center gap-1">
-            © {currentYear} Knowway Academy. All rights reserved.
+        {/* BOTTOM */}
+        <div className="flex flex-col gap-4 border-t border-[#E7ECF3] py-5 sm:flex-row sm:items-center sm:justify-between">
+          <p className="text-[11px] text-[#8A94A6]">
+            © 2026 LearnSpace. All rights reserved.
           </p>
 
-          {/* Social Links */}
-          <div className="flex items-center gap-3">
-            <a
-              href="https://github.com"
-              target="_blank"
-              rel="noreferrer"
-              className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 flex items-center justify-center transition-colors"
-              aria-label="GitHub"
-            >
-              <svg className="w-4 h-4 fill-current" viewBox="0 0 24 24">
-                <path fillRule="evenodd" clipRule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.53 1.032 1.53 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" />
-              </svg>
-            </a>
-
-            <a
-              href="https://twitter.com"
-              target="_blank"
-              rel="noreferrer"
-              className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 flex items-center justify-center transition-colors"
-              aria-label="X / Twitter"
-            >
-              <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-                <path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z" />
-              </svg>
-            </a>
-
-            <a
-              href="https://linkedin.com"
-              target="_blank"
-              rel="noreferrer"
-              className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-600 hover:text-slate-900 flex items-center justify-center transition-colors"
-              aria-label="LinkedIn"
-            >
-              <svg className="w-3.5 h-3.5 fill-current" viewBox="0 0 24 24">
-                <path d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" />
-              </svg>
-            </a>
+          <div className="flex items-center gap-2">
+            <SocialIcon icon={<Instagram size={15} />} />
+            <SocialIcon icon={<Linkedin size={15} />} />
+            <SocialIcon icon={<Youtube size={15} />} />
           </div>
         </div>
       </div>
     </footer>
-  )
+  );
+}
+
+function SocialIcon({ icon }) {
+  return (
+    <a
+      href="#"
+      className="flex h-9 w-9 items-center justify-center rounded-full border border-[#E1E6EF] bg-white text-[#59657A] transition hover:border-[#315FD8] hover:text-[#315FD8]"
+    >
+      {icon}
+    </a>
+  );
 }
