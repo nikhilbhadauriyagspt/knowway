@@ -67,7 +67,7 @@ export default function ExpertsSection() {
   };
 
   return (
-    <section className="relative overflow-hidden bg-[#FBFCFF] py-20 lg:py-28">
+    <section className="relative overflow-hidden bg-[#FBFCFF] py-10 sm:py-12 lg:py-16">
       {/* subtle grid */}
       <div
         className="pointer-events-none absolute inset-0 opacity-[0.48]"
@@ -82,7 +82,7 @@ export default function ExpertsSection() {
 
       <div className="relative z-10 mx-auto max-w-[1540px] px-5 sm:px-8 lg:px-12">
         {/* ================= HEADER ================= */}
-        <div className="mb-10 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+        <div className="mb-8 sm:mb-9 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-[760px]">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#DCE5F5] bg-white px-4 py-2">
               <Sparkles size={13} className="text-[#315FD8]" />
@@ -109,14 +109,14 @@ export default function ExpertsSection() {
           <div className="flex items-center gap-2">
             <button
               onClick={() => scroll("left")}
-              className="flex h-12 w-12 items-center justify-center rounded-full border border-[#DCE4F0] bg-white text-[#171D2B] transition hover:border-[#315FD8] hover:text-[#315FD8]"
+              className="flex h-12 w-12 items-center justify-center rounded-full border border-[#DCE4F0] bg-white text-[#171D2B] transition-colors hover:border-[#035BE3] hover:text-[#035BE3] cursor-pointer"
             >
               <ArrowLeft size={18} />
             </button>
 
             <button
               onClick={() => scroll("right")}
-              className="flex h-12 w-12 items-center justify-center rounded-full bg-[#171D2B] text-white transition hover:bg-[#315FD8]"
+              className="flex h-12 w-12 items-center justify-center rounded-full bg-[#035BE3] text-white transition-colors hover:bg-[#FA8C03] shadow-md shadow-[#035BE3]/20 cursor-pointer"
             >
               <ArrowRight size={18} />
             </button>

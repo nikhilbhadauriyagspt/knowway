@@ -41,7 +41,7 @@ const SkillIcon = ({
 
 export default function Hero() {
   return (
-    <section className="relative isolate min-h-[720px] lg:min-h-[780px] xl:min-h-[820px] 2xl:min-h-[880px] overflow-hidden bg-[#FBFCFF]">
+    <section className="relative isolate min-h-[560px] lg:min-h-[620px] xl:min-h-[660px] overflow-hidden bg-[#FBFCFF]">
 
       {/* =====================================================
           OPTIONAL FULL BACKGROUND PNG
@@ -277,12 +277,12 @@ export default function Hero() {
       <div
         className="
           relative z-30 mx-auto
-          flex min-h-[720px] lg:min-h-[780px] xl:min-h-[820px] 2xl:min-h-[880px]
+          flex min-h-[560px] lg:min-h-[620px] xl:min-h-[660px]
           max-w-[1500px]
           flex-col items-center justify-center
-          px-5 pb-[100px] pt-[60px]
-          lg:pb-[110px] lg:pt-[70px]
-          xl:pb-[120px] xl:pt-[80px]
+          px-5 pb-10 pt-[90px]
+          sm:pb-12 sm:pt-[95px]
+          lg:pb-14 lg:pt-[105px]
           text-center
           sm:px-8
         "
@@ -363,12 +363,12 @@ export default function Hero() {
             className="
               group flex h-[48px] xl:h-[52px] items-center justify-center gap-2
               rounded-full
-              bg-[#315FD8]
+              bg-[#035BE3]
               px-6 xl:px-7
               text-[13px] xl:text-[14px] font-semibold text-white
               transition-colors duration-200
-              hover:bg-[#264EB8]
-              shadow-sm cursor-pointer
+              hover:bg-[#FA8C03]
+              shadow-md shadow-[#035BE3]/20 cursor-pointer
             "
           >
             Explore Learning
@@ -385,16 +385,16 @@ export default function Hero() {
 
           <button
             className="
-              flex h-[48px] xl:h-[52px] items-center justify-center gap-2
+              group flex h-[48px] xl:h-[52px] items-center justify-center gap-2
               rounded-full border border-[#DCE2ED]
               bg-white px-5 xl:px-6
               text-[13px] xl:text-[14px] font-semibold text-[#293246]
-              transition-colors
-              hover:bg-[#F8FAFD]
+              transition-all duration-200
+              hover:border-[#FA8C03] hover:text-[#FA8C03]
               shadow-xs cursor-pointer
             "
           >
-            <span className="flex h-6 w-6 xl:h-7 xl:w-7 items-center justify-center rounded-full bg-[#F0EDFF] text-[#7059D6]">
+            <span className="flex h-6 w-6 xl:h-7 xl:w-7 items-center justify-center rounded-full bg-[#FFF4E6] text-[#FA8C03] transition-colors group-hover:bg-[#FA8C03] group-hover:text-white">
               <Play size={10} fill="currentColor" />
             </span>
 

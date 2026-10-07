@@ -59,7 +59,7 @@ export default function HowItWorks() {
   return (
     <section
       id="how-it-works"
-      className="relative overflow-hidden bg-[#FBFCFF] py-20 lg:py-28"
+      className="relative overflow-hidden bg-[#FBFCFF] py-10 sm:py-12 lg:py-16"
     >
       {/* HERO STYLE GRID */}
       <div
@@ -75,7 +75,7 @@ export default function HowItWorks() {
 
       <div className="relative z-10 mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-12">
         {/* ================= HEADER ================= */}
-        <div className="mb-16 max-w-[850px]">
+        <div className="mb-10 sm:mb-12 max-w-[850px]">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#DCE5F5] bg-white px-4 py-2">
             <Sparkles size={13} className="text-[#315FD8]" />
 

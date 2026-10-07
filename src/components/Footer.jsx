@@ -1,28 +1,24 @@
 import React from "react";
-import { BookOpen, ArrowUpRight } from "lucide-react";
+import { Link } from "react-router-dom";
+import { ArrowUpRight } from "lucide-react";
+
+const CURRENT_YEAR = new Date().getFullYear();
 
 export default function Footer() {
   return (
     <footer className="border-t border-[#E7ECF3] bg-[#FBFCFF]">
       <div className="mx-auto max-w-[1540px] px-5 sm:px-8 lg:px-12">
         {/* TOP */}
-        <div className="grid gap-10 py-12 lg:grid-cols-[1.2fr_.8fr_.8fr] lg:py-14">
+        <div className="grid gap-10 py-10 lg:grid-cols-[1.2fr_.8fr_.8fr] lg:py-12">
           {/* BRAND */}
           <div className="max-w-[520px]">
-            <div className="flex items-center gap-3">
-              <div className="flex h-11 w-11 items-center justify-center rounded-[14px] bg-[#315FD8] text-white">
-                <BookOpen size={21} />
-              </div>
-
-              <div>
-                <p className="text-[18px] font-bold text-[#171D2B]">
-                  Knowway
-                </p>
-                <p className="text-[10px] tracking-[0.16em] text-[#8B95A7]">
-                  LEARN • GROW • BUILD
-                </p>
-              </div>
-            </div>
+            <Link to="/" className="inline-block group">
+              <img
+                src="/images/logo/logo.png"
+                alt="Logo"
+                className="h-12 sm:h-14 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
+              />
+            </Link>
 
             <p className="mt-5 max-w-[470px] text-[13px] leading-6 text-[#6C778A]">
               Simple learning paths, practical digital skills and useful
@@ -31,7 +27,7 @@ export default function Footer() {
 
             <a
               href="/packages"
-              className="mt-6 inline-flex items-center gap-2 text-[12px] font-semibold text-[#315FD8]"
+              className="mt-6 inline-flex items-center gap-2 text-[12px] font-semibold text-[#035BE3] hover:text-[#FA8C03] transition-colors"
             >
               Explore Packages
               <ArrowUpRight size={14} />
@@ -84,7 +80,7 @@ export default function Footer() {
         {/* BOTTOM */}
         <div className="flex flex-col gap-4 border-t border-[#E7ECF3] py-5 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-[11px] text-[#8A94A6]">
-            © {new Date().getFullYear()} Knowway. All rights reserved.
+            © {CURRENT_YEAR} Knowway. All rights reserved.
           </p>
 
           {/* Clean Social Brand Icons */}

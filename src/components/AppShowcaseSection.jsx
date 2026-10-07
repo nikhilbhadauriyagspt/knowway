@@ -17,7 +17,7 @@ export default function CreatorProgramSection() {
   ];
 
   return (
-    <section className="relative overflow-hidden bg-[#FBFCFF] py-20 lg:py-24">
+    <section className="relative overflow-hidden bg-[#FBFCFF] py-10 sm:py-12 lg:py-16">
       <div className="mx-auto max-w-[1540px] px-5 sm:px-8 lg:px-12">
         <div
           className="
@@ -77,10 +77,10 @@ export default function CreatorProgramSection() {
               <div className="mt-8 flex flex-wrap items-center gap-4">
                 <a
                   href="/creator-program"
-                  className="inline-flex h-[54px] items-center gap-3 rounded-full bg-white px-5 pr-2 text-[13px] font-semibold text-[#083B34] transition hover:bg-[#ecfffa]"
+                  className="inline-flex h-[54px] items-center gap-3 rounded-full bg-[#FA8C03] px-5 pr-2 text-[13px] font-semibold text-white transition-colors duration-200 hover:bg-[#e07b02] shadow-lg shadow-[#FA8C03]/25"
                 >
                   Join Now
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-[#0A6A5A] text-white">
+                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#FA8C03]">
                     <ArrowUpRight size={16} />
                   </span>
                 </a>

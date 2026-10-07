@@ -5,7 +5,6 @@ import {
   ChevronDown,
   Menu,
   X,
-  BookOpen,
   Sparkles,
   BrainCircuit,
   Palette,
@@ -83,30 +82,12 @@ export default function Header() {
         `}
       >
         {/* ================= LOGO ================= */}
-        <Link to="/" className="flex items-center gap-3 group shrink-0">
-          <div
-            className="
-              relative flex h-[42px] w-[42px]
-              items-center justify-center
-              overflow-hidden rounded-[13px]
-              bg-[#315FD8] shadow-md shadow-blue-500/15
-              transition-transform duration-200 group-hover:scale-105
-            "
-          >
-            <BookOpen size={20} className="relative z-10 text-white" />
-            <span className="absolute -bottom-4 -right-3 h-8 w-8 rounded-full bg-[#8C72F2]" />
-            <span className="absolute -left-3 -top-3 h-7 w-7 rounded-full bg-[#6E91F7]" />
-          </div>
-
-          <div className="leading-none">
-            <p className="text-[17px] font-bold tracking-[-0.03em] text-[#171C29]">
-              LearnSpace
-            </p>
-
-            <p className="mt-1 text-[9px] font-semibold uppercase tracking-[0.18em] text-[#929AA9]">
-              Learn • Grow • Build
-            </p>
-          </div>
+        <Link to="/" className="flex items-center group shrink-0">
+          <img
+            src="/images/logo/logo.png"
+            alt="Logo"
+            className="h-10 sm:h-12 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
+          />
         </Link>
 
         {/* ================= DESKTOP NAV ================= */}
@@ -274,12 +255,12 @@ export default function Header() {
             className="
               group flex h-[46px] items-center gap-2
               rounded-full
-              bg-[#171D2B]
+              bg-[#035BE3]
               px-5
               text-[13px] font-semibold text-white
               transition-colors duration-200
-              hover:bg-[#315FD8]
-              shadow-xs cursor-pointer
+              hover:bg-[#FA8C03]
+              shadow-sm shadow-[#035BE3]/20 cursor-pointer
             "
           >
             Start Learning
@@ -405,8 +386,8 @@ export default function Header() {
               className="
                 flex h-[46px] items-center justify-center gap-2
                 rounded-full
-                bg-[#315FD8]
-                text-[13px] font-semibold text-white cursor-pointer
+                bg-[#035BE3] hover:bg-[#FA8C03]
+                text-[13px] font-semibold text-white transition-colors cursor-pointer
               "
             >
               Start Learning

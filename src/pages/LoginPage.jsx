@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
 import {
-  BookOpen,
   Mail,
   Lock,
   Eye,
@@ -10,6 +9,8 @@ import {
   ArrowLeft,
   Sparkles,
 } from "lucide-react";
+
+const CURRENT_YEAR = new Date().getFullYear();
 
 export default function LoginPage() {
   const [showPassword, setShowPassword] = useState(false);
@@ -73,29 +74,12 @@ export default function LoginPage() {
 
       {/* ================= TOP NAVIGATION ================= */}
       <header className="w-full px-6 lg:px-16 pt-6 flex items-center justify-between z-10">
-        <Link to="/" className="flex items-center gap-3 group">
-          <div
-            className="
-              relative flex h-10 w-10
-              items-center justify-center
-              overflow-hidden rounded-[12px]
-              bg-[#315FD8] text-white
-              transition-transform group-hover:scale-105
-            "
-          >
-            <BookOpen size={20} className="relative z-10" />
-            <span className="absolute -bottom-3 -right-2 h-6 w-6 rounded-full bg-[#8C72F2]" />
-            <span className="absolute -left-2 -top-2 h-5 w-5 rounded-full bg-[#6E91F7]" />
-          </div>
-
-          <div className="leading-none">
-            <span className="text-[18px] font-bold tracking-[-0.03em] text-[#161B29]">
-              LearnSpace
-            </span>
-            <span className="block text-[9px] font-semibold uppercase tracking-[0.18em] text-[#929AA9] mt-0.5">
-              Learn • Grow • Build
-            </span>
-          </div>
+        <Link to="/" className="flex items-center group">
+          <img
+            src="/images/logo/logo.png"
+            alt="Logo"
+            className="h-10 sm:h-12 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
+          />
         </Link>
 
         <Link
@@ -202,7 +186,7 @@ export default function LoginPage() {
             {/* Submit Button (Flat, Clean) */}
             <button
               type="submit"
-              className="w-full h-[50px] mt-2 flex items-center justify-center gap-2 rounded-full bg-[#315FD8] hover:bg-[#264EB8] text-[14px] font-semibold text-white transition-colors duration-200 cursor-pointer"
+              className="w-full h-[50px] mt-2 flex items-center justify-center gap-2 rounded-full bg-[#035BE3] hover:bg-[#FA8C03] text-[14px] font-semibold text-white transition-colors duration-200 shadow-md shadow-[#035BE3]/20 cursor-pointer"
             >
               <span>Sign In to Learning Dashboard</span>
               <ArrowRight size={16} />
@@ -223,7 +207,7 @@ export default function LoginPage() {
           <button
             type="button"
             onClick={() => alert("Google Login initialized")}
-            className="w-full h-[48px] flex items-center justify-center gap-3 rounded-full border border-[#DCE2ED] bg-white text-[13px] font-semibold text-[#293246] hover:bg-[#F8FAFD] transition-colors cursor-pointer"
+            className="w-full h-[48px] flex items-center justify-center gap-3 rounded-full border border-[#DCE2ED] bg-white text-[13px] font-semibold text-[#293246] hover:border-[#035BE3] hover:bg-[#F8FAFD] transition-colors cursor-pointer"
           >
             <svg className="h-4.5 w-4.5" viewBox="0 0 24 24">
               <path
@@ -250,7 +234,7 @@ export default function LoginPage() {
           <div className="mt-8 pt-6 border-t border-[#F0F3F8] text-center">
             <p className="text-[13px] text-[#626B7C]">
               New to LearnSpace?{" "}
-              <Link to="/signup" className="font-bold text-[#315FD8] hover:text-[#264EB8] hover:underline">
+              <Link to="/signup" className="font-bold text-[#035BE3] hover:text-[#FA8C03] hover:underline">
                 Create a free account
               </Link>
             </p>
@@ -261,7 +245,7 @@ export default function LoginPage() {
 
       {/* ================= FOOTER ================= */}
       <footer className="w-full px-6 py-6 text-center text-[12px] text-[#9AA3B1] z-10 border-t border-[#E5E9F1]">
-        © {new Date().getFullYear()} LearnSpace Platform. All rights reserved. • <a href="#privacy" className="hover:underline">Privacy Policy</a> • <a href="#terms" className="hover:underline">Terms of Service</a>
+        © {CURRENT_YEAR} LearnSpace Platform. All rights reserved. • <a href="#privacy" className="hover:underline">Privacy Policy</a> • <a href="#terms" className="hover:underline">Terms of Service</a>
       </footer>
 
     </div>

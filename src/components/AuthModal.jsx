@@ -1,19 +1,12 @@
 import React, { useState } from "react";
 import {
-  BookOpen,
   Mail,
   Lock,
   User,
   Eye,
   EyeOff,
   ArrowRight,
-  Sparkles,
-  CheckCircle2,
   X,
-  BrainCircuit,
-  Palette,
-  Code2,
-  Layers3,
 } from "lucide-react";
 
 export default function AuthModal({ isOpen, onClose, initialMode = "login" }) {
@@ -76,9 +69,11 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }) {
         {/* ================= HEADER BRANDING ================= */}
         <div className="text-center">
           {/* Logo Badge */}
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-[16px] bg-[#315FD8] shadow-md shadow-blue-500/20">
-            <BookOpen size={24} className="text-white" />
-          </div>
+          <img
+            src="/images/logo/logo.png"
+            alt="Logo"
+            className="mx-auto h-12 w-auto object-contain"
+          />
 
           <h2 className="mt-4 text-[24px] sm:text-[26px] font-bold tracking-[-0.03em] text-[#171C29]">
             {isLogin ? "Welcome back" : "Create your account"}
@@ -228,8 +223,8 @@ export default function AuthModal({ isOpen, onClose, initialMode = "login" }) {
             type="submit"
             className="
               mt-2 flex w-full h-[48px] items-center justify-center gap-2
-              rounded-full bg-[#315FD8] hover:bg-[#254EC0]
-              text-[14px] font-semibold text-white shadow-md shadow-blue-500/20
+              rounded-full bg-[#035BE3] hover:bg-[#FA8C03]
+              text-[14px] font-semibold text-white shadow-md shadow-[#035BE3]/20
               transition-colors duration-200 cursor-pointer
             "
           >

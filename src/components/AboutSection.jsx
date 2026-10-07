@@ -10,7 +10,7 @@ import {
 
 export default function AboutSection() {
   return (
-    <section className="relative overflow-hidden bg-[#FBFCFF] py-20 lg:py-28 border-b border-[#E5EBF4]">
+    <section className="relative overflow-hidden bg-[#FBFCFF] py-10 sm:py-12 lg:py-16 border-b border-[#E5EBF4]">
 
       {/* =========================================
           SAME SOFT GRID AS HERO
@@ -206,11 +206,12 @@ export default function AboutSection() {
                 mt-8 inline-flex h-[50px]
                 items-center gap-3
                 rounded-full
-                bg-[#315FD8]
+                bg-[#035BE3]
                 pl-6 pr-2
                 text-[13px] font-semibold text-white
-                transition duration-200
-                hover:bg-[#264FBC] cursor-pointer
+                transition-colors duration-200
+                hover:bg-[#FA8C03]
+                shadow-md shadow-[#035BE3]/20 cursor-pointer
               "
             >
               Learn More About Us

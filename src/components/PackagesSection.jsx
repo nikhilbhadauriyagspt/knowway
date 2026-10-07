@@ -63,7 +63,7 @@ export default function PackagesSection() {
   return (
     <section
       id="packages"
-      className="relative overflow-hidden bg-[#FBFCFF] py-20 lg:py-28"
+      className="relative overflow-hidden bg-[#FBFCFF] py-10 sm:py-12 lg:py-16"
     >
       {/* HERO-MATCHING GRID */}
       <div
@@ -84,7 +84,7 @@ export default function PackagesSection() {
       <div className="relative z-10 mx-auto w-full max-w-[1540px] px-5 sm:px-8 lg:px-12">
 
         {/* ================= HEADER ================= */}
-        <div className="mb-11 flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
+        <div className="mb-8 sm:mb-9 flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-[720px]">
             <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#DCE5F5] bg-white/90 px-4 py-2 shadow-[0_2px_5px_rgba(20,35,70,.04)]">
               <Sparkles size={13} className="text-[#315FD8]" />
@@ -165,7 +165,7 @@ export default function PackagesSection() {
 
           <Link
             to="/courses"
-            className="inline-flex h-[44px] items-center justify-center gap-2 rounded-full bg-[#171D2B] px-5 text-[12px] font-semibold text-white transition hover:bg-[#315FD8]"
+            className="inline-flex h-[44px] items-center justify-center gap-2 rounded-full bg-[#035BE3] px-5 text-[12px] font-semibold text-white transition-colors duration-200 hover:bg-[#FA8C03] shadow-sm shadow-[#035BE3]/20"
           >
             Explore all courses
             <ArrowUpRight size={15} />
@@ -210,7 +210,7 @@ function PackageHorizontal({ pkg }) {
 
           <Link
             to={pkg.link}
-            className="mt-7 inline-flex h-[47px] items-center gap-3 rounded-full bg-[#171D2B] pl-5 pr-2 text-[12.5px] font-semibold text-white transition duration-300 hover:bg-[#315FD8]"
+            className="mt-7 inline-flex h-[47px] items-center gap-3 rounded-full bg-[#035BE3] pl-5 pr-2 text-[12.5px] font-semibold text-white transition-colors duration-200 hover:bg-[#FA8C03] shadow-sm shadow-[#035BE3]/20"
           >
             Explore Package
 
@@ -307,7 +307,7 @@ function PackageVertical({ pkg }) {
 
           <Link
             to={pkg.link}
-            className="mt-5 inline-flex h-[47px] items-center gap-3 rounded-full bg-[#171D2B] pl-5 pr-2 text-[12.5px] font-semibold text-white transition hover:bg-[#315FD8]"
+            className="mt-5 inline-flex h-[47px] items-center gap-3 rounded-full bg-[#035BE3] pl-5 pr-2 text-[12.5px] font-semibold text-white transition-colors duration-200 hover:bg-[#FA8C03] shadow-sm shadow-[#035BE3]/20"
           >
             Explore Package
 

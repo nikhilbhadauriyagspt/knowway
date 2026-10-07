@@ -91,7 +91,7 @@ export default function FAQSection() {
   return (
     <section
       id="faq"
-      className="relative overflow-hidden bg-[#FBFCFF] py-20 lg:py-28"
+      className="relative overflow-hidden bg-[#FBFCFF] py-10 sm:py-12 lg:py-16"
     >
       {/* subtle hero grid */}
       <div
@@ -107,7 +107,7 @@ export default function FAQSection() {
 
       <div className="relative z-10 mx-auto max-w-[1540px] px-5 sm:px-8 lg:px-12">
 
-        <div className="grid grid-cols-1 gap-14 lg:grid-cols-[0.9fr_1.1fr] lg:gap-20">
+        <div className="grid grid-cols-1 gap-10 lg:grid-cols-[0.9fr_1.1fr] lg:gap-14">
 
           {/* =====================================================
               LEFT SIDE
@@ -262,10 +262,10 @@ export default function FAQSection() {
                     <span
                       className={`
                         flex h-9 w-9 shrink-0 items-center justify-center
-                        rounded-full transition
+                        rounded-full transition-colors
                         ${isOpen
-                          ? "bg-[#315FD8] text-white"
-                          : "bg-white text-[#536078]"
+                          ? "bg-[#035BE3] text-white shadow-sm shadow-[#035BE3]/25"
+                          : "bg-white text-[#536078] group-hover:text-[#FA8C03]"
                         }
                       `}
                     >
