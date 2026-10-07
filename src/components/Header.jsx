@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowUpRight,
   ChevronDown,
@@ -10,14 +10,48 @@ import {
   ArrowRight,
   HelpCircle,
   BookOpen,
+  LayoutDashboard,
+  User,
+  LogOut,
+  GraduationCap,
+  ShieldCheck,
 } from "lucide-react";
+import {
+  getUserData,
+  isUserAuthenticated,
+  clearUserSession,
+} from "../services/api";
 
 export default function Header() {
+  const navigate = useNavigate();
   const [mobileOpen, setMobileOpen] = useState(false);
   const [packagesOpen, setPackagesOpen] = useState(false);
   const [mobilePackagesOpen, setMobilePackagesOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
+  const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+
+  // Authentication State
+  const [currentUser, setCurrentUser] = useState(getUserData());
+  const [isLoggedIn, setIsLoggedIn] = useState(isUserAuthenticated());
+
   const dropdownRef = useRef(null);
+  const userDropdownRef = useRef(null);
+
+  // Synchronize auth state on custom events & storage changes
+  useEffect(() => {
+    const handleAuthChange = () => {
+      setCurrentUser(getUserData());
+      setIsLoggedIn(isUserAuthenticated());
+    };
+
+    window.addEventListener("knowway_auth_change", handleAuthChange);
+    window.addEventListener("storage", handleAuthChange);
+
+    return () => {
+      window.removeEventListener("knowway_auth_change", handleAuthChange);
+      window.removeEventListener("storage", handleAuthChange);
+    };
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -38,11 +72,21 @@ export default function Header() {
       if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
         setPackagesOpen(false);
       }
+      if (userDropdownRef.current && !userDropdownRef.current.contains(event.target)) {
+        setUserDropdownOpen(false);
+      }
     };
 
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
+
+  const handleLogout = () => {
+    clearUserSession();
+    setUserDropdownOpen(false);
+    setMobileOpen(false);
+    navigate("/", { replace: true });
+  };
 
   const packageItems = [
     {
@@ -95,97 +139,87 @@ export default function Header() {
     },
   ];
 
+  const userInitial = currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : "U";
+
   return (
     <header
       className={`
-        fixed left-0 top-0 z-50 w-full
-        transition-all duration-300 ease-in-out
-        ${scrolled ? "px-0 pt-0" : "px-4 pt-5 sm:px-6 lg:px-8"}
+        sticky top-0 z-50 w-full transition-all duration-300
+        ${
+          scrolled
+            ? "bg-white/90 py-3 shadow-md backdrop-blur-md"
+            : "bg-white/80 py-4 backdrop-blur-sm"
+        }
       `}
     >
-      <div
-        className={`
-          mx-auto flex h-[74px] items-center justify-between
-          backdrop-blur-xl transition-all duration-300 ease-in-out
-          ${
-            scrolled
-              ? "max-w-full rounded-none border-b border-[#E3E9F4] border-t-0 border-x-0 bg-[#FBFCFF]/95 px-6 shadow-[0_4px_24px_-6px_rgba(3,91,227,0.08)] sm:px-8 lg:px-12 xl:px-16"
-              : "max-w-[1420px] rounded-[22px] border border-[#E2E7F0] bg-white/90 px-5 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.04)] sm:px-6 lg:px-7"
-          }
-        `}
-      >
+      <div className="mx-auto flex max-w-[1420px] items-center justify-between px-4 sm:px-6 lg:px-8">
+        
         {/* ================= LOGO ================= */}
-        <Link to="/" className="flex items-center group shrink-0">
+        <Link to="/" className="flex items-center gap-2 group">
           <img
             src="/images/logo/logo.png"
-            alt="Logo"
+            alt="KnowWay LearnSpace"
             className="h-10 sm:h-12 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
           />
         </Link>
 
-        {/* ================= DESKTOP NAV ================= */}
-        <nav className="hidden items-center gap-1.5 lg:flex">
+        {/* ================= DESKTOP NAVIGATION ================= */}
+        <nav className="hidden items-center gap-1 rounded-full border border-[#E7ECF3] bg-white/90 px-3 py-1.5 shadow-2xs lg:flex">
+          
           {/* 1. Home */}
           <Link
             to="/"
             className="
-              rounded-full px-4 py-2.5
-              text-[14px] font-semibold text-[#035BE3]
+              rounded-full px-4 py-2
+              text-[14px] font-medium text-[#4A5568]
               transition-colors
-              hover:bg-[#EEF4FF]
+              hover:bg-[#F3F6FD]
+              hover:text-[#161B29]
             "
           >
             Home
           </Link>
 
-          {/* 2. Packages (Heavy Rich Mega Dropdown) */}
-          <div
-            ref={dropdownRef}
-            className="relative"
-            onMouseEnter={() => setPackagesOpen(true)}
-            onMouseLeave={() => setPackagesOpen(false)}
-          >
+          {/* 2. Packages with Rich Mega-Dropdown */}
+          <div className="relative" ref={dropdownRef}>
             <button
-              type="button"
               onClick={() => setPackagesOpen(!packagesOpen)}
               className={`
                 group flex items-center gap-1.5
-                rounded-full px-4 py-2.5
+                rounded-full px-4 py-2
                 text-[14px] font-medium transition-colors cursor-pointer
                 ${
                   packagesOpen
-                    ? "bg-[#EEF4FF] text-[#035BE3] font-semibold"
+                    ? "bg-[#F3F6FD] text-[#035BE3]"
                     : "text-[#4A5568] hover:bg-[#F3F6FD] hover:text-[#161B29]"
                 }
               `}
             >
               <span>Packages</span>
               <ChevronDown
-                size={15}
-                className={`transition-transform duration-200 ${
-                  packagesOpen ? "rotate-180 text-[#035BE3]" : "text-[#7A8497]"
-                }`}
+                size={14}
+                className={`
+                  transition-transform duration-200 text-[#8C97A8]
+                  group-hover:text-[#035BE3]
+                  ${packagesOpen ? "rotate-180 text-[#035BE3]" : ""}
+                `}
               />
             </button>
 
-            {/* Heavy Rich Mega Dropdown Box */}
+            {/* Mega Dropdown Menu */}
             {packagesOpen && (
-              <div className="absolute left-1/2 top-full -translate-x-1/2 pt-3 z-50 w-[780px] max-w-[92vw] animate-in fade-in slide-in-from-top-2 duration-200">
-                <div className="rounded-[26px] border border-[#DCE4F2] bg-white p-5 shadow-[0_24px_60px_-12px_rgba(3,91,227,0.18)]">
+              <div className="absolute left-1/2 -translate-x-1/2 top-full mt-3 w-[660px] rounded-[28px] border border-[#E4EBF5] bg-white p-5 shadow-2xl shadow-blue-900/10 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 z-50">
+                <div className="flex flex-col">
                   
-                  {/* Dropdown Top Bar */}
-                  <div className="flex items-center justify-between border-b border-[#F0F4FA] px-2 pb-3.5 pt-1">
+                  {/* Dropdown Header */}
+                  <div className="flex items-center justify-between pb-3 border-b border-[#F0F4FA] px-1">
                     <div className="flex items-center gap-2">
-                      <div className="flex h-7 w-7 items-center justify-center rounded-lg bg-[#EFF4FF] text-[#035BE3]">
+                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#EEF4FF] text-[#035BE3]">
                         <Layers3 size={15} />
                       </div>
                       <div>
-                        <span className="text-[11px] font-bold uppercase tracking-[0.14em] text-[#64748B]">
-                          Explore Career Packages
-                        </span>
-                        <p className="text-[12px] text-[#94A3B8]">
-                          Structured skill paths with practical certifications
-                        </p>
+                        <h3 className="text-[13px] font-bold text-[#161B29]">Career Skill Bundles</h3>
+                        <p className="text-[11px] text-[#64748B]">Structured multi-course learning tracks</p>
                       </div>
                     </div>
 
@@ -208,7 +242,6 @@ export default function Header() {
                         onClick={() => setPackagesOpen(false)}
                         className="group/card relative flex items-center gap-3.5 rounded-[20px] border border-[#E9EFF8] bg-[#FBFCFF] p-3.5 transition-all duration-200 hover:border-[#035BE3]/50 hover:bg-white hover:shadow-md hover:shadow-blue-900/5 cursor-pointer"
                       >
-                        {/* Package 3D Image Box */}
                         <div className="relative flex h-[76px] w-[76px] shrink-0 items-center justify-center rounded-[16px] bg-white border border-[#E8EEF8] p-1.5 shadow-2xs group-hover/card:scale-105 transition-transform duration-300">
                           <img
                             src={pkg.image}
@@ -217,7 +250,6 @@ export default function Header() {
                           />
                         </div>
 
-                        {/* Package Info */}
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center justify-between gap-1">
                             <h4 className="text-[14px] font-bold text-[#161B29] group-hover/card:text-[#035BE3] transition-colors truncate">
@@ -231,21 +263,8 @@ export default function Header() {
                           <p className="mt-1 text-[11.5px] leading-snug text-[#64748B] line-clamp-2">
                             {pkg.desc}
                           </p>
-
-                          {/* Mini Features Pills */}
-                          <div className="mt-2 flex flex-wrap gap-1">
-                            {pkg.features.map((feature) => (
-                              <span
-                                key={feature}
-                                className="rounded-[6px] bg-[#F1F5F9] px-1.5 py-0.5 text-[9.5px] font-semibold text-[#475569]"
-                              >
-                                {feature}
-                              </span>
-                            ))}
-                          </div>
                         </div>
 
-                        {/* Hover Arrow */}
                         <div className="absolute right-3 top-3 opacity-0 group-hover/card:opacity-100 group-hover/card:translate-x-0.5 transition-all duration-200 text-[#035BE3]">
                           <ArrowRight size={14} />
                         </div>
@@ -278,10 +297,10 @@ export default function Header() {
           </div>
 
           {/* 3. Courses */}
-          <a
-            href="/#packages"
+          <Link
+            to="/courses"
             className="
-              rounded-full px-4 py-2.5
+              rounded-full px-4 py-2
               text-[14px] font-medium text-[#4A5568]
               transition-colors
               hover:bg-[#F3F6FD]
@@ -289,13 +308,13 @@ export default function Header() {
             "
           >
             Courses
-          </a>
+          </Link>
 
           {/* 4. Help */}
           <a
             href="/#faq"
             className="
-              rounded-full px-4 py-2.5
+              rounded-full px-4 py-2
               text-[14px] font-medium text-[#4A5568]
               transition-colors
               hover:bg-[#F3F6FD]
@@ -306,43 +325,132 @@ export default function Header() {
           </a>
         </nav>
 
-        {/* ================= RIGHT ACTIONS ================= */}
+        {/* ================= RIGHT ACTIONS (DYNAMIC AUTH STATE) ================= */}
         <div className="hidden items-center gap-3 lg:flex">
-          <Link
-            to="/login"
-            className="
-              px-4 py-2
-              text-[14px] font-semibold
-              text-[#4C5668]
-              transition hover:text-[#035BE3] cursor-pointer
-            "
-          >
-            Log in
-          </Link>
+          {isLoggedIn && currentUser ? (
+            <div className="flex items-center gap-3">
+              
+              {/* Sleek Dashboard Button */}
+              <Link
+                to="/dashboard"
+                className="
+                  group flex h-[42px] items-center gap-2
+                  rounded-full
+                  bg-[#035BE3]
+                  px-4
+                  text-[13px] font-semibold text-white
+                  transition-colors duration-200
+                  hover:bg-[#FA8C03]
+                  shadow-sm shadow-[#035BE3]/20 cursor-pointer no-underline
+                "
+              >
+                <LayoutDashboard size={15} />
+                <span>Dashboard</span>
+              </Link>
 
-          <Link
-            to="/signup"
-            className="
-              group flex h-[46px] items-center gap-2
-              rounded-full
-              bg-[#035BE3]
-              px-5
-              text-[13px] font-semibold text-white
-              transition-colors duration-200
-              hover:bg-[#FA8C03]
-              shadow-sm shadow-[#035BE3]/20 cursor-pointer
-            "
-          >
-            <span>Start Learning</span>
-            <ArrowUpRight
-              size={16}
-              className="
-                transition-transform duration-200
-                group-hover:-translate-y-[1px]
-                group-hover:translate-x-[2px]
-              "
-            />
-          </Link>
+              {/* User Avatar + Dropdown */}
+              <div className="relative" ref={userDropdownRef}>
+                <button
+                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
+                  className="flex items-center gap-2 rounded-full border border-[#E2E8F0] bg-white p-1.5 pr-3 hover:bg-[#F8FAFD] transition cursor-pointer shadow-2xs"
+                >
+                  <div className="w-8 h-8 rounded-full bg-[#EEF4FF] border border-[#035BE3]/20 text-[#035BE3] font-bold text-xs flex items-center justify-center shrink-0">
+                    {currentUser.avatar_url ? (
+                      <img src={currentUser.avatar_url} alt={currentUser.name} className="w-full h-full rounded-full object-cover" />
+                    ) : (
+                      userInitial
+                    )}
+                  </div>
+                  <span className="text-xs font-bold text-[#161B29] max-w-[100px] truncate">
+                    {currentUser.name ? currentUser.name.split(" ")[0] : "Learner"}
+                  </span>
+                  <ChevronDown size={13} className={`text-[#8C97A8] transition-transform ${userDropdownOpen ? "rotate-180" : ""}`} />
+                </button>
+
+                {/* Profile Popup Menu */}
+                {userDropdownOpen && (
+                  <div className="absolute right-0 top-full mt-2 w-56 rounded-[24px] border border-[#E2E8F0] bg-white p-2 shadow-xl animate-in fade-in zoom-in-95 duration-150 z-50">
+                    <div className="p-3 border-b border-gray-100">
+                      <p className="text-xs font-bold text-[#161B29] truncate">{currentUser.name}</p>
+                      <p className="text-[11px] text-[#64748B] truncate mt-0.5">{currentUser.email}</p>
+                      <span className="inline-block mt-1 text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200">
+                        Verified Learner
+                      </span>
+                    </div>
+
+                    <div className="py-1">
+                      <Link
+                        to="/dashboard"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[#4A5568] hover:text-[#035BE3] hover:bg-[#F3F6FD] rounded-xl transition no-underline"
+                      >
+                        <LayoutDashboard size={14} />
+                        <span>My Dashboard</span>
+                      </Link>
+
+                      <Link
+                        to="/courses"
+                        onClick={() => setUserDropdownOpen(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[#4A5568] hover:text-[#035BE3] hover:bg-[#F3F6FD] rounded-xl transition no-underline"
+                      >
+                        <BookOpen size={14} />
+                        <span>Browse Courses</span>
+                      </Link>
+                    </div>
+
+                    <div className="pt-1 border-t border-gray-100">
+                      <button
+                        onClick={handleLogout}
+                        className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50 rounded-xl transition cursor-pointer"
+                      >
+                        <LogOut size={14} />
+                        <span>Sign Out</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+
+            </div>
+          ) : (
+            <>
+              <Link
+                to="/login"
+                className="
+                  px-4 py-2
+                  text-[14px] font-semibold
+                  text-[#4C5668]
+                  transition hover:text-[#035BE3] cursor-pointer
+                "
+              >
+                Log in
+              </Link>
+
+              <Link
+                to="/signup"
+                className="
+                  group flex h-[46px] items-center gap-2
+                  rounded-full
+                  bg-[#035BE3]
+                  px-5
+                  text-[13px] font-semibold text-white
+                  transition-colors duration-200
+                  hover:bg-[#FA8C03]
+                  shadow-sm shadow-[#035BE3]/20 cursor-pointer
+                "
+              >
+                <span>Start Learning</span>
+                <ArrowUpRight
+                  size={16}
+                  className="
+                    transition-transform duration-200
+                    group-hover:-translate-y-[1px]
+                    group-hover:translate-x-[2px]
+                  "
+                />
+              </Link>
+            </>
+          )}
         </div>
 
         {/* ================= MOBILE TOGGLE BUTTON ================= */}
@@ -365,138 +473,105 @@ export default function Header() {
       {/* ================= MOBILE MENU ================= */}
       {mobileOpen && (
         <div
-          className={`
+          className="
             mx-auto mt-2 max-w-[1420px]
             rounded-[24px]
-            border border-[#E2E7F0]
+            border border-[#E7ECF3]
             bg-white
-            p-4 shadow-xl
+            p-5
+            shadow-xl
             lg:hidden
-            ${scrolled ? "mx-4" : ""}
-          `}
+            animate-in fade-in duration-200
+          "
         >
-          <div className="flex flex-col">
-            {/* 1. Home */}
+          {/* User profile banner if logged in */}
+          {isLoggedIn && currentUser && (
+            <div className="mb-4 p-3.5 rounded-2xl bg-blue-50/70 border border-blue-100 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-[#035BE3] text-white font-bold text-xs flex items-center justify-center">
+                  {userInitial}
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-[#161B29]">{currentUser.name}</p>
+                  <p className="text-[11px] text-[#64748B]">{currentUser.email}</p>
+                </div>
+              </div>
+
+              <Link
+                to="/dashboard"
+                onClick={() => setMobileOpen(false)}
+                className="px-3 py-1.5 rounded-full bg-[#035BE3] text-white text-[11px] font-bold no-underline"
+              >
+                Dashboard
+              </Link>
+            </div>
+          )}
+
+          <div className="flex flex-col space-y-1">
             <Link
               to="/"
               onClick={() => setMobileOpen(false)}
-              className="
-                flex items-center justify-between
-                border-b border-[#EEF1F5]
-                px-3 py-3
-                text-[15px] font-bold text-[#035BE3]
-              "
+              className="px-3 py-2.5 text-[15px] font-medium text-[#4F596B] hover:text-[#035BE3]"
             >
-              <span>Home</span>
-              <BookOpen size={16} />
+              Home
             </Link>
 
-            {/* 2. Packages (Mobile Accordion) */}
-            <div className="border-b border-[#EEF1F5] py-2">
-              <button
-                type="button"
-                onClick={() => setMobilePackagesOpen(!mobilePackagesOpen)}
-                className="flex w-full items-center justify-between px-3 py-2 text-[15px] font-bold text-[#161B29] cursor-pointer"
-              >
-                <div className="flex items-center gap-2">
-                  <span>Packages</span>
-                  <span className="rounded-full bg-[#EFF4FF] px-2 py-0.5 text-[10px] font-bold text-[#035BE3]">
-                    4 Bundles
-                  </span>
-                </div>
-                <ChevronDown
-                  size={16}
-                  className={`transition-transform duration-200 ${
-                    mobilePackagesOpen ? "rotate-180 text-[#035BE3]" : "text-[#7A8497]"
-                  }`}
-                />
-              </button>
+            <Link
+              to="/courses"
+              onClick={() => setMobileOpen(false)}
+              className="px-3 py-2.5 text-[15px] font-medium text-[#4F596B] hover:text-[#035BE3]"
+            >
+              Courses
+            </Link>
 
-              {mobilePackagesOpen && (
-                <div className="space-y-2 pt-2 px-1">
-                  {packageItems.map((pkg) => (
-                    <a
-                      key={pkg.id}
-                      href={pkg.link}
-                      onClick={() => setMobileOpen(false)}
-                      className="flex items-center gap-3 rounded-[16px] border border-[#EEF2F8] bg-[#F8FAFD] p-2.5 hover:bg-white transition-colors"
-                    >
-                      <img
-                        src={pkg.image}
-                        alt={pkg.name}
-                        className="h-11 w-11 object-contain shrink-0"
-                      />
-                      <div className="min-w-0 flex-1">
-                        <div className="flex items-center justify-between">
-                          <p className="text-[13px] font-bold text-[#161B29]">{pkg.name}</p>
-                          <span className={`text-[9px] font-bold uppercase rounded px-1.5 py-0.2 ${pkg.bgBadge}`}>
-                            {pkg.badge}
-                          </span>
-                        </div>
-                        <p className="text-[11px] text-[#64748B] truncate">{pkg.subtitle}</p>
-                      </div>
-                    </a>
-                  ))}
-                </div>
-              )}
-            </div>
-
-            {/* 3. Courses */}
             <a
               href="/#packages"
               onClick={() => setMobileOpen(false)}
-              className="
-                border-b border-[#EEF1F5]
-                px-3 py-3
-                text-[15px] font-medium text-[#4F596B] hover:text-[#035BE3]
-              "
+              className="px-3 py-2.5 text-[15px] font-medium text-[#4F596B] hover:text-[#035BE3]"
             >
-              Courses
+              Packages
             </a>
 
-            {/* 4. Help */}
             <a
               href="/#faq"
               onClick={() => setMobileOpen(false)}
-              className="
-                flex items-center justify-between
-                px-3 py-3
-                text-[15px] font-medium text-[#4F596B] hover:text-[#035BE3]
-              "
+              className="flex items-center justify-between px-3 py-2.5 text-[15px] font-medium text-[#4F596B] hover:text-[#035BE3]"
             >
-              <span>Help</span>
+              <span>Help & FAQ</span>
               <HelpCircle size={16} className="text-[#8C97A8]" />
             </a>
           </div>
 
-          {/* Bottom Auth Buttons */}
-          <div className="mt-4 grid grid-cols-2 gap-2 pt-2 border-t border-[#EEF1F5]">
-            <Link
-              to="/login"
-              onClick={() => setMobileOpen(false)}
-              className="
-                flex h-[46px] items-center justify-center
-                rounded-full
-                border border-[#DDE3EC]
-                text-[13px] font-semibold text-[#2C3547] cursor-pointer
-              "
-            >
-              Log in
-            </Link>
+          {/* Bottom Actions */}
+          <div className="mt-4 pt-3 border-t border-[#EEF1F5]">
+            {isLoggedIn ? (
+              <button
+                onClick={handleLogout}
+                className="w-full flex h-[44px] items-center justify-center gap-2 rounded-full border border-red-200 bg-red-50 text-red-600 font-bold text-xs"
+              >
+                <LogOut size={15} />
+                <span>Sign Out Account</span>
+              </button>
+            ) : (
+              <div className="grid grid-cols-2 gap-2">
+                <Link
+                  to="/login"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex h-[44px] items-center justify-center rounded-full border border-[#DDE3EC] text-[13px] font-semibold text-[#2C3547]"
+                >
+                  Log in
+                </Link>
 
-            <Link
-              to="/signup"
-              onClick={() => setMobileOpen(false)}
-              className="
-                flex h-[46px] items-center justify-center gap-2
-                rounded-full
-                bg-[#035BE3] hover:bg-[#FA8C03]
-                text-[13px] font-semibold text-white transition-colors cursor-pointer
-              "
-            >
-              Start Learning
-              <ArrowUpRight size={15} />
-            </Link>
+                <Link
+                  to="/signup"
+                  onClick={() => setMobileOpen(false)}
+                  className="flex h-[44px] items-center justify-center gap-2 rounded-full bg-[#035BE3] text-[13px] font-semibold text-white"
+                >
+                  Start Learning
+                  <ArrowUpRight size={15} />
+                </Link>
+              </div>
+            )}
           </div>
         </div>
       )}

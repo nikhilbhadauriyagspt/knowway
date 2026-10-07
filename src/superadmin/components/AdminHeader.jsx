@@ -1,14 +1,14 @@
 import React, { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import {
   Menu,
   Search,
-  Bell,
   RefreshCw,
   LogOut,
   ChevronDown,
-  Shield,
-  CheckCircle2,
+  Sun,
+  Moon,
+  ExternalLink,
 } from "lucide-react";
 import { clearAdminSession } from "../../services/api";
 
@@ -20,181 +20,178 @@ export default function AdminHeader({
   isRefreshing,
   searchQuery,
   setSearchQuery,
+  darkMode,
+  setDarkMode,
 }) {
   const navigate = useNavigate();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
-  const [showNotifications, setShowNotifications] = useState(false);
 
   const handleLogout = () => {
     clearAdminSession();
     navigate("/admin/login");
   };
 
-  const getTitle = () => {
+  const getTabTitle = () => {
     switch (activeTab) {
+      case "mentors":
+        return "Mentors & Instructors";
+      case "courses":
+        return "Course & Video Management";
       case "users":
-        return {
-          title: "Student Registrations",
-          subtitle: "Manage and monitor registered students & referral records",
-        };
-      case "packages":
-        return {
-          title: "Packages & Curriculum",
-          subtitle: "Explore training packages, active tiers, and modules",
-        };
-      case "revenue":
-        return {
-          title: "Revenue & Earnings Analytics",
-          subtitle: "Financial metrics, transaction trends, and forecasts",
-        };
+        return "Student Directory";
       case "settings":
-        return {
-          title: "System & Database Configuration",
-          subtitle: "MySQL database health, credentials, and app controls",
-        };
+        return "Cloudinary & System Settings";
       default:
-        return {
-          title: "Super Admin Dashboard",
-          subtitle: "Real-time overview of student enrollments, courses, and platform metrics",
-        };
+        return "Control Center";
     }
   };
 
-  const currentTabInfo = getTitle();
-
   return (
-    <header className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-gray-200/80 px-4 sm:px-8 py-3.5 flex items-center justify-between gap-4 transition-all">
-      {/* Left: Mobile hamburger & Page Title */}
-      <div className="flex items-center gap-3.5 min-w-0">
+    <header className="sticky top-0 z-30 pt-4 px-4 sm:px-6 lg:px-8 pb-2 flex items-center justify-between gap-3 sm:gap-4 pointer-events-none">
+      {/* Mobile Hamburger */}
+      <div className="flex items-center gap-2 pointer-events-auto lg:hidden">
         <button
           onClick={() => setMobileOpen(true)}
-          className="p-2 -ml-2 rounded-xl text-gray-500 hover:text-gray-900 hover:bg-gray-100 lg:hidden cursor-pointer"
+          className={`h-12 w-12 rounded-full border flex items-center justify-center transition cursor-pointer ${
+            darkMode
+              ? "bg-[#131926] border-[#222B3D] text-[#E2E8F0]"
+              : "bg-white border-[#E2E8F0] text-[#0F172A]"
+          }`}
           aria-label="Open sidebar"
         >
           <Menu className="w-5 h-5" />
         </button>
-
-        <div className="min-w-0">
-          <h1 className="text-base sm:text-lg font-extrabold text-[#161B29] truncate flex items-center gap-2">
-            <span>{currentTabInfo.title}</span>
-          </h1>
-          <p className="hidden sm:block text-xs text-[#5B6F96] truncate">
-            {currentTabInfo.subtitle}
-          </p>
-        </div>
       </div>
 
-      {/* Right: Search + Refresh + Notifications + Admin Profile */}
-      <div className="flex items-center gap-2.5 sm:gap-3 shrink-0">
-        {/* Search input (visible on sm+) */}
-        <div className="relative hidden md:block w-56 lg:w-72">
-          <div className="pointer-events-none absolute inset-y-0 left-0 flex items-center pl-3 text-gray-400">
-            <Search className="h-4 w-4" />
-          </div>
+      {/* Center/Left Search Pill */}
+      <div className="flex-1 max-w-lg pointer-events-auto">
+        <div
+          className={`h-12 rounded-full border flex items-center px-4 transition-all focus-within:border-[#035BE3] ${
+            darkMode
+              ? "bg-[#131926] border-[#222B3D]"
+              : "bg-white border-[#E2E8F0]"
+          }`}
+        >
+          <Search className="w-4 h-4 text-[#94A3B8] shrink-0 mr-2.5" />
           <input
             type="text"
             value={searchQuery || ""}
             onChange={(e) => setSearchQuery && setSearchQuery(e.target.value)}
-            placeholder="Search students, emails..."
-            className="w-full rounded-xl border border-gray-200 bg-[#F8FAFC] pl-9 pr-4 py-1.5 text-xs text-[#161B29] placeholder-gray-400 outline-none transition focus:border-[#035BE3] focus:bg-white focus:ring-2 focus:ring-[#035BE3]/15"
+            placeholder={`Search ${getTabTitle().toLowerCase()}...`}
+            className={`w-full bg-transparent text-xs outline-none placeholder-[#94A3B8] ${
+              darkMode ? "text-white" : "text-[#0F172A]"
+            }`}
           />
         </div>
+      </div>
 
-        {/* Refresh button */}
-        {onRefresh && (
-          <button
-            onClick={onRefresh}
-            disabled={isRefreshing}
-            title="Refresh live data"
-            className="p-2 text-[#5B6F96] hover:text-[#035BE3] hover:bg-[#EFF4FF] rounded-xl border border-gray-200/80 transition-all cursor-pointer disabled:opacity-50"
+      {/* Right Controls: Theme Switcher Toggle, Sync DB, Admin Profile Pill */}
+      <div className="flex items-center gap-2 sm:gap-2.5 shrink-0 pointer-events-auto">
+        {/* Dark / Light Theme Sliding Switcher Toggle */}
+        <button
+          type="button"
+          onClick={() => setDarkMode(!darkMode)}
+          title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
+          className={`h-12 w-22 sm:w-24 rounded-full border p-1.5 flex items-center justify-between relative transition-all cursor-pointer select-none ${
+            darkMode
+              ? "bg-[#131926] border-[#222B3D]"
+              : "bg-white border-[#E2E8F0]"
+          }`}
+        >
+          <div
+            className={`absolute top-1 bottom-1 w-9 rounded-full transition-transform duration-300 ease-out flex items-center justify-center shadow-xs ${
+              darkMode
+                ? "translate-x-10 sm:translate-x-12 bg-[#1E2638] border border-[#2B374E] text-[#FBBF24]"
+                : "translate-x-0 bg-[#035BE3] text-white shadow-md shadow-[#035BE3]/20"
+            }`}
           >
-            <RefreshCw
-              className={`w-4 h-4 ${isRefreshing ? "animate-spin text-[#035BE3]" : ""}`}
-            />
-          </button>
-        )}
+            {darkMode ? <Moon className="w-4 h-4" /> : <Sun className="w-4 h-4" />}
+          </div>
 
-        {/* Notifications Popover Toggle */}
+          <div className={`w-9 h-9 rounded-full flex items-center justify-center z-10 transition-colors ${!darkMode ? "opacity-0" : "text-[#64748B]"}`}>
+            <Sun className="w-4 h-4" />
+          </div>
+
+          <div className={`w-9 h-9 rounded-full flex items-center justify-center z-10 transition-colors ${darkMode ? "opacity-0" : "text-[#94A3B8]"}`}>
+            <Moon className="w-4 h-4" />
+          </div>
+        </button>
+
+        {/* Database Sync Refresh Pill */}
+        <button
+          onClick={onRefresh}
+          disabled={isRefreshing}
+          title="Refresh database records"
+          className={`h-12 px-3 sm:px-4 rounded-full border flex items-center gap-2 text-xs font-semibold transition cursor-pointer disabled:opacity-50 ${
+            darkMode
+              ? "bg-[#131926] border-[#222B3D] text-[#E2E8F0] hover:border-[#035BE3]"
+              : "bg-white border-[#E2E8F0] text-[#475569] hover:border-[#035BE3] hover:text-[#035BE3]"
+          }`}
+        >
+          <RefreshCw className={`w-4 h-4 ${isRefreshing ? "animate-spin text-[#035BE3]" : ""}`} />
+          <span className="hidden sm:inline">Sync DB</span>
+        </button>
+
+        {/* Super Admin Profile Pill */}
         <div className="relative">
           <button
-            onClick={() => {
-              setShowNotifications(!showNotifications);
-              setShowProfileMenu(false);
-            }}
-            className="relative p-2 text-[#5B6F96] hover:text-[#035BE3] hover:bg-[#EFF4FF] rounded-xl border border-gray-200/80 transition-all cursor-pointer"
-            aria-label="View notifications"
+            onClick={() => setShowProfileMenu(!showProfileMenu)}
+            className={`h-12 px-3 sm:px-4 rounded-full border flex items-center gap-2.5 transition cursor-pointer ${
+              darkMode
+                ? "bg-[#131926] border-[#222B3D] text-white hover:border-[#035BE3]"
+                : "bg-white border-[#E2E8F0] text-[#0F172A] hover:border-[#CBD5E1]"
+            }`}
           >
-            <Bell className="w-4 h-4" />
-            <span className="absolute top-1.5 right-1.5 h-2 w-2 rounded-full bg-[#FA8C03] ring-2 ring-white" />
-          </button>
-
-          {showNotifications && (
-            <div className="absolute right-0 mt-2 w-72 rounded-2xl bg-white border border-gray-200 shadow-xl p-3 z-50 text-xs animate-in fade-in zoom-in-95 duration-150">
-              <div className="flex items-center justify-between pb-2 mb-2 border-b border-gray-100">
-                <span className="font-bold text-[#161B29]">Notifications</span>
-                <span className="text-[10px] bg-[#EFF4FF] text-[#035BE3] font-bold px-2 py-0.5 rounded-full">
-                  1 New
-                </span>
-              </div>
-              <div className="p-2.5 rounded-xl bg-gray-50 flex items-start gap-2.5">
-                <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-semibold text-gray-800">MySQL DB Connected</p>
-                  <p className="text-[11px] text-gray-500 mt-0.5">
-                    Tables synced: users, admins.
-                  </p>
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Admin Profile Dropdown */}
-        <div className="relative">
-          <button
-            onClick={() => {
-              setShowProfileMenu(!showProfileMenu);
-              setShowNotifications(false);
-            }}
-            className="flex items-center gap-2.5 p-1.5 sm:px-3 sm:py-1.5 rounded-xl border border-gray-200/80 hover:border-[#035BE3]/30 bg-white hover:bg-gray-50 transition-all cursor-pointer"
-          >
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-tr from-[#035BE3] to-[#4379F2] text-white flex items-center justify-center font-bold text-xs shadow-xs">
-              <Shield className="w-3.5 h-3.5" />
+            <div className="w-7 h-7 rounded-full bg-[#035BE3] text-white font-bold text-xs flex items-center justify-center shrink-0">
+              {(adminUser?.name || "A")[0]?.toUpperCase()}
             </div>
             <div className="hidden sm:block text-left">
-              <span className="block text-xs font-bold text-[#161B29] leading-tight">
+              <p className="text-xs font-bold leading-tight truncate max-w-[100px]">
                 {adminUser?.name || "Super Admin"}
-              </span>
-              <span className="block text-[10px] text-[#035BE3] font-semibold leading-none mt-0.5">
-                Root Access
-              </span>
+              </p>
+              <p className="text-[10px] font-semibold text-[#035BE3] leading-none mt-0.5">
+                Admin
+              </p>
             </div>
-            <ChevronDown className="w-3.5 h-3.5 text-gray-400 hidden sm:block" />
+            <ChevronDown className="w-3.5 h-3.5 text-[#94A3B8] hidden sm:block" />
           </button>
 
+          {/* Profile Dropdown */}
           {showProfileMenu && (
-            <div className="absolute right-0 mt-2 w-56 rounded-2xl bg-white border border-gray-200 shadow-xl p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
-              <div className="p-3 border-b border-gray-100">
-                <p className="text-xs font-bold text-[#161B29]">
-                  {adminUser?.name || "Super Administrator"}
+            <div
+              className={`absolute right-0 mt-2 w-56 rounded-2xl border p-2 shadow-lg z-50 animate-in fade-in zoom-in-95 duration-100 ${
+                darkMode
+                  ? "bg-[#131926] border-[#222B3D] text-white"
+                  : "bg-white border-[#E2E8F0] text-[#0F172A]"
+              }`}
+            >
+              <div className="p-2 border-b border-inherit mb-1">
+                <p className="text-xs font-bold">
+                  {adminUser?.name || "Super Admin"}
                 </p>
-                <p className="text-[11px] text-[#5B6F96] truncate">
+                <p className="text-[11px] text-[#64748B] truncate">
                   {adminUser?.email || "admin@knowway.com"}
                 </p>
-                <span className="inline-block mt-1.5 text-[10px] font-bold text-[#035BE3] bg-[#EFF4FF] px-2 py-0.5 rounded-full border border-[#035BE3]/20">
-                  Role: Super Admin
-                </span>
               </div>
 
-              <div className="p-1">
-                <button
-                  onClick={handleLogout}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50 rounded-xl transition-colors cursor-pointer text-left"
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span>Logout from Panel</span>
-                </button>
-              </div>
+              <Link
+                to="/"
+                target="_blank"
+                className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-xl text-xs font-medium transition ${
+                  darkMode ? "hover:bg-[#1E2638]" : "hover:bg-[#F8FAFD]"
+                }`}
+              >
+                <ExternalLink className="w-3.5 h-3.5 text-[#64748B]" />
+                <span>Visit Public Site</span>
+              </Link>
+
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-2 px-2.5 py-2 rounded-xl text-xs font-semibold text-red-500 hover:bg-red-500/10 transition cursor-pointer"
+              >
+                <LogOut className="w-3.5 h-3.5" />
+                <span>Sign Out of Admin</span>
+              </button>
             </div>
           )}
         </div>

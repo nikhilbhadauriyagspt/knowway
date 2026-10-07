@@ -54,7 +54,7 @@ export const isAdminAuthenticated = () => {
   return Boolean(getAdminToken());
 };
 
-// User Session
+// Student / User Session
 export const getUserToken = () => {
   try {
     return localStorage.getItem(USER_TOKEN_KEY) || "";
@@ -63,10 +63,20 @@ export const getUserToken = () => {
   }
 };
 
+export const getUserData = () => {
+  try {
+    const raw = localStorage.getItem(USER_DATA_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch {
+    return null;
+  }
+};
+
 export const setUserSession = (token, user) => {
   try {
     if (token) localStorage.setItem(USER_TOKEN_KEY, token);
     if (user) localStorage.setItem(USER_DATA_KEY, JSON.stringify(user));
+    window.dispatchEvent(new Event("knowway_auth_change"));
   } catch (err) {
     console.error("Failed to save user session:", err);
   }
@@ -76,9 +86,14 @@ export const clearUserSession = () => {
   try {
     localStorage.removeItem(USER_TOKEN_KEY);
     localStorage.removeItem(USER_DATA_KEY);
+    window.dispatchEvent(new Event("knowway_auth_change"));
   } catch (err) {
     console.error("Failed to clear user session:", err);
   }
+};
+
+export const isUserAuthenticated = () => {
+  return Boolean(getUserToken());
 };
 
 // ============================================================
@@ -93,139 +108,255 @@ async function apiRequest(endpoint, options = {}) {
     ...(options.headers || {}),
   };
 
-  // Attach admin token if available and not explicitly provided
+  // Attach token if available
   const adminToken = getAdminToken();
+  const userToken = getUserToken();
+
   if (adminToken && !headers.Authorization) {
     headers.Authorization = `Bearer ${adminToken}`;
+  } else if (userToken && !headers.Authorization) {
+    headers.Authorization = `Bearer ${userToken}`;
   }
 
-  const config = {
-    ...options,
-    headers,
-  };
-
   try {
-    const response = await fetch(url, config);
+    const response = await fetch(url, {
+      ...options,
+      headers,
+    });
+
     const data = await response.json().catch(() => ({}));
 
     if (!response.ok) {
-      const error = new Error(
-        data.message || `Request failed with status ${response.status}`
-      );
-      error.status = response.status;
-      error.data = data;
-      throw error;
+      throw new Error(data.message || `Request failed with status ${response.status}`);
     }
 
     return data;
-  } catch (err) {
-    if (err.name === "TypeError" && err.message.includes("fetch")) {
-      const offlineError = new Error(
-        "Unable to connect to backend server. Make sure the backend is running on http://localhost:5000"
-      );
-      offlineError.status = 0;
-      throw offlineError;
-    }
-    throw err;
+  } catch (error) {
+    console.warn(`API Error [${endpoint}]:`, error.message);
+    throw error;
   }
 }
 
 // ============================================================
-// SUPER ADMIN ENDPOINTS
+// USER AUTHENTICATION APIS (WITH EMAIL OTP)
 // ============================================================
 
-/**
- * Super Admin Login
- * @param {Object} credentials - { email, password }
- */
-export const adminLoginApi = async ({ email, password }) => {
-  return apiRequest("/admin/login", {
+export const sendSignupOtpApi = (payload) => {
+  return apiRequest("/auth/send-signup-otp", {
     method: "POST",
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify(payload),
   });
 };
 
-/**
- * Get Current Super Admin Profile
- */
-export const getAdminProfileApi = async () => {
-  return apiRequest("/admin/me", {
-    method: "GET",
-  });
-};
-
-/**
- * Get Dashboard Stats & Metrics
- */
-export const getAdminStatsApi = async () => {
-  return apiRequest("/admin/stats", {
-    method: "GET",
-  });
-};
-
-/**
- * Get All Registered Users (Students)
- */
-export const getAllUsersApi = async () => {
-  return apiRequest("/admin/users", {
-    method: "GET",
-  });
-};
-
-/**
- * Delete a User by ID
- * @param {number|string} userId
- */
-export const deleteUserApi = async (userId) => {
-  return apiRequest(`/admin/users/${userId}`, {
-    method: "DELETE",
-  });
-};
-
-// ============================================================
-// STUDENT / USER AUTH ENDPOINTS
-// ============================================================
-
-/**
- * User Registration (Signup)
- * @param {Object} userData - { name, phone, email, address, password, referralCode }
- */
-export const userRegisterApi = async (userData) => {
+export const registerUserApi = (userData) => {
   return apiRequest("/auth/register", {
     method: "POST",
     body: JSON.stringify(userData),
   });
 };
 
-/**
- * User Login
- * @param {Object} credentials - { email, password }
- */
-export const userLoginApi = async ({ email, password }) => {
+export const loginUserApi = (credentials) => {
   return apiRequest("/auth/login", {
     method: "POST",
-    body: JSON.stringify({ email, password }),
+    body: JSON.stringify(credentials),
   });
 };
 
-// Default export containing all APIs and helpers
-const api = {
-  BASE_URL: API_BASE_URL,
-  getAdminToken,
-  getAdminUser,
-  setAdminSession,
-  clearAdminSession,
-  isAdminAuthenticated,
-  getUserToken,
-  setUserSession,
-  clearUserSession,
-  adminLoginApi,
-  getAdminProfileApi,
-  getAdminStatsApi,
-  getAllUsersApi,
-  deleteUserApi,
-  userRegisterApi,
-  userLoginApi,
+export const sendForgotPasswordOtpApi = (payload) => {
+  return apiRequest("/auth/forgot-password-otp", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
 };
 
-export default api;
+export const resetPasswordApi = (payload) => {
+  return apiRequest("/auth/reset-password", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+};
+
+export const getUserProfileApi = () => {
+  return apiRequest("/auth/me");
+};
+
+// ============================================================
+// SUPER ADMIN AUTH & DASHBOARD APIS
+// ============================================================
+
+export const adminLoginApi = (credentials) => {
+  return apiRequest("/admin/login", {
+    method: "POST",
+    body: JSON.stringify(credentials),
+  });
+};
+
+export const getAdminProfileApi = () => {
+  return apiRequest("/admin/me");
+};
+
+export const getAdminStatsApi = () => {
+  return apiRequest("/admin/stats");
+};
+
+export const getAllUsersApi = () => {
+  return apiRequest("/admin/users");
+};
+
+export const deleteUserApi = (id) => {
+  return apiRequest(`/admin/users/${id}`, {
+    method: "DELETE",
+  });
+};
+
+// ============================================================
+// MENTORS APIS
+// ============================================================
+
+export const getMentorsApi = () => {
+  return apiRequest("/admin/mentors");
+};
+
+export const createMentorApi = (mentorData) => {
+  return apiRequest("/admin/mentors", {
+    method: "POST",
+    body: JSON.stringify(mentorData),
+  });
+};
+
+export const deleteMentorApi = (id) => {
+  return apiRequest(`/admin/mentors/${id}`, {
+    method: "DELETE",
+  });
+};
+
+// ============================================================
+// COURSES APIS
+// ============================================================
+
+export const getCoursesApi = () => {
+  return apiRequest("/admin/courses");
+};
+
+export const getCourseByIdApi = (id) => {
+  return apiRequest(`/admin/courses/${id}`);
+};
+
+export const createCourseApi = (courseData) => {
+  return apiRequest("/admin/courses", {
+    method: "POST",
+    body: JSON.stringify(courseData),
+  });
+};
+
+export const updateCourseApi = (id, courseData) => {
+  return apiRequest(`/admin/courses/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(courseData),
+  });
+};
+
+export const deleteCourseApi = (id) => {
+  return apiRequest(`/admin/courses/${id}`, {
+    method: "DELETE",
+  });
+};
+
+// ============================================================
+// SYSTEM SETTINGS & NODEMAILER / CLOUDINARY
+// ============================================================
+
+export const getSystemSettingsApi = () => {
+  return apiRequest("/admin/settings");
+};
+
+export const saveSystemSettingsApi = (settings) => {
+  return apiRequest("/admin/settings", {
+    method: "POST",
+    body: JSON.stringify({ settings }),
+  });
+};
+
+export const testSmtpApi = (smtpData) => {
+  return apiRequest("/admin/settings/test-smtp", {
+    method: "POST",
+    body: JSON.stringify(smtpData),
+  });
+};
+
+// ============================================================
+// DIRECT CLOUDINARY FILE UPLOADS
+// ============================================================
+
+export const uploadImageApi = async (file, folder = "knowway_images") => {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("folder", folder);
+
+  const token = getAdminToken();
+  const headers = {};
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${API_BASE_URL}/admin/upload/image`, {
+    method: "POST",
+    headers,
+    body: formData,
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to upload image");
+  }
+  return data;
+};
+
+export const uploadVideoApi = async (file, folder = "knowway_courses/lectures") => {
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("folder", folder);
+
+  const token = getAdminToken();
+  const headers = {};
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${API_BASE_URL}/admin/upload/video`, {
+    method: "POST",
+    headers,
+    body: formData,
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to upload video");
+  }
+  return data;
+};
+
+// ============================================================
+// COURSE QUIZ & CERTIFICATES API
+// ============================================================
+
+export const getCourseQuizApi = (courseId) => {
+  return apiRequest(`/auth/courses/${courseId}/quiz`);
+};
+
+export const submitCourseQuizApi = (courseId, answers, studentName) => {
+  return apiRequest(`/auth/courses/${courseId}/quiz/submit`, {
+    method: "POST",
+    body: JSON.stringify({ answers, student_name: studentName }),
+  });
+};
+
+export const getMyCertificatesApi = () => {
+  return apiRequest("/auth/my-certificates");
+};
+
+export const getCertificateByNumberApi = (certificateNo) => {
+  return apiRequest(`/auth/certificates/${certificateNo}`);
+};
+
+
