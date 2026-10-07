@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import {
   ArrowLeft,
   ArrowRight,
@@ -34,6 +34,8 @@ import AdminHeader from "./components/AdminHeader";
 import {
   getMentorsApi,
   createCourseApi,
+  updateCourseApi,
+  getCourseByIdApi,
   getSystemSettingsApi,
   uploadImageApi,
   uploadVideoApi,
@@ -43,6 +45,8 @@ import {
 
 export default function CreateCoursePage() {
   const navigate = useNavigate();
+  const { id } = useParams();
+  const isEditMode = Boolean(id);
 
   // Layout & Theme State
   const [darkMode, setDarkMode] = useState(false);
@@ -86,6 +90,22 @@ export default function CreateCoursePage() {
     "Calligraphy & Art",
     "Spoken English & Communication",
   ];
+
+  const [categoryList, setCategoryList] = useState(availableCategories);
+  const [showCustomCategoryInput, setShowCustomCategoryInput] = useState(false);
+  const [customCategoryText, setCustomCategoryText] = useState("");
+
+  const handleAddCustomCategory = () => {
+    const trimmed = customCategoryText.trim();
+    if (!trimmed) return;
+    if (!categoryList.includes(trimmed)) {
+      setCategoryList((prev) => [...prev, trimmed]);
+    }
+    setCourseData((prev) => ({ ...prev, category: trimmed }));
+    setCustomCategoryText("");
+    setShowCustomCategoryInput(false);
+    showToast(`Added and selected "${trimmed}" category!`);
+  };
 
   const availableLanguages = [
     "Hindi",
@@ -194,6 +214,88 @@ export default function CreateCoursePage() {
     },
   ]);
 
+  // ========================================================
+  // QUIZ QUESTIONS FOR ACCREDITED CERTIFICATION STATE
+  // ========================================================
+  const [quizQuestions, setQuizQuestions] = useState([
+    {
+      id: "q-1",
+      question: "What is the primary objective of this course curriculum?",
+      option_a: "To master practical workflows and real-world execution",
+      option_b: "To memorize theory without implementation",
+      option_c: "To avoid software tools and setups",
+      option_d: "To skip portfolio building",
+      correct_option: "A",
+    },
+    {
+      id: "q-2",
+      question: "Which habit produces the fastest client results and skill monetization?",
+      option_a: "Building a verified portfolio and structured outreach",
+      option_b: "Waiting without taking action",
+      option_c: "Random guesswork",
+      option_d: "Avoiding mentor feedback",
+      correct_option: "A",
+    },
+    {
+      id: "q-3",
+      question: "Why is continuous optimization critical in this domain?",
+      option_a: "To maintain competitive edge and improve ROI",
+      option_b: "It is not required once course finishes",
+      option_c: "To create duplicate files",
+      option_d: "To reset settings every day",
+      correct_option: "A",
+    },
+    {
+      id: "q-4",
+      question: "What is the primary indicator of high-quality deliverable output?",
+      option_a: "Consistency, testing, and business impact",
+      option_b: "Random font colors",
+      option_c: "Ignoring client instructions",
+      option_d: "Skipping final review",
+      correct_option: "A",
+    },
+    {
+      id: "q-5",
+      question: "What is the key takeaway of KnowWay hands-on training?",
+      option_a: "Practical execution over passive watching",
+      option_b: "Never asking mentors for clarification",
+      option_c: "Skipping final assessments",
+      option_d: "Avoiding practice tasks",
+      correct_option: "A",
+    },
+  ]);
+
+  const handleAddQuizQuestion = () => {
+    setQuizQuestions((prev) => [
+      ...prev,
+      {
+        id: `q-${Date.now()}`,
+        question: "",
+        option_a: "",
+        option_b: "",
+        option_c: "",
+        option_d: "",
+        correct_option: "A",
+      },
+    ]);
+  };
+
+  const handleRemoveQuizQuestion = (qIdx) => {
+    if (quizQuestions.length <= 1) {
+      showToast("Course must have at least 1 quiz question for certification", "error");
+      return;
+    }
+    setQuizQuestions((prev) => prev.filter((_, idx) => idx !== qIdx));
+  };
+
+  const handleUpdateQuizQuestion = (qIdx, field, value) => {
+    setQuizQuestions((prev) => {
+      const updated = [...prev];
+      updated[qIdx][field] = value;
+      return updated;
+    });
+  };
+
   // Toast Helper
   const showToast = (message, type = "success") => {
     setNotificationMsg({ message, type });
@@ -202,7 +304,7 @@ export default function CreateCoursePage() {
     }, 4000);
   };
 
-  // Check auth & fetch initial mentors & settings
+  // Check auth & fetch initial mentors, settings, and existing course if edit mode
   useEffect(() => {
     if (!isAdminAuthenticated()) {
       navigate("/admin/login", { replace: true });
@@ -218,7 +320,7 @@ export default function CreateCoursePage() {
 
         if (mentorsRes.status === "fulfilled" && mentorsRes.value?.mentors) {
           setMentorsList(mentorsRes.value.mentors);
-          if (mentorsRes.value.mentors.length > 0) {
+          if (!isEditMode && mentorsRes.value.mentors.length > 0) {
             setCourseData((prev) => ({
               ...prev,
               mentor_id: prev.mentor_id || String(mentorsRes.value.mentors[0].id),
@@ -231,6 +333,80 @@ export default function CreateCoursePage() {
             cloud_name: settingsRes.value.settings.cloudinary_cloud_name || "",
           });
         }
+
+        // If in Edit Mode, fetch and populate course data
+        if (isEditMode) {
+          try {
+            const courseRes = await getCourseByIdApi(id);
+            if (courseRes?.success && courseRes.course) {
+              const c = courseRes.course;
+              if (c.category) {
+                setCategoryList((prev) => (prev.includes(c.category) ? prev : [...prev, c.category]));
+              }
+              setCourseData({
+                title: c.title || "",
+                mentor_id: c.mentor_id ? String(c.mentor_id) : "",
+                category: c.category || "Meta Ads",
+                selectedLanguages: c.languages
+                  ? c.languages.split(",").map((s) => s.trim())
+                  : ["Hindi"],
+                duration: c.duration || "2.5 Hours",
+                regular_price: String(c.regular_price || "2999"),
+                promo_price: String(c.promo_price || "499"),
+                promo_code: c.promo_code || "KNOWWAY50",
+                thumbnail_url: c.thumbnail_url || "",
+                description: c.description || "",
+                what_you_will_learn:
+                  Array.isArray(c.what_you_will_learn_parsed) && c.what_you_will_learn_parsed.length > 0
+                    ? c.what_you_will_learn_parsed
+                    : ["", "", ""],
+                software_required: c.software_required || "",
+                certificate_enabled: true,
+              });
+
+              if (c.lectures && c.lectures.length > 0) {
+                const sectionMap = {};
+                c.lectures.forEach((lec, idx) => {
+                  const secName = lec.section_name || "Module 1";
+                  if (!sectionMap[secName]) {
+                    sectionMap[secName] = {
+                      id: `sec-${idx + 1}`,
+                      section_name: secName,
+                      lectures: [],
+                    };
+                  }
+                  sectionMap[secName].lectures.push({
+                    id: lec.id || `lec-${idx + 1}`,
+                    title: lec.title || `Lecture ${idx + 1}`,
+                    duration: lec.duration || "10m",
+                    video_url: lec.video_url || "",
+                    is_free_preview: Boolean(lec.is_free_preview),
+                    mode: "file",
+                  });
+                });
+                setSections(Object.values(sectionMap));
+              }
+
+              // Load existing quiz questions if present
+              if (c.quiz_questions && c.quiz_questions.length > 0) {
+                setQuizQuestions(
+                  c.quiz_questions.map((q, idx) => ({
+                    id: q.id || `q-${idx + 1}`,
+                    question: q.question || "",
+                    option_a: q.option_a || "",
+                    option_b: q.option_b || "",
+                    option_c: q.option_c || "",
+                    option_d: q.option_d || "",
+                    correct_option: (q.correct_option || "A").toUpperCase(),
+                  }))
+                );
+              }
+            }
+          } catch (cErr) {
+            console.error("Failed to load course for editing:", cErr);
+            showToast("Failed to load course details for editing", "error");
+          }
+        }
       } catch (err) {
         console.error("Failed to load course studio context", err);
       } finally {
@@ -239,7 +415,7 @@ export default function CreateCoursePage() {
     };
 
     loadInitialData();
-  }, [navigate]);
+  }, [navigate, id, isEditMode]);
 
   // Handle Thumbnail File Upload
   const handleThumbnailFileUpload = async (e) => {
@@ -451,8 +627,14 @@ export default function CreateCoursePage() {
         showToast("Please add at least 1 lecture", "error");
         return;
       }
+    } else if (currentStep === 4) {
+      const validQuestions = quizQuestions.filter((q) => q.question.trim());
+      if (validQuestions.length === 0) {
+        showToast("Please provide at least 1 quiz question for certification", "error");
+        return;
+      }
     }
-    setCurrentStep((prev) => Math.min(prev + 1, 4));
+    setCurrentStep((prev) => Math.min(prev + 1, 5));
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
@@ -488,6 +670,17 @@ export default function CreateCoursePage() {
         });
       });
 
+      const validQuizQuestions = quizQuestions
+        .filter((q) => q.question.trim())
+        .map((q) => ({
+          question: q.question.trim(),
+          option_a: q.option_a.trim(),
+          option_b: q.option_b.trim(),
+          option_c: q.option_c.trim(),
+          option_d: q.option_d.trim(),
+          correct_option: (q.correct_option || "A").toUpperCase(),
+        }));
+
       const payload = {
         title: courseData.title,
         mentor_id: courseData.mentor_id ? Number(courseData.mentor_id) : null,
@@ -505,17 +698,20 @@ export default function CreateCoursePage() {
         what_you_will_learn: courseData.what_you_will_learn.filter((item) => item.trim() !== ""),
         software_required: courseData.software_required,
         lectures: flattenedLectures,
+        quiz_questions: validQuizQuestions,
       };
 
-      const res = await createCourseApi(payload);
+      const res = isEditMode
+        ? await updateCourseApi(id, payload)
+        : await createCourseApi(payload);
 
       if (res?.success) {
-        showToast("🎉 Course published successfully!");
+        showToast(isEditMode ? "🎉 Course updated successfully!" : "🎉 Course published successfully!");
         setTimeout(() => {
           navigate("/admin/dashboard");
         }, 1200);
       } else {
-        showToast(res?.message || "Failed to publish course", "error");
+        showToast(res?.message || (isEditMode ? "Failed to update course" : "Failed to publish course"), "error");
       }
     } catch (err) {
       showToast(err.message || "An unexpected error occurred", "error");
@@ -528,7 +724,8 @@ export default function CreateCoursePage() {
     { number: 1, title: "Course Info", subtitle: "Title & Details", icon: BookOpen },
     { number: 2, title: "Mentor & Objectives", subtitle: "Instructor & Learnings", icon: GraduationCap },
     { number: 3, title: "Curriculum & Videos", subtitle: "Sections & Parts", icon: Video },
-    { number: 4, title: "Review & Publish", subtitle: "Final Preview", icon: Sparkles },
+    { number: 4, title: "Certificate Quiz", subtitle: "MCQ Assessment", icon: Award },
+    { number: 5, title: "Review & Publish", subtitle: isEditMode ? "Save Changes" : "Final Preview", icon: Sparkles },
   ];
 
   return (
@@ -609,13 +806,17 @@ export default function CreateCoursePage() {
               </Link>
               <div>
                 <div className="flex items-center gap-2">
-                  <h1 className="text-base sm:text-lg font-bold tracking-tight">Course Creation Studio</h1>
+                  <h1 className="text-base sm:text-lg font-bold tracking-tight">
+                    {isEditMode ? "Edit Course Studio" : "Course Creation Studio"}
+                  </h1>
                   <span className="text-[11px] font-bold text-[#035BE3] bg-[#035BE3]/10 px-2.5 py-0.5 rounded-full border border-[#035BE3]/20">
-                    Step {currentStep} of 4
+                    Step {currentStep} of 5
                   </span>
                 </div>
                 <p className={`text-xs mt-0.5 ${darkMode ? "text-[#94A3B8]" : "text-[#64748B]"}`}>
-                  Upload video lessons & thumbnails directly to Cloudinary or paste direct links.
+                  {isEditMode
+                    ? "Edit full curriculum, pricing, video modules, quiz questions and mentor details."
+                    : "Upload video lessons, configure certification quiz & publish directly."}
                 </p>
               </div>
             </div>
@@ -635,14 +836,14 @@ export default function CreateCoursePage() {
           </div>
 
           {/* ======================================================== */}
-          {/* STEPPER PROGRESS INDICATOR (4 STEPS FULL ROUNDED PILLS) */}
+          {/* STEPPER PROGRESS INDICATOR (5 STEPS FULL ROUNDED PILLS) */}
           {/* ======================================================== */}
           <div
             className={`rounded-full p-2 sm:p-2.5 border ${
               darkMode ? "bg-[#131926] border-[#222B3D]" : "bg-white border-[#E2E8F0]"
             }`}
           >
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-2 sm:gap-3">
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 sm:gap-3">
               {wizardSteps.map((step) => {
                 const Icon = step.icon;
                 const isCompleted = currentStep > step.number;
@@ -741,13 +942,60 @@ export default function CreateCoursePage() {
                       />
                     </div>
 
-                    {/* Category Selector */}
-                    <div>
-                      <label className="block text-xs font-bold mb-2">
-                        Select Category <span className="text-red-500">*</span>
-                      </label>
+                    {/* Category Selector with Custom Category Support */}
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <label className="block text-xs font-bold">
+                          Select Category <span className="text-red-500">*</span>
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setShowCustomCategoryInput(!showCustomCategoryInput)}
+                          className="text-xs font-bold text-[#035BE3] hover:underline flex items-center gap-1 cursor-pointer"
+                        >
+                          <Plus className="w-3.5 h-3.5" />
+                          <span>{showCustomCategoryInput ? "Hide Custom Category" : "+ Add Custom Category"}</span>
+                        </button>
+                      </div>
+
+                      {/* Custom Category Input Box */}
+                      {showCustomCategoryInput && (
+                        <div
+                          className={`p-3.5 rounded-2xl border flex flex-col sm:flex-row items-stretch sm:items-center gap-2.5 ${
+                            darkMode ? "bg-[#0B0F17] border-[#222B3D]" : "bg-blue-50/70 border-blue-200"
+                          }`}
+                        >
+                          <input
+                            type="text"
+                            placeholder="Type new custom category name (e.g. AI Prompting, VFX, 3D Art)..."
+                            value={customCategoryText}
+                            onChange={(e) => setCustomCategoryText(e.target.value)}
+                            onKeyDown={(e) => {
+                              if (e.key === "Enter") {
+                                e.preventDefault();
+                                handleAddCustomCategory();
+                              }
+                            }}
+                            className={`flex-1 h-10 rounded-xl px-4 text-xs outline-none border ${
+                              darkMode
+                                ? "bg-[#131926] border-[#222B3D] text-white placeholder-gray-500"
+                                : "bg-white border-[#DCE5F5] text-[#0F172A] placeholder-gray-400"
+                            }`}
+                          />
+                          <button
+                            type="button"
+                            onClick={handleAddCustomCategory}
+                            className="h-10 px-5 rounded-xl bg-[#035BE3] hover:bg-[#024bc0] text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs shrink-0"
+                          >
+                            <Plus className="w-3.5 h-3.5" />
+                            <span>Add & Select</span>
+                          </button>
+                        </div>
+                      )}
+
+                      {/* Category Pills */}
                       <div className="flex flex-wrap gap-2">
-                        {availableCategories.map((cat) => {
+                        {categoryList.map((cat) => {
                           const isSelected = courseData.category === cat;
                           return (
                             <button
@@ -756,7 +1004,7 @@ export default function CreateCoursePage() {
                               onClick={() =>
                                 setCourseData({ ...courseData, category: cat })
                               }
-                              className={`h-9 px-4 rounded-full text-xs font-semibold transition cursor-pointer flex items-center justify-center ${
+                              className={`h-9 px-4 rounded-full text-xs font-semibold transition cursor-pointer flex items-center gap-1.5 ${
                                 isSelected
                                   ? "bg-[#035BE3] text-white shadow-xs"
                                   : darkMode
@@ -764,10 +1012,26 @@ export default function CreateCoursePage() {
                                   : "bg-[#F4F6FB] border border-[#E2E8F0] text-[#556377] hover:border-[#035BE3]"
                               }`}
                             >
-                              {cat}
+                              {isSelected && <Check className="w-3.5 h-3.5" />}
+                              <span>{cat}</span>
                             </button>
                           );
                         })}
+                      </div>
+
+                      {/* Selected Category Direct Edit */}
+                      <div className="pt-1">
+                        <span className="text-[11px] font-semibold text-[#64748B]">Active Category Name:</span>
+                        <input
+                          type="text"
+                          required
+                          value={courseData.category}
+                          onChange={(e) => setCourseData({ ...courseData, category: e.target.value })}
+                          placeholder="Category name"
+                          className={`mt-1 w-full h-10 rounded-xl border px-4 text-xs font-bold outline-none ${
+                            darkMode ? "bg-[#0B0F17] border-[#222B3D] text-white" : "bg-[#F8FAFD] border-[#E2E8F0] text-[#0F172A]"
+                          }`}
+                        />
                       </div>
                     </div>
 
@@ -853,69 +1117,96 @@ export default function CreateCoursePage() {
                     {/* ======================================================== */}
                     {/* PRICING CONFIGURATION (REAL PRICE + PROMO PRICE) */}
                     {/* ======================================================== */}
-                    <div className="p-5 rounded-2xl border border-blue-100 dark:border-blue-900/40 bg-blue-50/40 dark:bg-blue-950/20 space-y-3">
-                      <div className="flex items-center gap-2">
-                        <span className="text-xs font-bold text-[#035BE3] uppercase tracking-wider">
-                          Course Pricing & Promo Code
-                        </span>
+                    <div
+                      className={`p-6 rounded-[24px] border space-y-4 shadow-sm transition-colors ${
+                        darkMode
+                          ? "bg-[#131926] border-[#222B3D]"
+                          : "bg-white border-[#DCE5F5]"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between pb-3 border-b border-inherit">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-xl bg-[#035BE3]/10 text-[#035BE3] flex items-center justify-center font-bold">
+                            ₹
+                          </div>
+                          <div>
+                            <h3 className="text-xs font-bold uppercase tracking-wider text-[#035BE3]">
+                              Course Pricing Structure
+                            </h3>
+                            <p className="text-[11px] text-[#64748B] mt-0.5">
+                              Specify standard real price and special promocode offer price
+                            </p>
+                          </div>
+                        </div>
                       </div>
 
-                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                        <div>
-                          <label className="block text-[11px] font-bold mb-1 text-gray-700 dark:text-gray-300">
-                            Real / Regular Price (₹) <span className="text-red-500">*</span>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        {/* Real / Regular Price */}
+                        <div
+                          className={`p-4 rounded-2xl border ${
+                            darkMode
+                              ? "bg-[#0B0F17] border-[#222B3D]"
+                              : "bg-[#F8FAFD] border-[#E2E8F0]"
+                          }`}
+                        >
+                          <label className="block text-xs font-bold mb-1.5 text-gray-700 dark:text-gray-300">
+                            Real / Regular Price <span className="text-red-500">*</span>
                           </label>
-                          <input
-                            type="number"
-                            placeholder="2999"
-                            value={courseData.regular_price}
-                            onChange={(e) =>
-                              setCourseData({ ...courseData, regular_price: e.target.value })
-                            }
-                            className={`w-full h-11 rounded-full border px-4 text-xs font-bold outline-none focus:border-[#035BE3] ${
-                              darkMode
-                                ? "bg-[#0B0F17] border-[#222B3D] text-white"
-                                : "bg-white border-[#E2E8F0]"
-                            }`}
-                          />
+                          <p className="text-[10.5px] text-[#94A3B8] mb-2">Original crossed-out price</p>
+                          <div className="relative">
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 font-bold text-xs text-gray-400">
+                              ₹
+                            </span>
+                            <input
+                              type="number"
+                              min="0"
+                              step="1"
+                              placeholder="2999"
+                              value={courseData.regular_price}
+                              onChange={(e) =>
+                                setCourseData({ ...courseData, regular_price: e.target.value })
+                              }
+                              className={`w-full h-11 rounded-xl border pl-8 pr-4 text-xs font-bold outline-none focus:border-[#035BE3] shadow-xs ${
+                                darkMode
+                                  ? "bg-[#131926] border-[#2B374E] text-white"
+                                  : "bg-white border-[#DCE5F5] text-[#0F172A]"
+                              }`}
+                            />
+                          </div>
                         </div>
 
-                        <div>
-                          <label className="block text-[11px] font-bold mb-1 text-[#035BE3] dark:text-blue-400">
-                            With Promocode Price (₹) <span className="text-red-500">*</span>
+                        {/* With Promocode Price */}
+                        <div
+                          className={`p-4 rounded-2xl border ${
+                            darkMode
+                              ? "bg-[#0B0F17] border-emerald-900/40"
+                              : "bg-emerald-50/50 border-emerald-200"
+                          }`}
+                        >
+                          <label className="block text-xs font-bold mb-1.5 text-emerald-700 dark:text-emerald-400">
+                            With Promocode Price <span className="text-red-500">*</span>
                           </label>
-                          <input
-                            type="number"
-                            placeholder="499"
-                            value={courseData.promo_price}
-                            onChange={(e) =>
-                              setCourseData({ ...courseData, promo_price: e.target.value })
-                            }
-                            className={`w-full h-11 rounded-full border px-4 text-xs font-bold outline-none focus:border-[#035BE3] border-blue-300 ${
-                              darkMode
-                                ? "bg-[#0B0F17] text-emerald-400"
-                                : "bg-white text-[#035BE3]"
-                            }`}
-                          />
-                        </div>
-
-                        <div>
-                          <label className="block text-[11px] font-bold mb-1 text-gray-700 dark:text-gray-300">
-                            Promo Code Tag
-                          </label>
-                          <input
-                            type="text"
-                            placeholder="KNOWWAY50"
-                            value={courseData.promo_code}
-                            onChange={(e) =>
-                              setCourseData({ ...courseData, promo_code: e.target.value.toUpperCase() })
-                            }
-                            className={`w-full h-11 rounded-full border px-4 text-xs font-mono font-bold uppercase outline-none focus:border-[#035BE3] ${
-                              darkMode
-                                ? "bg-[#0B0F17] border-[#222B3D] text-amber-400"
-                                : "bg-white border-[#E2E8F0] text-amber-600"
-                            }`}
-                          />
+                          <p className="text-[10.5px] text-emerald-600/80 dark:text-emerald-500/80 mb-2">Discounted active price</p>
+                          <div className="relative">
+                            <span className="absolute left-4 top-1/2 -translate-y-1/2 font-extrabold text-xs text-emerald-600 dark:text-emerald-400">
+                              ₹
+                            </span>
+                            <input
+                              type="number"
+                              min="0"
+                              step="1"
+                              placeholder="499"
+                              value={courseData.promo_price}
+                              onChange={(e) =>
+                                setCourseData({ ...courseData, promo_price: e.target.value })
+                              }
+                              className={`w-full h-11 rounded-xl border pl-8 pr-4 text-xs font-extrabold outline-none focus:border-[#035BE3] shadow-xs ${
+                                darkMode
+                                  ? "bg-[#131926] border-emerald-800/60 text-emerald-400"
+                                  : "bg-white border-emerald-300 text-emerald-700"
+                              }`}
+                            />
+                          </div>
                         </div>
                       </div>
                     </div>
@@ -1541,7 +1832,7 @@ export default function CreateCoursePage() {
           )}
 
           {/* ======================================================== */}
-          {/* STEP 4: REVIEW & PUBLISH */}
+          {/* STEP 4: CERTIFICATE ASSESSMENT & MCQ QUIZ BUILDER */}
           {/* ======================================================== */}
           {currentStep === 4 && (
             <div className="space-y-6">
@@ -1550,14 +1841,243 @@ export default function CreateCoursePage() {
                   darkMode ? "bg-[#131926] border-[#222B3D]" : "bg-white border-[#E2E8F0]"
                 }`}
               >
+                {/* Section Header */}
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-6 border-b border-inherit">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-amber-500/10 text-amber-600 flex items-center justify-center font-bold shrink-0">
+                      <Award className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h2 className="text-base font-bold">Step 4: Certificate Assessment & MCQ Quiz</h2>
+                      <p className={`text-xs mt-0.5 ${darkMode ? "text-[#94A3B8]" : "text-[#64748B]"}`}>
+                        Create multiple-choice questions for the end-of-course assessment. Students must pass this test to claim their accredited certificate.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs font-bold text-amber-600 bg-amber-50 dark:bg-amber-950/30 px-3.5 py-1.5 rounded-full border border-amber-200 dark:border-amber-800">
+                      {quizQuestions.length} Questions Configured
+                    </span>
+                    <button
+                      type="button"
+                      onClick={handleAddQuizQuestion}
+                      className="h-11 px-5 bg-[#035BE3] hover:bg-[#024bc0] text-white text-xs font-semibold rounded-full transition flex items-center gap-1.5 cursor-pointer shadow-sm"
+                    >
+                      <Plus className="w-4 h-4" />
+                      <span>Add Question</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Quiz Questions List */}
+                <div className="space-y-6 mt-6">
+                  {quizQuestions.map((q, qIdx) => (
+                    <div
+                      key={q.id || qIdx}
+                      className={`rounded-[28px] border p-6 transition-colors space-y-4 ${
+                        darkMode
+                          ? "bg-[#0B0F17] border-[#222B3D]"
+                          : "bg-[#F8FAFD] border-[#E2E8F0]"
+                      }`}
+                    >
+                      {/* Card Header: Question Number & Delete */}
+                      <div className="flex items-center justify-between gap-3 pb-3 border-b border-inherit">
+                        <div className="flex items-center gap-2.5">
+                          <span className="h-8 px-3.5 rounded-full bg-[#035BE3]/10 text-[#035BE3] text-xs font-bold flex items-center justify-center">
+                            Question #{qIdx + 1}
+                          </span>
+                          <span className={`text-xs font-medium ${darkMode ? "text-[#94A3B8]" : "text-[#64748B]"}`}>
+                            Multiple Choice Question
+                          </span>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveQuizQuestion(qIdx)}
+                          className="w-9 h-9 rounded-full flex items-center justify-center text-[#94A3B8] hover:text-red-500 hover:bg-red-500/10 transition cursor-pointer"
+                          title="Delete Question"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+
+                      {/* Question Text */}
+                      <div className="space-y-1.5">
+                        <label className="text-xs font-semibold block">
+                          Question Prompt <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          type="text"
+                          value={q.question}
+                          onChange={(e) => handleUpdateQuizQuestion(qIdx, "question", e.target.value)}
+                          placeholder="e.g. What is the recommended strategy for Meta Ads scaling?"
+                          className={`w-full h-12 rounded-full border px-5 text-xs outline-none focus:border-[#035BE3] font-medium ${
+                            darkMode
+                              ? "bg-[#131926] border-[#222B3D] text-white"
+                              : "bg-white border-[#E2E8F0]"
+                          }`}
+                        />
+                      </div>
+
+                      {/* 4 Options Grid (2x2) */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 pt-1">
+                        {/* Option A */}
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-bold text-[#64748B] flex items-center gap-1.5">
+                            <span className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-[10px] flex items-center justify-center font-bold">
+                              A
+                            </span>
+                            Option A
+                          </label>
+                          <input
+                            type="text"
+                            value={q.option_a}
+                            onChange={(e) => handleUpdateQuizQuestion(qIdx, "option_a", e.target.value)}
+                            placeholder="Enter option A"
+                            className={`w-full h-11 rounded-full border px-4 text-xs outline-none focus:border-[#035BE3] ${
+                              darkMode
+                                ? "bg-[#131926] border-[#222B3D] text-white"
+                                : "bg-white border-[#E2E8F0]"
+                            }`}
+                          />
+                        </div>
+
+                        {/* Option B */}
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-bold text-[#64748B] flex items-center gap-1.5">
+                            <span className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-[10px] flex items-center justify-center font-bold">
+                              B
+                            </span>
+                            Option B
+                          </label>
+                          <input
+                            type="text"
+                            value={q.option_b}
+                            onChange={(e) => handleUpdateQuizQuestion(qIdx, "option_b", e.target.value)}
+                            placeholder="Enter option B"
+                            className={`w-full h-11 rounded-full border px-4 text-xs outline-none focus:border-[#035BE3] ${
+                              darkMode
+                                ? "bg-[#131926] border-[#222B3D] text-white"
+                                : "bg-white border-[#E2E8F0]"
+                            }`}
+                          />
+                        </div>
+
+                        {/* Option C */}
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-bold text-[#64748B] flex items-center gap-1.5">
+                            <span className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-[10px] flex items-center justify-center font-bold">
+                              C
+                            </span>
+                            Option C
+                          </label>
+                          <input
+                            type="text"
+                            value={q.option_c}
+                            onChange={(e) => handleUpdateQuizQuestion(qIdx, "option_c", e.target.value)}
+                            placeholder="Enter option C"
+                            className={`w-full h-11 rounded-full border px-4 text-xs outline-none focus:border-[#035BE3] ${
+                              darkMode
+                                ? "bg-[#131926] border-[#222B3D] text-white"
+                                : "bg-white border-[#E2E8F0]"
+                            }`}
+                          />
+                        </div>
+
+                        {/* Option D */}
+                        <div className="space-y-1">
+                          <label className="text-[11px] font-bold text-[#64748B] flex items-center gap-1.5">
+                            <span className="w-5 h-5 rounded-full bg-blue-100 dark:bg-blue-900/40 text-blue-600 dark:text-blue-400 text-[10px] flex items-center justify-center font-bold">
+                              D
+                            </span>
+                            Option D
+                          </label>
+                          <input
+                            type="text"
+                            value={q.option_d}
+                            onChange={(e) => handleUpdateQuizQuestion(qIdx, "option_d", e.target.value)}
+                            placeholder="Enter option D"
+                            className={`w-full h-11 rounded-full border px-4 text-xs outline-none focus:border-[#035BE3] ${
+                              darkMode
+                                ? "bg-[#131926] border-[#222B3D] text-white"
+                                : "bg-white border-[#E2E8F0]"
+                            }`}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Correct Option Selector */}
+                      <div className="pt-2 border-t border-inherit/60 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                        <span className="text-xs font-semibold text-[#64748B] flex items-center gap-1.5">
+                          <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0" />
+                          Correct Option (Answer Key):
+                        </span>
+
+                        <div className="flex items-center gap-2">
+                          {["A", "B", "C", "D"].map((optKey) => {
+                            const isSelected = (q.correct_option || "A").toUpperCase() === optKey;
+                            return (
+                              <button
+                                key={optKey}
+                                type="button"
+                                onClick={() => handleUpdateQuizQuestion(qIdx, "correct_option", optKey)}
+                                className={`h-9 px-4 rounded-full text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                                  isSelected
+                                    ? "bg-emerald-600 text-white shadow-sm ring-2 ring-emerald-500/30"
+                                    : darkMode
+                                    ? "bg-[#131926] border border-[#222B3D] text-[#94A3B8] hover:text-white"
+                                    : "bg-white border border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A]"
+                                }`}
+                              >
+                                <span>Option {optKey}</span>
+                                {isSelected && <Check className="w-3.5 h-3.5 ml-0.5" />}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Add More Questions bottom button */}
+                <div className="mt-6 pt-4 border-t border-inherit flex justify-center">
+                  <button
+                    type="button"
+                    onClick={handleAddQuizQuestion}
+                    className={`h-11 px-6 rounded-full border border-dashed text-xs font-semibold transition flex items-center gap-2 cursor-pointer ${
+                      darkMode
+                        ? "border-[#2B374E] text-[#94A3B8] hover:text-white hover:border-[#035BE3]"
+                        : "border-[#CBD5E1] text-[#64748B] hover:text-[#035BE3] hover:border-[#035BE3]"
+                    }`}
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Add Another Question</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* ======================================================== */}
+          {/* STEP 5: REVIEW & PUBLISH */}
+          {/* ======================================================== */}
+          {currentStep === 5 && (
+            <div className="space-y-6">
+              <div
+                className={`rounded-[32px] p-6 sm:p-8 border ${
+                  darkMode ? "bg-[#131926] border-[#222B3D]" : "bg-white border-[#E2E8F0]"
+                }`}
+              >
                 <div className="flex items-center gap-3 pb-6 border-b border-inherit">
-                  <div className="w-10 h-10 rounded-full bg-amber-500/10 text-amber-600 flex items-center justify-center font-bold shrink-0">
+                  <div className="w-10 h-10 rounded-full bg-emerald-500/10 text-emerald-600 flex items-center justify-center font-bold shrink-0">
                     <Sparkles className="w-5 h-5" />
                   </div>
                   <div>
-                    <h2 className="text-base font-bold">Step 4: Review Course & Final Publish</h2>
+                    <h2 className="text-base font-bold">Step 5: Review Course & Final Publish</h2>
                     <p className={`text-xs mt-0.5 ${darkMode ? "text-[#94A3B8]" : "text-[#64748B]"}`}>
-                      Verify course details, assigned mentor, and video curriculum before publishing to the live catalog.
+                      Verify course details, assigned mentor, video curriculum, and certification quiz before publishing to the live catalog.
                     </p>
                   </div>
                 </div>
@@ -1590,8 +2110,9 @@ export default function CreateCoursePage() {
                       </p>
 
                       <div className="mt-4 pt-4 border-t border-inherit flex flex-wrap gap-4 text-xs font-semibold text-[#64748B]">
+                        <span>💰 Real: ₹{courseData.regular_price} • Promo: ₹{courseData.promo_price}</span>
                         <span>🛠️ Software: {courseData.software_required || "None required"}</span>
-                        <span>📜 Certificate: {courseData.certificate_enabled ? "Included" : "Disabled"}</span>
+                        <span>📜 Quiz: {quizQuestions.length} Questions</span>
                       </div>
                     </div>
 
@@ -1662,6 +2183,45 @@ export default function CreateCoursePage() {
                         ))}
                       </div>
                     </div>
+
+                    {/* Certificate Assessment Quiz Summary */}
+                    <div
+                      className={`p-6 rounded-[26px] border ${
+                        darkMode ? "bg-[#0B0F17] border-[#222B3D]" : "bg-[#F8FAFD] border-[#E2E8F0]"
+                      }`}
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <h4 className="text-xs font-bold uppercase tracking-wider text-[#64748B]">
+                          Certification Quiz ({quizQuestions.length} Questions)
+                        </h4>
+                        <span className="text-[11px] font-bold text-emerald-600 bg-emerald-50 px-3 py-1 rounded-full border border-emerald-200">
+                          Passing Grade: 60%
+                        </span>
+                      </div>
+
+                      <div className="space-y-3">
+                        {quizQuestions.map((q, qIdx) => (
+                          <div
+                            key={qIdx}
+                            className={`p-3.5 rounded-[18px] border text-xs ${
+                              darkMode ? "bg-[#131926] border-[#222B3D]" : "bg-white border-[#E2E8F0]"
+                            }`}
+                          >
+                            <p className="font-semibold mb-1.5">
+                              {qIdx + 1}. {q.question || "Untitled Question"}
+                            </p>
+                            <div className="flex items-center gap-2 text-[11px] text-[#64748B]">
+                              <span className="font-bold text-emerald-600 bg-emerald-500/10 px-2 py-0.5 rounded-md">
+                                Correct: Option {q.correct_option || "A"}
+                              </span>
+                              <span className="truncate">
+                                • {q[`option_${(q.correct_option || "a").toLowerCase()}`]}
+                              </span>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   </div>
 
                   {/* Right 1 Col: Mentor & Action Card */}
@@ -1704,9 +2264,13 @@ export default function CreateCoursePage() {
                         darkMode ? "bg-[#0B0F17] border-[#222B3D]" : "bg-[#F8FAFD] border-[#E2E8F0]"
                       }`}
                     >
-                      <h4 className="text-sm font-bold">Ready to Launch?</h4>
+                      <h4 className="text-sm font-bold">
+                        {isEditMode ? "Save & Apply Updates" : "Ready to Launch?"}
+                      </h4>
                       <p className="text-xs text-[#64748B]">
-                        Click below to publish this course and make it live in your database.
+                        {isEditMode
+                          ? "Click below to save all modified curriculum, video lectures, quiz questions and pricing."
+                          : "Click below to publish this course and make it live in your database."}
                       </p>
                       <button
                         type="button"
@@ -1715,11 +2279,11 @@ export default function CreateCoursePage() {
                         className="w-full h-12 rounded-full bg-[#035BE3] hover:bg-[#024bc0] text-white font-bold text-xs transition cursor-pointer flex items-center justify-center gap-2 shadow-md shadow-[#035BE3]/20 disabled:opacity-50"
                       >
                         {isSubmitting ? (
-                          <span>Publishing Course...</span>
+                          <span>{isEditMode ? "Saving Changes..." : "Publishing Course..."}</span>
                         ) : (
                           <>
                             <Sparkles className="w-4 h-4" />
-                            <span>Publish Course to KnowWay</span>
+                            <span>{isEditMode ? "Save & Update Course" : "Publish Course to KnowWay"}</span>
                           </>
                         )}
                       </button>
@@ -1753,10 +2317,10 @@ export default function CreateCoursePage() {
             </button>
 
             <div className="text-xs font-semibold text-[#64748B] hidden sm:block">
-              Step {currentStep} of 4: {wizardSteps[currentStep - 1].title}
+              Step {currentStep} of 5: {wizardSteps[currentStep - 1]?.title}
             </div>
 
-            {currentStep < 4 ? (
+            {currentStep < 5 ? (
               <button
                 type="button"
                 onClick={handleNextStep}
@@ -1773,7 +2337,15 @@ export default function CreateCoursePage() {
                 className="h-12 px-8 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold rounded-full transition flex items-center gap-2 cursor-pointer shadow-md shadow-emerald-600/20 disabled:opacity-50"
               >
                 <Check className="w-4 h-4" />
-                <span>{isSubmitting ? "Publishing..." : "Confirm & Publish"}</span>
+                <span>
+                  {isSubmitting
+                    ? isEditMode
+                      ? "Updating..."
+                      : "Publishing..."
+                    : isEditMode
+                    ? "Confirm & Save Changes"
+                    : "Confirm & Publish"}
+                </span>
               </button>
             )}
           </div>

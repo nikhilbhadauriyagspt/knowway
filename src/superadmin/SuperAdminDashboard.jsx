@@ -789,7 +789,7 @@ export default function SuperAdminDashboard() {
                           </div>
                           <div className="text-right">
                             <span className="text-[10px] uppercase font-bold text-emerald-600 dark:text-emerald-400 block">
-                              Code: {course.promo_code || "KNOWWAY50"}
+                              With Promocode
                             </span>
                             <span className="text-sm font-extrabold text-[#035BE3] dark:text-blue-400">
                               ₹{Number(course.promo_price || 499).toLocaleString("en-IN")}
@@ -816,13 +816,13 @@ export default function SuperAdminDashboard() {
                       </span>
 
                       <div className="flex items-center gap-1.5">
-                        <button
-                          onClick={() => setEditingCourse(course)}
+                        <Link
+                          to={`/admin/courses/edit/${course.id}`}
                           className="p-2 text-[#035BE3] hover:bg-[#035BE3]/10 rounded-full transition cursor-pointer"
-                          title="Edit Course & Prices"
+                          title="Edit Course Studio"
                         >
                           <Pencil className="w-4 h-4" />
-                        </button>
+                        </Link>
                         <button
                           onClick={() => setItemToDelete({ type: "course", id: course.id, name: course.title })}
                           className="p-2 text-[#94A3B8] hover:text-red-600 hover:bg-red-500/10 rounded-full transition cursor-pointer"
@@ -1472,184 +1472,7 @@ export default function SuperAdminDashboard() {
         </div>
       )}
 
-      {/* ======================================================== */}
-      {/* EDIT COURSE & PRICING MODAL */}
-      {/* ======================================================== */}
-      {editingCourse && (
-        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
-          <div
-            className={`rounded-[32px] max-w-xl w-full p-6 sm:p-8 border shadow-2xl transition-all my-8 ${
-              darkMode ? "bg-[#131926] border-[#222B3D] text-white" : "bg-white border-[#E2E8F0] text-[#0F172A]"
-            }`}
-          >
-            <div className="flex items-center justify-between pb-4 border-b border-inherit">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-2xl bg-[#035BE3]/10 text-[#035BE3] flex items-center justify-center">
-                  <Pencil className="w-5 h-5" />
-                </div>
-                <div>
-                  <h3 className="text-base font-bold">Edit Course & Dynamic Pricing</h3>
-                  <p className="text-xs text-[#64748B]">Update real price, promocode offer price & course details</p>
-                </div>
-              </div>
-              <button
-                type="button"
-                onClick={() => setEditingCourse(null)}
-                className="p-2 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 transition text-[#94A3B8]"
-              >
-                <X className="w-5 h-5" />
-              </button>
-            </div>
 
-            <form onSubmit={handleSaveCourseEdit} className="mt-6 space-y-4 text-xs">
-              {/* Title */}
-              <div className="space-y-1.5">
-                <label className="font-bold text-xs">Course Title</label>
-                <input
-                  type="text"
-                  required
-                  value={editingCourse.title || ""}
-                  onChange={(e) => setEditingCourse({ ...editingCourse, title: e.target.value })}
-                  className={`w-full rounded-2xl border p-3 outline-none ${
-                    darkMode ? "bg-[#0B0F17] border-[#222B3D] text-white" : "bg-[#F8FAFD] border-[#DCE5F5] text-[#0F172A]"
-                  }`}
-                />
-              </div>
-
-              {/* Category, Language & Duration */}
-              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                <div className="space-y-1.5">
-                  <label className="font-bold text-xs">Category</label>
-                  <input
-                    type="text"
-                    required
-                    value={editingCourse.category || ""}
-                    onChange={(e) => setEditingCourse({ ...editingCourse, category: e.target.value })}
-                    className={`w-full rounded-2xl border p-3 outline-none ${
-                      darkMode ? "bg-[#0B0F17] border-[#222B3D] text-white" : "bg-[#F8FAFD] border-[#DCE5F5] text-[#0F172A]"
-                    }`}
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="font-bold text-xs">Languages</label>
-                  <input
-                    type="text"
-                    required
-                    value={editingCourse.languages || ""}
-                    onChange={(e) => setEditingCourse({ ...editingCourse, languages: e.target.value })}
-                    className={`w-full rounded-2xl border p-3 outline-none ${
-                      darkMode ? "bg-[#0B0F17] border-[#222B3D] text-white" : "bg-[#F8FAFD] border-[#DCE5F5] text-[#0F172A]"
-                    }`}
-                  />
-                </div>
-
-                <div className="space-y-1.5">
-                  <label className="font-bold text-xs">Duration</label>
-                  <input
-                    type="text"
-                    required
-                    value={editingCourse.duration || ""}
-                    onChange={(e) => setEditingCourse({ ...editingCourse, duration: e.target.value })}
-                    className={`w-full rounded-2xl border p-3 outline-none ${
-                      darkMode ? "bg-[#0B0F17] border-[#222B3D] text-white" : "bg-[#F8FAFD] border-[#DCE5F5] text-[#0F172A]"
-                    }`}
-                  />
-                </div>
-              </div>
-
-              {/* DUAL PRICING CONTROLS */}
-              <div className="p-4 rounded-2xl border border-[#035BE3]/30 bg-[#035BE3]/5 space-y-3">
-                <div className="flex items-center gap-2">
-                  <IndianRupee className="w-4 h-4 text-[#035BE3]" />
-                  <span className="font-bold text-xs text-[#035BE3] uppercase tracking-wider">
-                    Dynamic Course Pricing & Promo Offer
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-                  <div className="space-y-1.5">
-                    <label className="font-bold text-xs text-[#64748B]">Real / Regular Price (₹)</label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-3 text-gray-400 font-bold">₹</span>
-                      <input
-                        type="number"
-                        min="0"
-                        step="1"
-                        required
-                        value={editingCourse.regular_price ?? 2999}
-                        onChange={(e) => setEditingCourse({ ...editingCourse, regular_price: e.target.value })}
-                        className={`w-full rounded-2xl border p-3 pl-7 outline-none font-bold ${
-                          darkMode ? "bg-[#0B0F17] border-[#222B3D] text-white" : "bg-white border-[#DCE5F5] text-[#0F172A]"
-                        }`}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="font-bold text-xs text-emerald-600">With Promocode Price (₹)</label>
-                    <div className="relative">
-                      <span className="absolute left-3 top-3 text-emerald-500 font-bold">₹</span>
-                      <input
-                        type="number"
-                        min="0"
-                        step="1"
-                        required
-                        value={editingCourse.promo_price ?? 499}
-                        onChange={(e) => setEditingCourse({ ...editingCourse, promo_price: e.target.value })}
-                        className={`w-full rounded-2xl border border-emerald-300 dark:border-emerald-700 p-3 pl-7 outline-none font-bold text-emerald-600 dark:text-emerald-400 ${
-                          darkMode ? "bg-[#0B0F17]" : "bg-white"
-                        }`}
-                      />
-                    </div>
-                  </div>
-
-                  <div className="space-y-1.5">
-                    <label className="font-bold text-xs text-[#64748B]">Promo Code Tag</label>
-                    <input
-                      type="text"
-                      required
-                      value={editingCourse.promo_code || "KNOWWAY50"}
-                      onChange={(e) => setEditingCourse({ ...editingCourse, promo_code: e.target.value.toUpperCase() })}
-                      className={`w-full rounded-2xl border p-3 outline-none font-bold uppercase tracking-wider ${
-                        darkMode ? "bg-[#0B0F17] border-[#222B3D] text-white" : "bg-white border-[#DCE5F5] text-[#0F172A]"
-                      }`}
-                    />
-                  </div>
-                </div>
-
-                <p className="text-[11px] text-[#64748B]">
-                  Students will see ₹{Number(editingCourse.regular_price || 2999).toLocaleString("en-IN")} crossed out, and ₹{Number(editingCourse.promo_price || 499).toLocaleString("en-IN")} active with code <strong>{editingCourse.promo_code || "KNOWWAY50"}</strong>.
-                </p>
-              </div>
-
-              <div className="flex gap-3 pt-3">
-                <button
-                  type="button"
-                  onClick={() => setEditingCourse(null)}
-                  className="flex-1 py-3 rounded-full border border-gray-300 dark:border-gray-700 text-xs font-semibold cursor-pointer hover:bg-gray-100 dark:hover:bg-gray-800 transition"
-                >
-                  Cancel
-                </button>
-                <button
-                  type="submit"
-                  disabled={isSavingCourse}
-                  className="flex-1 py-3 rounded-full bg-[#035BE3] hover:bg-[#024bc0] text-white text-xs font-bold transition flex items-center justify-center gap-2 cursor-pointer shadow-md shadow-[#035BE3]/20"
-                >
-                  {isSavingCourse ? (
-                    <>
-                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
-                      <span>Saving Updates...</span>
-                    </>
-                  ) : (
-                    <span>Save Course & Pricing</span>
-                  )}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
 
       {/* ======================================================== */}
       {/* DELETE CONFIRMATION MODAL */}

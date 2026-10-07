@@ -232,7 +232,14 @@ export const getCourseById = async (req, res) => {
       [course.id]
     );
 
-    course.lectures = lectures;
+    // Fetch quiz assessment questions for this course
+    const [quizQuestions] = await pool.query(
+      `SELECT id, question, option_a, option_b, option_c, option_d, correct_option FROM course_quizzes WHERE course_id = ? ORDER BY id ASC`,
+      [course.id]
+    );
+
+    course.lectures = lectures || [];
+    course.quiz_questions = quizQuestions || [];
 
     return res.status(200).json({ success: true, course });
   } catch (err) {
@@ -257,6 +264,7 @@ export const createCourse = async (req, res) => {
     what_you_will_learn,
     software_required,
     lectures = [],
+    quiz_questions = [],
   } = req.body;
 
   if (!title || !category) {
@@ -317,12 +325,33 @@ export const createCourse = async (req, res) => {
       }
     }
 
+    // Insert Quiz Questions if provided
+    if (Array.isArray(quiz_questions) && quiz_questions.length > 0) {
+      for (const q of quiz_questions) {
+        if (q.question && q.question.trim()) {
+          await connection.query(
+            `INSERT INTO course_quizzes (course_id, question, option_a, option_b, option_c, option_d, correct_option)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [
+              courseId,
+              q.question.trim(),
+              q.option_a || "Option A",
+              q.option_b || "Option B",
+              q.option_c || "Option C",
+              q.option_d || "Option D",
+              (q.correct_option || "A").toUpperCase(),
+            ]
+          );
+        }
+      }
+    }
+
     await connection.commit();
     connection.release();
 
     return res.status(201).json({
       success: true,
-      message: "Course created successfully with lectures and pricing!",
+      message: "Course created successfully with lectures, quiz assessment, and pricing!",
       courseId,
       slug,
     });
@@ -338,6 +367,8 @@ export const updateCourse = async (req, res) => {
   const { id } = req.params;
   const {
     title,
+    mentor_id,
+    mentor_name,
     category,
     languages,
     duration,
@@ -346,19 +377,33 @@ export const updateCourse = async (req, res) => {
     promo_code,
     thumbnail_url,
     description,
-    mentor_id,
-    mentor_name,
+    what_you_will_learn,
+    software_required,
+    lectures,
+    quiz_questions,
   } = req.body;
 
+  const connection = await pool.getConnection();
+
   try {
-    const [existing] = await pool.query("SELECT id FROM courses WHERE id = ? LIMIT 1", [id]);
+    await connection.beginTransaction();
+
+    const [existing] = await connection.query("SELECT id FROM courses WHERE id = ? LIMIT 1", [id]);
     if (!existing || existing.length === 0) {
+      await connection.rollback();
+      connection.release();
       return res.status(404).json({ success: false, message: "Course not found" });
     }
 
-    await pool.query(
+    const learnJson = what_you_will_learn
+      ? JSON.stringify(Array.isArray(what_you_will_learn) ? what_you_will_learn : [what_you_will_learn])
+      : null;
+
+    await connection.query(
       `UPDATE courses SET 
         title = COALESCE(?, title),
+        mentor_id = COALESCE(?, mentor_id),
+        mentor_name = COALESCE(?, mentor_name),
         category = COALESCE(?, category),
         languages = COALESCE(?, languages),
         duration = COALESCE(?, duration),
@@ -367,11 +412,13 @@ export const updateCourse = async (req, res) => {
         promo_code = COALESCE(?, promo_code),
         thumbnail_url = COALESCE(?, thumbnail_url),
         description = COALESCE(?, description),
-        mentor_id = COALESCE(?, mentor_id),
-        mentor_name = COALESCE(?, mentor_name)
+        what_you_will_learn = COALESCE(?, what_you_will_learn),
+        software_required = COALESCE(?, software_required)
        WHERE id = ?`,
       [
         title ? title.trim() : null,
+        mentor_id !== undefined && mentor_id !== "" ? Number(mentor_id) : null,
+        mentor_name || null,
         category ? category.trim() : null,
         languages ? (Array.isArray(languages) ? languages.join(", ") : languages) : null,
         duration || null,
@@ -380,17 +427,67 @@ export const updateCourse = async (req, res) => {
         promo_code || null,
         thumbnail_url || null,
         description || null,
-        mentor_id ? Number(mentor_id) : null,
-        mentor_name || null,
+        learnJson,
+        software_required || null,
         id,
       ]
     );
 
+    // If lectures array is provided, sync course_lectures
+    if (Array.isArray(lectures)) {
+      await connection.query("DELETE FROM course_lectures WHERE course_id = ?", [id]);
+
+      for (let i = 0; i < lectures.length; i++) {
+        const l = lectures[i];
+        await connection.query(
+          `INSERT INTO course_lectures (course_id, section_name, lecture_order, title, duration, video_url, is_free_preview)
+           VALUES (?, ?, ?, ?, ?, ?, ?)`,
+          [
+            id,
+            l.section_name || "Module 1",
+            i + 1,
+            l.title || `Lecture ${i + 1}`,
+            l.duration || "5m",
+            l.video_url || "",
+            Boolean(l.is_free_preview),
+          ]
+        );
+      }
+    }
+
+    // If quiz_questions array is provided, sync course_quizzes
+    if (Array.isArray(quiz_questions)) {
+      await connection.query("DELETE FROM course_quizzes WHERE course_id = ?", [id]);
+
+      for (const q of quiz_questions) {
+        if (q.question && q.question.trim()) {
+          await connection.query(
+            `INSERT INTO course_quizzes (course_id, question, option_a, option_b, option_c, option_d, correct_option)
+             VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [
+              id,
+              q.question.trim(),
+              q.option_a || "Option A",
+              q.option_b || "Option B",
+              q.option_c || "Option C",
+              q.option_d || "Option D",
+              (q.correct_option || "A").toUpperCase(),
+            ]
+          );
+        }
+      }
+    }
+
+    await connection.commit();
+    connection.release();
+
     return res.status(200).json({
       success: true,
-      message: "Course details & pricing updated successfully!",
+      message: "Course curriculum, pricing, quiz assessment, and video modules updated successfully!",
     });
   } catch (err) {
+    await connection.rollback();
+    connection.release();
     console.error("Update Course Error:", err);
     return res.status(500).json({ success: false, message: err.message });
   }

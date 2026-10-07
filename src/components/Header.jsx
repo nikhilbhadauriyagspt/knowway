@@ -99,7 +99,7 @@ export default function Header() {
       accent: "#035BE3",
       bgBadge: "bg-[#EFF4FF] text-[#035BE3]",
       features: ["AI Tools", "Video Editing", "Certificate"],
-      link: "/#packages",
+      link: "/package/pro",
     },
     {
       id: "supreme",
@@ -111,7 +111,7 @@ export default function Header() {
       accent: "#FA8C03",
       bgBadge: "bg-[#FFF4E6] text-[#E07B00]",
       features: ["Meta Ads", "Sales Funnels", "Growth Playbook"],
-      link: "/#packages",
+      link: "/package/supreme",
     },
     {
       id: "premium",
@@ -123,7 +123,7 @@ export default function Header() {
       accent: "#2563EB",
       bgBadge: "bg-[#EFF6FF] text-[#1D4ED8]",
       features: ["Web Tech", "Ecommerce", "Real Projects"],
-      link: "/#packages",
+      link: "/package/premium",
     },
     {
       id: "premium-plus",
@@ -135,7 +135,7 @@ export default function Header() {
       accent: "#7C3AED",
       bgBadge: "bg-[#F5F3FF] text-[#6D28D9]",
       features: ["Full Library", "Mentorship", "Lifetime Access"],
-      link: "/#packages",
+      link: "/package/premium-plus",
     },
   ];
 
