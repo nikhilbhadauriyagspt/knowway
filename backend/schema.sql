@@ -1,0 +1,17 @@
+-- Database Creation Script for Knowway Learning Platform
+CREATE DATABASE IF NOT EXISTS knowway_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+
+USE knowway_db;
+
+-- Users Table (Matches 2-Step Signup Form)
+CREATE TABLE IF NOT EXISTS users (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  name VARCHAR(120) NOT NULL,
+  phone VARCHAR(20) NOT NULL,
+  email VARCHAR(120) NOT NULL UNIQUE,
+  address TEXT NOT NULL,
+  password VARCHAR(255) NOT NULL,
+  referral_code VARCHAR(50) DEFAULT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

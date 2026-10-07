@@ -1,6 +1,5 @@
 import React from "react";
 import {
-  Sparkles,
   TrendingUp,
   Video,
   Code2,
@@ -9,7 +8,6 @@ import {
   MessageSquare,
   DollarSign,
   Briefcase,
-  GraduationCap,
 } from "lucide-react";
 
 export default function MarqueeSection() {
