@@ -2,28 +2,27 @@ import React from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   LayoutDashboard,
-  BookOpen,
-  Award,
-  Tag,
-  Settings,
+  Users,
+  Wallet,
+  Share2,
+  Trophy,
   LogOut,
-  ExternalLink,
-  ArrowUpRight,
-  Layers3,
-  Zap,
-  Compass,
   GraduationCap,
   Sparkles,
+  ExternalLink,
+  ArrowUpRight,
+  ShieldCheck,
+  Zap,
+  Percent,
 } from "lucide-react";
 import { clearUserSession } from "../../services/api";
 
-export default function StudentSidebar({
+export default function AffiliateSidebar({
   activeTab,
   setActiveTab,
   user,
-  coursesCount = 0,
-  allCoursesCount = 0,
-  packagesCount = 0,
+  referralsCount = 0,
+  pendingPayoutCount = 0,
   mobileOpen,
   setMobileOpen,
   darkMode,
@@ -35,14 +34,13 @@ export default function StudentSidebar({
     navigate("/", { replace: true });
   };
 
-  const studentMenuItems = [
-    { id: "dashboard", label: "Dashboard", icon: LayoutDashboard, badge: "Live" },
-    { id: "all_courses", label: "All Courses", icon: Compass, badge: allCoursesCount ? `${allCoursesCount}` : "Explore" },
-    { id: "courses", label: "My Courses", icon: BookOpen, badge: coursesCount ? `${coursesCount}` : null },
-    { id: "packages", label: "My Packages", icon: Layers3, badge: packagesCount ? `${packagesCount}` : "Active" },
-    { id: "upgrade", label: "Upgrade Package", icon: Zap, badge: "Upgrade" },
-    { id: "certificates", label: "Certificates & Badges", icon: Award, badge: "Verified" },
-    { id: "profile", label: "Account & Profile", icon: Settings, badge: null },
+  const menuItems = [
+    { id: "overview", label: "Earnings Overview", icon: LayoutDashboard, badge: "Live" },
+    { id: "referrals", label: "My Referrals", icon: Users, badge: referralsCount ? `${referralsCount}` : "Network" },
+    { id: "wallet", label: "Wallet & Payouts", icon: Wallet, badge: pendingPayoutCount > 0 ? "Pending" : null },
+    { id: "matrix", label: "Commission Rates", icon: Percent, badge: "2-Tier" },
+    { id: "leaderboard", label: "Leaderboard & Ranks", icon: Trophy, badge: "🏆 Top" },
+    { id: "promos", label: "Marketing & Promos", icon: Share2, badge: "Tools" },
   ];
 
   return (
@@ -50,7 +48,7 @@ export default function StudentSidebar({
       {/* Mobile Backdrop */}
       {mobileOpen && (
         <div
-          className="fixed inset-0 z-40 bg-black/40 backdrop-blur-xs lg:hidden transition-opacity"
+          className="fixed inset-0 z-40 bg-black/50 backdrop-blur-xs lg:hidden transition-opacity"
           onClick={() => setMobileOpen(false)}
         />
       )}
@@ -59,17 +57,17 @@ export default function StudentSidebar({
       <div
         className={`
           fixed top-4 bottom-4 left-4 z-50 flex flex-col gap-3 transition-all duration-300 ease-in-out
-          ${mobileOpen ? "translate-x-0 w-[268px]" : "-translate-x-[150%] lg:translate-x-0 lg:w-[268px]"}
+          ${mobileOpen ? "translate-x-0 w-[270px]" : "-translate-x-[150%] lg:translate-x-0 lg:w-[270px]"}
         `}
       >
-        {/* Top Logo Pill Capsule */}
+        {/* Top Logo Capsule */}
         <div
           className={`
             h-14 w-full rounded-full border px-5 flex items-center justify-between shrink-0 transition-colors
             ${darkMode ? "bg-[#131926] border-[#222B3D]" : "bg-white border-[#E2E8F0]"}
           `}
         >
-          <Link to="/" className="flex items-center gap-2.5 group" title="Back to Homepage">
+          <Link to="/" className="flex items-center gap-2 group" title="KnowWay Platform">
             <img
               src="/images/logo/logo.png"
               alt="KnowWay Logo"
@@ -79,19 +77,20 @@ export default function StudentSidebar({
 
           <span
             className={`
-              px-3 py-1 rounded-full font-semibold text-[11px] tracking-wide transition-colors
+              px-2.5 py-1 rounded-full font-bold text-[10px] tracking-wide uppercase flex items-center gap-1 transition-colors
               ${
                 darkMode
-                  ? "bg-[#1A2234] text-[#94A3B8] border border-[#2B374E]"
-                  : "bg-[#F4F6FB] text-[#475569] border border-[#E2E8F0]"
+                  ? "bg-amber-500/15 text-amber-400 border border-amber-500/30"
+                  : "bg-amber-50 text-amber-700 border border-amber-200"
               }
             `}
           >
-            Learner
+            <Sparkles className="w-3 h-3 text-amber-500" />
+            Affiliate
           </span>
         </div>
 
-        {/* Sidebar Navigation Body */}
+        {/* Sidebar Body */}
         <aside
           className={`
             flex-1 rounded-[32px] border p-2.5 flex flex-col justify-between backdrop-blur-xl transition-all duration-300 overflow-hidden
@@ -102,13 +101,14 @@ export default function StudentSidebar({
             }
           `}
         >
-          {/* Main Navigation Menu */}
+          {/* Main Navigation */}
           <div className="space-y-1.5 mt-1">
-            <div className="px-3 pb-2 pt-1 text-[10px] font-bold uppercase tracking-wider text-[#8A99AD]">
-              Main Menu
+            <div className="px-3 pb-2 pt-1 text-[10px] font-bold uppercase tracking-wider text-[#8A99AD] flex items-center justify-between">
+              <span>Affiliate Partner Hub</span>
+              <ShieldCheck className="w-3 h-3 text-emerald-500" />
             </div>
 
-            {studentMenuItems.map((item) => {
+            {menuItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;
               return (
@@ -122,7 +122,7 @@ export default function StudentSidebar({
                     w-full h-12 flex items-center justify-between rounded-full text-xs font-semibold transition-all cursor-pointer group px-1.5 pr-3.5
                     ${
                       isActive
-                        ? "bg-[#035BE3] text-white shadow-xs"
+                        ? "bg-linear-to-r from-amber-500 to-orange-500 text-white shadow-xs"
                         : darkMode
                         ? "text-[#94A3B8] hover:bg-[#1E2638] hover:text-white"
                         : "text-[#556377] hover:bg-[#F1F5F9] hover:text-[#0F172A]"
@@ -135,10 +135,10 @@ export default function StudentSidebar({
                         w-9 h-9 rounded-full flex items-center justify-center shrink-0 transition-colors
                         ${
                           isActive
-                            ? "bg-white/15 text-white"
+                            ? "bg-white/20 text-white"
                             : darkMode
-                            ? "bg-[#1A2234] text-[#94A3B8] group-hover:bg-[#035BE3]/20 group-hover:text-[#035BE3]"
-                            : "bg-[#F4F6FB] text-[#64748B] group-hover:bg-[#035BE3]/10 group-hover:text-[#035BE3]"
+                            ? "bg-[#1A2234] text-[#94A3B8] group-hover:bg-amber-500/20 group-hover:text-amber-400"
+                            : "bg-[#F4F6FB] text-[#64748B] group-hover:bg-amber-100 group-hover:text-amber-600"
                         }
                       `}
                     >
@@ -154,10 +154,10 @@ export default function StudentSidebar({
                     <span
                       className={`text-[10px] font-semibold px-2 py-0.5 rounded-full shrink-0 transition-colors ${
                         isActive
-                          ? "bg-white/20 text-white"
+                          ? "bg-white/25 text-white"
                           : darkMode
                           ? "bg-[#1E293B] text-[#94A3B8]"
-                          : "bg-gray-100 text-[#64748B] group-hover:bg-[#035BE3]/10 group-hover:text-[#035BE3]"
+                          : "bg-gray-100 text-[#64748B] group-hover:bg-amber-100 group-hover:text-amber-700"
                       }`}
                     >
                       {item.badge}
@@ -168,17 +168,17 @@ export default function StudentSidebar({
             })}
           </div>
 
-          {/* Bottom Sidebar Action Items */}
+          {/* Bottom Switcher & Exit */}
           <div className="pt-3 border-t border-inherit space-y-1.5">
-            {/* Quick Switch to Affiliate Hub */}
+            {/* Quick Switch to Learning Dashboard */}
             <Link
-              to="/affiliate/dashboard"
+              to="/dashboard"
               className={`
-                w-full h-11 flex items-center justify-between rounded-full text-xs font-bold transition-all px-1.5 pr-3.5 no-underline group shadow-xs
+                w-full h-11 flex items-center justify-between rounded-full text-xs font-semibold transition-colors px-1.5 pr-3.5 no-underline group
                 ${
                   darkMode
-                    ? "bg-amber-500/10 border border-amber-500/30 text-amber-400 hover:bg-amber-500/20 hover:text-white"
-                    : "bg-amber-50 border border-amber-200 text-amber-700 hover:bg-amber-100"
+                    ? "bg-[#1A2234]/70 border border-[#2B374E] text-[#38BDF8] hover:bg-[#035BE3]/20 hover:text-white"
+                    : "bg-[#F0F6FF] border border-[#BFDBFE] text-[#035BE3] hover:bg-[#035BE3] hover:text-white"
                 }
               `}
             >
@@ -188,49 +188,22 @@ export default function StudentSidebar({
                     w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors
                     ${
                       darkMode
-                        ? "bg-amber-500/20 text-amber-400"
-                        : "bg-white text-amber-600 shadow-xs"
+                        ? "bg-[#1E293B] text-[#38BDF8] group-hover:bg-blue-500 group-hover:text-white"
+                        : "bg-white text-[#035BE3] group-hover:bg-white group-hover:text-[#035BE3]"
                     }
                   `}
                 >
-                  <Sparkles className="w-4 h-4 text-amber-500" />
+                  <GraduationCap className="w-4 h-4" />
                 </div>
-                <span>Affiliate Panel</span>
+                <span>Student Hub</span>
               </div>
-              <span className="text-[10px] font-black px-2 py-0.5 rounded-full bg-amber-500 text-white">
-                Earn ₹
-              </span>
-            </Link>
-
-            <Link
-              to="/courses"
-              className={`
-                w-full h-11 flex items-center justify-between rounded-full text-xs font-semibold transition-colors px-1.5 pr-3.5 no-underline group
-                ${darkMode ? "text-[#94A3B8] hover:bg-[#1E2638] hover:text-white" : "text-[#556377] hover:bg-[#F1F5F9] hover:text-[#0F172A]"}
-              `}
-            >
-              <div className="flex items-center gap-3">
-                <div
-                  className={`
-                    w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors
-                    ${
-                      darkMode
-                        ? "bg-[#1A2234] text-[#94A3B8] group-hover:bg-amber-500/20 group-hover:text-amber-400"
-                        : "bg-[#F4F6FB] text-[#64748B] group-hover:bg-amber-100 group-hover:text-[#FA8C03]"
-                    }
-                  `}
-                >
-                  <ExternalLink className="w-3.5 h-3.5" />
-                </div>
-                <span>Explore Catalog</span>
-              </div>
-              <ArrowUpRight size={13} className="text-[#94A3B8]" />
+              <ArrowUpRight size={13} />
             </Link>
 
             <button
               onClick={handleLogout}
               className={`
-                w-full h-11 flex items-center gap-3 rounded-full text-xs font-semibold transition-colors cursor-pointer px-1.5 group
+                w-full h-10 flex items-center gap-3 rounded-full text-xs font-semibold transition-colors cursor-pointer px-1.5 group
                 ${
                   darkMode
                     ? "text-[#94A3B8] hover:text-red-400 hover:bg-red-950/30"
@@ -240,7 +213,7 @@ export default function StudentSidebar({
             >
               <div
                 className={`
-                  w-8 h-8 rounded-full flex items-center justify-center shrink-0 transition-colors
+                  w-7 h-7 rounded-full flex items-center justify-center shrink-0 transition-colors
                   ${
                     darkMode
                       ? "bg-[#1A2234] text-[#94A3B8] group-hover:bg-red-900/30 group-hover:text-red-400"

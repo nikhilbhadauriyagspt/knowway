@@ -10,6 +10,7 @@ import {
   User,
   Tag,
   LogOut,
+  Sparkles,
 } from "lucide-react";
 import { clearUserSession } from "../../services/api";
 
@@ -81,6 +82,23 @@ export default function StudentHeader({
 
       {/* Right Controls */}
       <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+        {/* Affiliate Hub Quick Button */}
+        <Link
+          to="/affiliate/dashboard"
+          className={`h-12 px-3.5 sm:px-4 rounded-full border flex items-center gap-2 text-xs font-bold transition cursor-pointer shadow-xs ${
+            darkMode
+              ? "bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20"
+              : "bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100"
+          }`}
+          title="Open Affiliate & Referral Income Hub"
+        >
+          <Sparkles className="w-4 h-4 text-amber-500" />
+          <span className="hidden sm:inline">Affiliate Panel</span>
+          <span className="text-[10px] px-1.5 py-0.5 rounded-full bg-amber-500 text-white font-black leading-none">
+            Earn ₹
+          </span>
+        </Link>
+
         {/* Dark / Light Theme Sliding Switcher Toggle */}
         <button
           type="button"
@@ -154,8 +172,21 @@ export default function StudentHeader({
               <div className="p-3 border-b border-inherit">
                 <p className="text-xs font-bold truncate">{user?.name}</p>
                 <p className="text-[11px] text-[#64748B] truncate mt-0.5">{user?.email}</p>
+                {user?.student_id && (
+                  <div className="mt-2 inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-[#035BE3]/10 text-[#035BE3] font-mono text-[10px] font-bold">
+                    <span>ID: {user.student_id}</span>
+                  </div>
+                )}
               </div>
               <div className="py-1">
+                <Link
+                  to="/affiliate/dashboard"
+                  onClick={() => setShowProfileMenu(false)}
+                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-xl hover:bg-amber-50 dark:hover:bg-amber-950/30 text-amber-600 dark:text-amber-400 transition cursor-pointer"
+                >
+                  <Sparkles size={14} />
+                  <span>Affiliate Panel</span>
+                </Link>
                 <button
                   onClick={() => {
                     setActiveTab("profile");
@@ -165,16 +196,6 @@ export default function StudentHeader({
                 >
                   <User size={14} />
                   <span>My Profile</span>
-                </button>
-                <button
-                  onClick={() => {
-                    setActiveTab("referrals");
-                    setShowProfileMenu(false);
-                  }}
-                  className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-semibold rounded-xl hover:bg-gray-100 dark:hover:bg-gray-800 transition cursor-pointer"
-                >
-                  <Tag size={14} />
-                  <span>Referrals & Rewards</span>
                 </button>
               </div>
               <div className="pt-1 border-t border-inherit">

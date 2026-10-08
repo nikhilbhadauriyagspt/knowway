@@ -104,6 +104,8 @@ export const createPackage = async (req, res) => {
     what_you_will_learn = [],
     faqs = [],
     course_ids = [],
+    referral_commission_type = "percentage",
+    referral_commission_value = 20,
   } = req.body;
 
   if (!name || !name.trim()) {
@@ -121,8 +123,8 @@ export const createPackage = async (req, res) => {
     await connection.beginTransaction();
 
     const [pkgRes] = await connection.query(
-      `INSERT INTO packages (name, slug, tagline, image_url, mrp_price, promo_price, mrp_note, promo_note, total_hours, enrolled_students, overview_heading, overview_desc, what_you_will_learn, faqs)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      `INSERT INTO packages (name, slug, tagline, image_url, mrp_price, promo_price, mrp_note, promo_note, total_hours, enrolled_students, overview_heading, overview_desc, what_you_will_learn, faqs, referral_commission_type, referral_commission_value)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         name.trim(),
         generatedSlug,
@@ -138,6 +140,8 @@ export const createPackage = async (req, res) => {
         overview_desc || "A complete ecosystem designed for individuals who are serious about building their career",
         JSON.stringify(what_you_will_learn || []),
         JSON.stringify(faqs || []),
+        referral_commission_type === "flat" ? "flat" : "percentage",
+        Number(referral_commission_value) || 20.0,
       ]
     );
 
@@ -190,6 +194,8 @@ export const updatePackage = async (req, res) => {
     what_you_will_learn = [],
     faqs = [],
     course_ids = [],
+    referral_commission_type = "percentage",
+    referral_commission_value = 20,
   } = req.body;
 
   if (!name || !name.trim()) {
@@ -220,7 +226,8 @@ export const updatePackage = async (req, res) => {
       `UPDATE packages 
        SET name = ?, slug = ?, tagline = ?, image_url = ?, mrp_price = ?, promo_price = ?, 
            mrp_note = ?, promo_note = ?, total_hours = ?, enrolled_students = ?, 
-           overview_heading = ?, overview_desc = ?, what_you_will_learn = ?, faqs = ?
+           overview_heading = ?, overview_desc = ?, what_you_will_learn = ?, faqs = ?,
+           referral_commission_type = ?, referral_commission_value = ?
        WHERE id = ?`,
       [
         name.trim(),
@@ -237,6 +244,8 @@ export const updatePackage = async (req, res) => {
         overview_desc || "A complete ecosystem designed for individuals who are serious about building their career",
         JSON.stringify(what_you_will_learn || []),
         JSON.stringify(faqs || []),
+        referral_commission_type === "flat" ? "flat" : "percentage",
+        Number(referral_commission_value) || 20.0,
         targetId,
       ]
     );

@@ -6,9 +6,16 @@ import {
   GraduationCap,
   BookOpen,
   Layers3,
+  CreditCard,
   Settings,
   LogOut,
   ExternalLink,
+  Sparkles,
+  Percent,
+  ShieldCheck,
+  Key,
+  Clock,
+  FileText,
 } from "lucide-react";
 import { clearAdminSession } from "../../services/api";
 
@@ -29,44 +36,108 @@ export default function AdminSidebar({
     navigate("/admin/login");
   };
 
-  const menuItems = [
+  const userPermissions = adminUser?.permissions || (adminUser?.role === "superadmin" ? ["*"] : []);
+  const isSuperAdmin = adminUser?.role === "superadmin" || userPermissions.includes("*");
+
+  const allMenuItems = [
+    // 1. Overview & Analytics
     {
       id: "dashboard",
       label: "Overview",
       icon: LayoutDashboard,
       badge: "Live",
     },
+
+    // 2. Curriculum & Studio
+    {
+      id: "courses",
+      label: "Courses Studio",
+      icon: BookOpen,
+      badge: "Studio",
+    },
     {
       id: "packages",
       label: "Package Studio",
       icon: Layers3,
-      badge: "Dynamic",
+      badge: "Bundles",
     },
     {
       id: "mentors",
-      label: "Mentors / Instructors",
+      label: "Instructors & Mentors",
       icon: GraduationCap,
       badge: null,
     },
-    {
-      id: "courses",
-      label: "Course Management",
-      icon: BookOpen,
-      badge: "New",
-    },
+
+    // 3. Students Directory
     {
       id: "users",
       label: "Students",
       icon: Users,
       badge: null,
     },
+
+    // 4. Financials & Orders
+    {
+      id: "payments",
+      label: "Payments & Orders",
+      icon: CreditCard,
+      badge: "Revenue",
+    },
+
+    // 5. Affiliate Hub & Monetization
+    {
+      id: "affiliates",
+      label: "Affiliate & Payouts",
+      icon: Sparkles,
+      badge: "Payouts",
+    },
+    {
+      id: "commissions",
+      label: "Commission Matrix",
+      icon: Percent,
+      badge: "2-Tier",
+    },
+
+    // 6. Security, Governance & RBAC
+    {
+      id: "videosecurity",
+      label: "Video Security (DRM)",
+      icon: ShieldCheck,
+      badge: "DRM",
+    },
+    {
+      id: "subadmins",
+      label: "Staff & Roles (RBAC)",
+      icon: Key,
+      badge: "RBAC",
+    },
+    {
+      id: "history",
+      label: "Activity & Audit Logs",
+      icon: Clock,
+      badge: "Audit",
+    },
+
+    // 7. Content & System Settings
+    {
+      id: "pages",
+      label: "Pages & Policies (CMS)",
+      icon: FileText,
+      badge: "CMS",
+    },
     {
       id: "settings",
-      label: "Cloudinary & Settings",
+      label: "Branding & API Settings",
       icon: Settings,
       badge: null,
     },
   ];
+
+  const menuItems = allMenuItems.filter((item) => {
+    if (isSuperAdmin) return true;
+    const permKey = item.id === "videosecurity" ? "video-security" : item.id;
+    return userPermissions.includes(permKey) || userPermissions.includes(item.id);
+  });
 
   return (
     <>
@@ -127,8 +198,8 @@ export default function AdminSidebar({
             }
           `}
         >
-          {/* Navigation Menu Items */}
-          <nav className="space-y-2 overflow-hidden">
+          {/* Navigation Menu Items (Scrollable with hidden scrollbar) */}
+          <nav className="space-y-1.5 overflow-y-auto flex-1 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden py-1 min-h-0">
             {menuItems.map((item) => {
               const Icon = item.icon;
               const isActive = activeTab === item.id;

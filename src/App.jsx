@@ -7,14 +7,20 @@ import DashboardPage from "./pages/DashboardPage";
 import CoursesPage from "./pages/CoursesPage";
 import CourseDetailPage from "./pages/CourseDetailPage";
 import PackageDetailPage from "./pages/PackageDetailPage";
+import CheckoutPage from "./pages/CheckoutPage";
+import CustomPolicyPage from "./pages/CustomPolicyPage";
 import SuperAdminLoginPage from "./superadmin/SuperAdminLoginPage";
 import SuperAdminDashboard from "./superadmin/SuperAdminDashboard";
 import CreateCoursePage from "./superadmin/CreateCoursePage";
 import CreatePackagePage from "./superadmin/CreatePackagePage";
+import AffiliatePage from "./pages/AffiliatePage";
+import SessionHeartbeatMonitor from "./components/SessionHeartbeatMonitor";
 
 export default function App() {
   return (
     <BrowserRouter>
+      {/* Real-time Multi-Device / Concurrent Session Monitor */}
+      <SessionHeartbeatMonitor />
       <Routes>
         {/* Public Student Routes */}
         <Route path="/" element={<HomePage />} />
@@ -25,10 +31,22 @@ export default function App() {
         <Route path="/packages/:id" element={<PackageDetailPage />} />
         <Route path="/package" element={<PackageDetailPage />} />
         <Route path="/packages" element={<PackageDetailPage />} />
+        <Route path="/checkout/:slug" element={<CheckoutPage />} />
+        <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
         <Route path="/dashboard" element={<DashboardPage />} />
+        <Route path="/affiliate" element={<AffiliatePage />} />
+        <Route path="/affiliate/dashboard" element={<AffiliatePage />} />
+
+        {/* Dynamic Legal & Custom Policy Pages */}
+        <Route path="/page/:slug" element={<CustomPolicyPage />} />
+        <Route path="/privacy-policy" element={<CustomPolicyPage defaultSlug="privacy-policy" />} />
+        <Route path="/terms-and-conditions" element={<CustomPolicyPage defaultSlug="terms-and-conditions" />} />
+        <Route path="/terms" element={<CustomPolicyPage defaultSlug="terms-and-conditions" />} />
+        <Route path="/refund-policy" element={<CustomPolicyPage defaultSlug="refund-policy" />} />
+        <Route path="/disclaimer" element={<CustomPolicyPage defaultSlug="disclaimer" />} />
 
         {/* Super Admin Routes */}
         <Route path="/admin/login" element={<SuperAdminLoginPage />} />

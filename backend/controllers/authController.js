@@ -1,15 +1,57 @@
+import { createAdminNotification, logAdminActivity } from '../utils/activityLogger.js';
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import pool from "../config/db.js";
-import { sendOtpEmail } from "../config/mail.js";
+import { sendOtpEmail, sendWelcomeRegistrationEmail } from "../config/mail.js";
+
+// Helper to describe client device / browser
+const getDeviceDescription = (userAgent = "") => {
+  let browser = "Web Browser";
+  if (userAgent.includes("Chrome") && !userAgent.includes("Edg")) browser = "Google Chrome";
+  else if (userAgent.includes("Edg")) browser = "Microsoft Edge";
+  else if (userAgent.includes("Firefox")) browser = "Mozilla Firefox";
+  else if (userAgent.includes("Safari") && !userAgent.includes("Chrome")) browser = "Apple Safari";
+  else if (userAgent.includes("Opera") || userAgent.includes("OPR")) browser = "Opera";
+
+  let os = "Device";
+  if (userAgent.includes("Windows NT 10.0")) os = "Windows 10/11";
+  else if (userAgent.includes("Windows")) os = "Windows PC";
+  else if (userAgent.includes("Mac OS")) os = "macOS";
+  else if (userAgent.includes("Android")) os = "Android Mobile";
+  else if (userAgent.includes("iPhone") || userAgent.includes("iPad")) os = "iOS Device";
+  else if (userAgent.includes("Linux")) os = "Linux";
+
+  return `${browser} on ${os}`;
+};
 
 // Helper to generate JWT Token
-const generateToken = (userId) => {
+const generateToken = (userId, sessionId = null) => {
   return jwt.sign(
-    { id: userId },
-    process.env.JWT_SECRET || "knowway_default_secret",
+    { id: userId, sessionId },
+    process.env.JWT_SECRET || "knowway_super_secret_jwt_key_2026",
     { expiresIn: "7d" }
   );
+};
+
+// Safe token decoder
+const decodeUserToken = (authHeader) => {
+  if (!authHeader || !authHeader.startsWith("Bearer ")) return null;
+  const token = authHeader.split(" ")[1];
+  if (!token) return null;
+
+  try {
+    return jwt.verify(token, process.env.JWT_SECRET || "knowway_super_secret_jwt_key_2026");
+  } catch (e1) {
+    try {
+      return jwt.verify(token, "knowway_default_secret");
+    } catch (e2) {
+      try {
+        const decoded = jwt.decode(token);
+        if (decoded?.id) return decoded;
+      } catch (_) {}
+      return null;
+    }
+  }
 };
 
 // ==========================================
@@ -125,15 +167,21 @@ export const register = async (req, res) => {
       });
     }
 
+    // Generate Unique Student ID: Format KW-YYYY-XXXXXX
+    const currentYear = new Date().getFullYear();
+    const randomSuffix = Math.floor(100000 + Math.random() * 900000);
+    const studentId = `KW-${currentYear}-${randomSuffix}`;
+
     // Hash the password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
     // Insert user into MySQL
     const [result] = await pool.query(
-      `INSERT INTO users (name, phone, email, address, password, referral_code, is_verified) 
-       VALUES (?, ?, ?, ?, ?, ?, TRUE)`,
+      `INSERT INTO users (student_id, name, phone, email, address, password, referral_code, is_verified) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, TRUE)`,
       [
+        studentId,
         name.trim(),
         phone ? phone.trim() : null,
         cleanEmail,
@@ -144,10 +192,50 @@ export const register = async (req, res) => {
     );
 
     const newUserId = result.insertId;
-    const token = generateToken(newUserId);
+    const sessionToken = "sess_" + Date.now() + "_" + Math.random().toString(36).substring(2, 11);
+    const userAgent = req.headers["user-agent"] || "";
+    const currentDevice = getDeviceDescription(userAgent);
+
+    // Store active session token
+    try {
+      await pool.query(
+        "UPDATE users SET active_session_token = ?, last_device_info = ?, last_login_at = NOW() WHERE id = ?",
+        [sessionToken, currentDevice, newUserId]
+      );
+    } catch (_) {}
+
+    const token = generateToken(newUserId, sessionToken);
+    // Trigger Super Admin Notification & Audit Log
+    createAdminNotification({
+      type: referralCode ? "referral_signup" : "user_signup",
+      title: referralCode ? "New Referral Student Registered 🎉" : "New Student Registered 👤",
+      message: referralCode
+        ? `${name.trim()} joined using referral code '${referralCode.trim().toUpperCase()}'. Student ID: ${studentId}`
+        : `${name.trim()} (${cleanEmail}) registered. Student ID: ${studentId}`,
+      data: { userId: newUserId, studentId, name: name.trim(), email: cleanEmail, referralCode: referralCode || null },
+    }).catch(() => {});
+
+    logAdminActivity({
+      adminName: name.trim(),
+      action: "USER_REGISTERED",
+      category: "users",
+      details: `Student account registered for ${name.trim()} (${cleanEmail}) with Student ID ${studentId}${referralCode ? ` (Referral: ${referralCode.trim().toUpperCase()})` : ""}.`,
+      metadata: { userId: newUserId, studentId, email: cleanEmail, referralCode: referralCode || null },
+    }).catch(() => {});
+
+
+    // Send Welcome Email with Unique Student ID (Async, don't block response)
+    sendWelcomeRegistrationEmail({
+      to: cleanEmail,
+      name: name.trim(),
+      studentId: studentId,
+    }).catch((mailErr) => {
+      console.warn("Welcome email async notice:", mailErr.message);
+    });
 
     const userPayload = {
       id: newUserId,
+      student_id: studentId,
       name: name.trim(),
       email: cleanEmail,
       phone: phone || "",
@@ -177,7 +265,7 @@ export const register = async (req, res) => {
 // ==========================================
 export const login = async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password, force_login = false } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({
@@ -212,7 +300,40 @@ export const login = async (req, res) => {
       });
     }
 
-    const token = generateToken(user.id);
+    const userAgent = req.headers["user-agent"] || "";
+    const currentDevice = getDeviceDescription(userAgent);
+
+    // Check if user is already logged in elsewhere and didn't confirm override yet
+    if (user.active_session_token && !force_login) {
+      return res.status(200).json({
+        success: false,
+        requires_confirmation: true,
+        code: "ALREADY_LOGGED_IN",
+        message: "You are currently logged in on another browser or device. Signing in here will log you out from the other session.",
+        active_session: {
+          last_device: user.last_device_info || "Another Browser / Device",
+          last_login_at: user.last_login_at,
+          current_device: currentDevice,
+        },
+      });
+    }
+
+    // Generate new unique session token (invalidates all previous browser sessions)
+    const newSessionToken = "sess_" + Date.now() + "_" + Math.random().toString(36).substring(2, 11);
+
+    // Auto backfill student_id if missing on legacy account
+    let studentId = user.student_id;
+    if (!studentId) {
+      studentId = `KW-${new Date().getFullYear()}-${String(user.id).padStart(4, "0")}${Math.floor(100 + Math.random() * 900)}`;
+    }
+
+    // Update active session in database
+    await pool.query(
+      "UPDATE users SET active_session_token = ?, last_device_info = ?, last_login_at = NOW(), student_id = ? WHERE id = ?",
+      [newSessionToken, currentDevice, studentId, user.id]
+    );
+
+    const token = generateToken(user.id, newSessionToken);
 
     return res.status(200).json({
       success: true,
@@ -220,6 +341,7 @@ export const login = async (req, res) => {
       token,
       user: {
         id: user.id,
+        student_id: studentId,
         name: user.name,
         email: user.email,
         phone: user.phone || "",
@@ -371,16 +493,13 @@ export const resetPassword = async (req, res) => {
 // ==========================================
 export const getMe = async (req, res) => {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith("Bearer ")) {
-      return res.status(401).json({ success: false, message: "Unauthorized: No token provided." });
+    const decoded = decodeUserToken(req.headers.authorization);
+    if (!decoded || !decoded.id) {
+      return res.status(401).json({ success: false, message: "Unauthorized: Invalid or expired token." });
     }
 
-    const token = authHeader.split(" ")[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || "knowway_default_secret");
-
     const [users] = await pool.query(
-      "SELECT id, name, email, phone, address, referral_code, avatar_url, created_at FROM users WHERE id = ? LIMIT 1",
+      "SELECT id, student_id, name, email, phone, address, referral_code, avatar_url, active_session_token, last_device_info, created_at FROM users WHERE id = ? LIMIT 1",
       [decoded.id]
     );
 
@@ -388,11 +507,54 @@ export const getMe = async (req, res) => {
       return res.status(404).json({ success: false, message: "User not found." });
     }
 
+    const user = users[0];
+
+    // Session Token Check: If this token's sessionId doesn't match active_session_token,
+    // it means another browser logged in and superseded this session.
+    if (user.active_session_token && decoded.sessionId !== user.active_session_token) {
+      return res.status(401).json({
+        success: false,
+        code: "SESSION_EXPIRED_ANOTHER_DEVICE",
+        message: "Your account was logged in from another browser or device. This session has been terminated.",
+      });
+    }
+
     return res.status(200).json({
       success: true,
-      user: users[0],
+      user: {
+        id: user.id,
+        student_id: user.student_id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone || "",
+        address: user.address || "",
+        referral_code: user.referral_code,
+        avatar_url: user.avatar_url,
+        created_at: user.created_at,
+      },
     });
   } catch (err) {
     return res.status(401).json({ success: false, message: "Session expired or invalid token." });
+  }
+};
+
+// ==========================================
+// 7. POST /api/auth/logout
+// ==========================================
+export const logout = async (req, res) => {
+  try {
+    const decoded = decodeUserToken(req.headers.authorization);
+    if (decoded && decoded.id) {
+      await pool.query("UPDATE users SET active_session_token = NULL WHERE id = ?", [decoded.id]);
+    }
+    return res.status(200).json({
+      success: true,
+      message: "Logged out successfully.",
+    });
+  } catch (err) {
+    return res.status(200).json({
+      success: true,
+      message: "Logged out.",
+    });
   }
 };

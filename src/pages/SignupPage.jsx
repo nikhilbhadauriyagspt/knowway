@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Mail,
   Lock,
@@ -24,6 +24,8 @@ const CURRENT_YEAR = new Date().getFullYear();
 
 export default function SignupPage() {
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
+  const initialRefCode = searchParams.get("ref") || searchParams.get("referral") || searchParams.get("code") || "";
 
   // Form input state
   const [formData, setFormData] = useState({
@@ -31,7 +33,7 @@ export default function SignupPage() {
     email: "",
     phone: "",
     password: "",
-    referralCode: "",
+    referralCode: initialRefCode,
   });
 
   const [showPassword, setShowPassword] = useState(false);
@@ -256,6 +258,7 @@ export default function SignupPage() {
                 <input
                   type="text"
                   required
+                  autoComplete="name"
                   placeholder="e.g. Rahul Sharma"
                   value={formData.name}
                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
@@ -279,6 +282,7 @@ export default function SignupPage() {
                 <input
                   type="email"
                   required
+                  autoComplete="email"
                   placeholder="name@domain.com"
                   value={formData.email}
                   onChange={(e) => setFormData({ ...formData, email: e.target.value })}
@@ -301,6 +305,7 @@ export default function SignupPage() {
                 </div>
                 <input
                   type="tel"
+                  autoComplete="tel"
                   placeholder="+91 98765 43210"
                   value={formData.phone}
                   onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -324,6 +329,7 @@ export default function SignupPage() {
                 <input
                   type={showPassword ? "text" : "password"}
                   required
+                  autoComplete="new-password"
                   placeholder="Minimum 6 characters"
                   value={formData.password}
                   onChange={(e) => setFormData({ ...formData, password: e.target.value })}

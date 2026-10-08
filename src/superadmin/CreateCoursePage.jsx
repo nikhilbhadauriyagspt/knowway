@@ -156,6 +156,8 @@ export default function CreateCoursePage() {
     ],
     software_required: "Facebook Account, Ads Manager Access, Stable Internet Connection",
     certificate_enabled: true,
+    referral_commission_type: "percentage",
+    referral_commission_value: "20",
   });
 
   // ========================================================
@@ -378,6 +380,8 @@ export default function CreateCoursePage() {
                     : ["", "", ""],
                 software_required: c.software_required || "",
                 certificate_enabled: true,
+                referral_commission_type: c.referral_commission_type || "percentage",
+                referral_commission_value: String(c.referral_commission_value !== undefined && c.referral_commission_value !== null ? c.referral_commission_value : "20"),
               });
 
               if (c.lectures && c.lectures.length > 0) {
@@ -713,6 +717,8 @@ export default function CreateCoursePage() {
         description: courseData.description,
         what_you_will_learn: courseData.what_you_will_learn.filter((item) => item.trim() !== ""),
         software_required: courseData.software_required,
+        referral_commission_type: courseData.referral_commission_type || "percentage",
+        referral_commission_value: Number(courseData.referral_commission_value) || 20,
         lectures: flattenedLectures,
         quiz_questions: validQuizQuestions,
       };
@@ -747,7 +753,7 @@ export default function CreateCoursePage() {
   return (
     <div
       className={`min-h-screen transition-colors duration-300 antialiased ${
-        darkMode ? "bg-[#0B0F17] text-[#E2E8F0]" : "bg-[#F4F6FA] text-[#0F172A]"
+        darkMode ? "dark bg-[#0B0F17] text-[#E2E8F0]" : "bg-[#F4F6FA] text-[#0F172A]"
       }`}
     >
       {/* Toast Notification Banner */}
@@ -2120,12 +2126,16 @@ export default function CreateCoursePage() {
                         </span>
                       </div>
 
-                      <h3 className="text-lg font-bold">{courseData.title || "Untitled Course"}</h3>
-                      <p className="text-xs text-[#64748B] mt-2 leading-relaxed">
+                      <h3 className={`text-lg font-bold ${darkMode ? "text-white" : "text-[#0F172A]"}`}>
+                        {courseData.title || "Untitled Course"}
+                      </h3>
+                      <p className={`text-xs mt-2 leading-relaxed ${darkMode ? "text-[#94A3B8]" : "text-[#64748B]"}`}>
                         {courseData.description || "No description provided."}
                       </p>
 
-                      <div className="mt-4 pt-4 border-t border-inherit flex flex-wrap gap-4 text-xs font-semibold text-[#64748B]">
+                      <div className={`mt-4 pt-4 border-t border-inherit flex flex-wrap gap-4 text-xs font-semibold ${
+                        darkMode ? "text-[#94A3B8]" : "text-[#64748B]"
+                      }`}>
                         <span>💰 Real: ₹{courseData.regular_price} • Promo: ₹{courseData.promo_price}</span>
                         <span>🛠️ Software: {courseData.software_required || "None required"}</span>
                         <span>📜 Quiz: {quizQuestions.length} Questions</span>
@@ -2143,7 +2153,7 @@ export default function CreateCoursePage() {
                       </h4>
                       <ul className="space-y-2">
                         {courseData.what_you_will_learn.map((item, i) => (
-                          <li key={i} className="flex items-start gap-2.5 text-xs">
+                          <li key={i} className={`flex items-start gap-2.5 text-xs ${darkMode ? "text-gray-200" : "text-[#1E293B]"}`}>
                             <CheckCircle2 className="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" />
                             <span>{item}</span>
                           </li>
@@ -2178,16 +2188,18 @@ export default function CreateCoursePage() {
                               {sec.lectures.map((lec, lIdx) => (
                                 <div
                                   key={lIdx}
-                                  className="flex items-center justify-between text-xs text-[#64748B]"
+                                  className={`flex items-center justify-between text-xs ${
+                                    darkMode ? "text-gray-300" : "text-[#64748B]"
+                                  }`}
                                 >
                                   <span className="truncate pr-2">
                                     • {lec.title} ({lec.duration})
                                   </span>
                                   <span
-                                    className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full shrink-0 ${
+                                    className={`text-[10px] font-bold px-2.5 py-0.5 rounded-full shrink-0 border ${
                                       lec.is_free_preview
-                                        ? "bg-emerald-50 text-emerald-600"
-                                        : "bg-gray-100 text-gray-500"
+                                        ? (darkMode ? "bg-emerald-950/50 text-emerald-400 border-emerald-800" : "bg-emerald-50 text-emerald-700 border-emerald-200")
+                                        : (darkMode ? "bg-gray-800 text-gray-400 border-gray-700" : "bg-gray-100 text-gray-500 border-gray-200")
                                     }`}
                                   >
                                     {lec.is_free_preview ? "Free Preview" : "Locked"}

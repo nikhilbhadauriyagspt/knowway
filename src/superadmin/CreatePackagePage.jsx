@@ -81,102 +81,32 @@ export default function CreatePackagePage() {
   const [courseSearch, setCourseSearch] = useState("");
 
   // ========================================================
-  // MAIN PACKAGE FORM STATE
+  // MAIN PACKAGE FORM STATE (STARTS FRESH/BLANK)
   // ========================================================
   const [packageData, setPackageData] = useState({
-    name: "Pro",
-    slug: "pro",
-    tagline:
-      "Our step-by-step, skill-focused, and practical growth package. Specially designed for people who want to learn high-income digital skills and start their freelancing journey.",
-    image_url: "/images/packages/pro.png",
-    mrp_price: "11800",
-    promo_price: "7999",
-    mrp_note:
-      "Full access to 9 value-packed courses, ideal for beginners, freelancers, content creators",
-    promo_note:
-      "Launch your Freelance career with 9+ High Value courses + lifetime access, tools, and community.",
-    total_hours: "25+ Hours",
-    enrolled_students: "45K+ Students Enrolled",
-    overview_heading:
-      "Unlock lifetime access, certification, and community support to grow, earn, and thrive confidently.",
-    overview_desc:
-      "A complete ecosystem designed for individuals who are serious about building their freelance career that leads to real results.",
-    what_you_will_learn: [
-      "Learn Artificial Intelligence tools to improve productivity and work smarter.",
-      "Master Video Editing with Premiere Pro, Filmora, and create engaging content.",
-      "Learn freelancing skills to find clients and start earning online.",
-      "Design professional graphics using Canva for personal and business needs.",
-      "Grow your Instagram presence with effective growth strategies.",
-      "Understand Content Marketing and create content that attracts audiences.",
-      "Create short-form videos that engage viewers and build digital presence.",
-    ],
+    name: "",
+    slug: "",
+    tagline: "",
+    image_url: "",
+    mrp_price: "",
+    promo_price: "",
+    mrp_note: "",
+    promo_note: "",
+    total_hours: "",
+    enrolled_students: "",
+    overview_heading: "",
+    overview_desc: "",
+    what_you_will_learn: [""],
     faqs: [
       {
-        question: "What’s included in this package?",
-        answer:
-          "The package includes full lifetime access to in-demand courses covering Freelancing, Video Editing, AI Tools, Graphic Design, Canva, and Social Media Marketing. You also get accredited completion certificates, downloadable project files, and access to our private community.",
-      },
-      {
-        question: "Can I upgrade to a higher package later?",
-        answer:
-          "Yes, you can easily upgrade to Supreme, Premium, or Premium Plus packages from your student dashboard at any time by paying only the upgrade difference.",
-      },
-      {
-        question: "What kind of certificate or recognition will I receive?",
-        answer:
-          "Upon scoring 60% or higher in the module quiz assessment, you will receive an official ISO-certified, verifiable digital certificate with unique QR code verification to add directly to your LinkedIn, resume, or client proposals.",
+        question: "",
+        answer: "",
       },
     ],
     course_ids: [],
+    referral_commission_type: "percentage",
+    referral_commission_value: "20",
   });
-
-  // Preset package templates for 1-click filling
-  const presetTemplates = [
-    {
-      name: "Pro",
-      slug: "pro",
-      image_url: "/images/packages/pro.png",
-      mrp_price: "11800",
-      promo_price: "7999",
-      tagline:
-        "Our step-by-step, skill-focused, and practical growth package. Specially designed for people who want to learn high-income digital skills and start their freelancing journey.",
-      total_hours: "25+ Hours",
-      enrolled_students: "45K+ Students Enrolled",
-    },
-    {
-      name: "Supreme",
-      slug: "supreme",
-      image_url: "/images/packages/supreme.png",
-      mrp_price: "14800",
-      promo_price: "9999",
-      tagline:
-        "Go deeper with advanced learning paths designed for digital growth and business skills. Master high-converting digital marketing, client scaling, and business workflows.",
-      total_hours: "40+ Hours",
-      enrolled_students: "28K+ Students Enrolled",
-    },
-    {
-      name: "Premium",
-      slug: "premium",
-      image_url: "/images/packages/premium.png",
-      mrp_price: "18800",
-      promo_price: "12999",
-      tagline:
-        "Learn how digital commerce works and explore the skills behind building an online business. End-to-end frontend development, digital product selling, and practical monetization.",
-      total_hours: "60+ Hours",
-      enrolled_students: "18K+ Students Enrolled",
-    },
-    {
-      name: "Premium Plus",
-      slug: "premium-plus",
-      image_url: "/images/packages/premium-plus.png",
-      mrp_price: "24800",
-      promo_price: "16999",
-      tagline:
-        "Explore content creation, personal branding, AI automation, and VIP founder community access with full lifetime privileges.",
-      total_hours: "100+ Hours",
-      enrolled_students: "9.5K+ Students Enrolled",
-    },
-  ];
 
   // Toast Helper
   const showToast = (message, type = "success") => {
@@ -252,6 +182,8 @@ export default function CreatePackagePage() {
                     ? p.faqs
                     : [{ question: "", answer: "" }],
                 course_ids: linkedIds,
+                referral_commission_type: p.referral_commission_type || "percentage",
+                referral_commission_value: String(p.referral_commission_value !== undefined && p.referral_commission_value !== null ? p.referral_commission_value : "20"),
               });
             }
           } catch (pErr) {
@@ -355,6 +287,8 @@ export default function CreatePackagePage() {
         what_you_will_learn: packageData.what_you_will_learn.filter((item) => item.trim() !== ""),
         faqs: packageData.faqs.filter((faq) => faq.question.trim() !== ""),
         course_ids: packageData.course_ids,
+        referral_commission_type: packageData.referral_commission_type || "percentage",
+        referral_commission_value: Number(packageData.referral_commission_value) || 20,
       };
 
       const res = isEditMode
@@ -440,7 +374,7 @@ export default function CreatePackagePage() {
   return (
     <div
       className={`min-h-screen transition-colors duration-300 antialiased ${
-        darkMode ? "bg-[#0B0F17] text-[#E2E8F0]" : "bg-[#F4F6FA] text-[#0F172A]"
+        darkMode ? "dark bg-[#0B0F17] text-[#E2E8F0]" : "bg-[#F4F6FA] text-[#0F172A]"
       }`}
     >
       {/* Toast Notification Banner */}
@@ -657,53 +591,6 @@ export default function CreatePackagePage() {
                 <div className="grid grid-cols-1 lg:grid-cols-3 gap-8 mt-6">
                   {/* Left 2 Cols: Form Inputs */}
                   <div className="lg:col-span-2 space-y-6">
-                    {/* 1-Click Preset Template Pills */}
-                    <div>
-                      <div className="flex items-center justify-between mb-2">
-                        <label className="text-xs font-bold flex items-center gap-1.5">
-                          <Sparkles className="w-3.5 h-3.5 text-[#035BE3]" />
-                          <span>Quick Preset Bundles</span>
-                        </label>
-                        <span className={`text-[11px] ${darkMode ? "text-[#94A3B8]" : "text-[#64748B]"}`}>
-                          Click to auto-fill details
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
-                        {presetTemplates.map((t) => (
-                          <button
-                            key={t.slug}
-                            type="button"
-                            onClick={() => {
-                              setPackageData((prev) => ({
-                                ...prev,
-                                name: t.name,
-                                slug: t.slug,
-                                image_url: t.image_url,
-                                mrp_price: t.mrp_price,
-                                promo_price: t.promo_price,
-                                tagline: t.tagline,
-                                total_hours: t.total_hours,
-                                enrolled_students: t.enrolled_students,
-                              }));
-                              showToast(`Loaded ${t.name} package template!`);
-                            }}
-                            className={`p-3 rounded-2xl border text-left cursor-pointer transition-all ${
-                              packageData.slug === t.slug
-                                ? "border-[#035BE3] bg-[#035BE3]/10 text-[#035BE3] ring-1 ring-[#035BE3]"
-                                : darkMode
-                                ? "border-[#222B3D] bg-[#0B0F17] text-[#E2E8F0] hover:border-[#035BE3]/50"
-                                : "border-[#E2E8F0] bg-[#F8FAFD] text-[#0F172A] hover:border-[#035BE3]/50"
-                            }`}
-                          >
-                            <p className="text-xs font-bold">{t.name}</p>
-                            <p className="text-[11px] text-[#035BE3] font-semibold mt-0.5">
-                              ₹{Number(t.promo_price).toLocaleString("en-IN")}
-                            </p>
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
                     {/* Name & Slug */}
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div>
@@ -713,11 +600,23 @@ export default function CreatePackagePage() {
                         <input
                           type="text"
                           required
-                          placeholder="e.g. Pro, Supreme, Premium"
+                          placeholder="e.g. Master Freelance Suite, Pro Bundle"
                           value={packageData.name}
-                          onChange={(e) =>
-                            setPackageData((prev) => ({ ...prev, name: e.target.value }))
-                          }
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setPackageData((prev) => {
+                              const autoSlug = val
+                                .toLowerCase()
+                                .trim()
+                                .replace(/[^\w\s-]/g, "")
+                                .replace(/[\s_-]+/g, "-");
+                              return {
+                                ...prev,
+                                name: val,
+                                slug: isEditMode ? prev.slug : autoSlug,
+                              };
+                            });
+                          }}
                           className={`w-full h-12 rounded-full border px-5 text-xs outline-none focus:border-[#035BE3] font-medium transition ${
                             darkMode
                               ? "bg-[#0B0F17] border-[#222B3D] text-white"

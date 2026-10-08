@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useNavigate, useLocation } from "react-router-dom";
 import {
   Mail,
   Lock,
@@ -9,7 +9,10 @@ import {
   ArrowLeft,
   Sparkles,
   AlertCircle,
-  CheckCircle2,
+  AlertTriangle,
+  MonitorSmartphone,
+  LogOut,
+  X,
 } from "lucide-react";
 import { loginUserApi, setUserSession } from "../services/api";
 
@@ -17,6 +20,7 @@ const CURRENT_YEAR = new Date().getFullYear();
 
 export default function LoginPage() {
   const navigate = useNavigate();
+  const location = useLocation();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -24,8 +28,26 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  // Concurrent Session Detection States
+  const [showSessionModal, setShowSessionModal] = useState(false);
+  const [activeSessionInfo, setActiveSessionInfo] = useState(null);
+  const [sessionTerminatedNotice, setSessionTerminatedNotice] = useState("");
+
+  useEffect(() => {
+    // Check if user was redirected due to session termination from another device
+    const handleSessionTerminated = (e) => {
+      setSessionTerminatedNotice(
+        e?.detail?.message ||
+          "Your session was logged out because your account was accessed from another browser or device."
+      );
+    };
+
+    window.addEventListener("knowway_session_terminated", handleSessionTerminated);
+    return () => window.removeEventListener("knowway_session_terminated", handleSessionTerminated);
+  }, []);
+
+  const handleSubmit = async (e, forceLogin = false) => {
+    if (e) e.preventDefault();
     if (!email || !password) {
       setErrorMsg("Please enter both email and password.");
       return;
@@ -33,22 +55,40 @@ export default function LoginPage() {
 
     setLoading(true);
     setErrorMsg("");
+    setSessionTerminatedNotice("");
 
     try {
       const res = await loginUserApi({
         email: email.trim(),
         password,
+        force_login: forceLogin,
       });
 
+      // 1. If user is logged in on another device/browser and needs confirmation
+      if (res?.requires_confirmation || res?.code === "ALREADY_LOGGED_IN") {
+        setActiveSessionInfo(res.active_session || { last_device: "Another Browser / Device" });
+        setShowSessionModal(true);
+        setLoading(false);
+        return;
+      }
+
+      // 2. Success login
       if (res?.success && res.token) {
+        setShowSessionModal(false);
         setUserSession(res.token, res.user);
         navigate("/dashboard", { replace: true });
+      } else {
+        setErrorMsg(res?.message || "Login failed. Please try again.");
       }
     } catch (err) {
       setErrorMsg(err.message || "Invalid credentials. Please check your email/password.");
     } finally {
       setLoading(false);
     }
+  };
+
+  const handleConfirmOverrideLogin = () => {
+    handleSubmit(null, true);
   };
 
   return (
@@ -115,6 +155,16 @@ export default function LoginPage() {
 
         <div className="w-full max-w-md bg-white rounded-[32px] border border-[#E4EAF4] p-6 sm:p-8 shadow-xl shadow-blue-900/5">
           
+          {sessionTerminatedNotice && (
+            <div className="mb-5 p-3.5 rounded-2xl bg-amber-50 border border-amber-200 text-amber-900 text-xs flex items-start gap-2.5">
+              <AlertTriangle className="w-4 h-4 text-amber-600 shrink-0 mt-0.5" />
+              <div>
+                <p className="font-bold">Session Notice</p>
+                <p className="mt-0.5 text-[#64748B]">{sessionTerminatedNotice}</p>
+              </div>
+            </div>
+          )}
+
           {errorMsg && (
             <div className="mb-5 p-3.5 rounded-2xl bg-red-50 border border-red-200 text-red-700 text-xs flex items-center gap-2.5">
               <AlertCircle className="w-4 h-4 shrink-0" />
@@ -136,6 +186,7 @@ export default function LoginPage() {
                 <input
                   type="email"
                   required
+                  autoComplete="username email"
                   placeholder="name@domain.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -165,6 +216,7 @@ export default function LoginPage() {
                 <input
                   type={showPassword ? "text" : "password"}
                   required
+                  autoComplete="current-password"
                   placeholder="Enter your password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -215,6 +267,86 @@ export default function LoginPage() {
           </div>
         </div>
       </main>
+
+      {/* ======================================================== */}
+      {/* CONCURRENT ACTIVE SESSION CONFIRMATION MODAL (ENGLISH) */}
+      {/* ======================================================== */}
+      {showSessionModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#0F172A]/60 backdrop-blur-sm animate-in fade-in duration-200">
+          <div className="relative w-full max-w-md bg-white rounded-3xl border border-[#E2E8F0] p-6 sm:p-7 shadow-2xl shadow-slate-900/20">
+            {/* Close Button */}
+            <button
+              onClick={() => setShowSessionModal(false)}
+              className="absolute right-4 top-4 p-2 rounded-full text-gray-400 hover:text-gray-700 hover:bg-gray-100 transition cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+
+            {/* Icon & Title */}
+            <div className="flex items-center gap-3.5 mb-4">
+              <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center shrink-0">
+                <AlertTriangle size={24} />
+              </div>
+              <div>
+                <h3 className="text-base font-black text-[#0F172A]">
+                  Active Session Detected
+                </h3>
+                <p className="text-xs text-[#64748B]">
+                  Account currently active on another device
+                </p>
+              </div>
+            </div>
+
+            {/* Body Explanation */}
+            <div className="space-y-3 mb-6 text-xs text-[#475569] leading-relaxed">
+              <p>
+                Your account is currently signed in on another browser or device.
+              </p>
+
+              {activeSessionInfo && (
+                <div className="p-3.5 rounded-2xl bg-gray-50 border border-gray-200 flex items-center gap-3">
+                  <MonitorSmartphone size={20} className="text-[#035BE3] shrink-0" />
+                  <div className="space-y-0.5">
+                    <span className="text-[10px] uppercase font-bold text-gray-400 block">
+                      Active Device
+                    </span>
+                    <span className="font-bold text-gray-800 text-xs block">
+                      {activeSessionInfo.last_device || "Other Browser / Device"}
+                    </span>
+                  </div>
+                </div>
+              )}
+
+              <div className="p-3 rounded-xl bg-amber-50/80 border border-amber-200/80 text-amber-900 flex items-start gap-2">
+                <LogOut size={15} className="shrink-0 text-amber-700 mt-0.5" />
+                <span>
+                  Continuing here will automatically <strong>log out</strong> your account from all other browsers and devices.
+                </span>
+              </div>
+            </div>
+
+            {/* Action Buttons */}
+            <div className="flex items-center gap-3">
+              <button
+                type="button"
+                onClick={() => setShowSessionModal(false)}
+                className="flex-1 h-11 rounded-full border border-gray-200 text-gray-700 text-xs font-bold hover:bg-gray-50 transition cursor-pointer"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleConfirmOverrideLogin}
+                disabled={loading}
+                className="flex-1 h-11 rounded-full bg-[#035BE3] hover:bg-[#024bc0] text-white text-xs font-black shadow-md shadow-blue-600/20 transition flex items-center justify-center gap-1.5 cursor-pointer disabled:opacity-60"
+              >
+                <span>{loading ? "Logging in..." : "OK, Proceed"}</span>
+                <ArrowRight size={14} />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <footer className="w-full py-4 text-center text-xs text-[#94A3B8] border-t border-[#EDF1F7]">
         &copy; {CURRENT_YEAR} KnowWay LearnSpace. All rights reserved.

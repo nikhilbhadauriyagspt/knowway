@@ -47,6 +47,7 @@ export const initDB = async () => {
     const createUsersTableQuery = `
       CREATE TABLE IF NOT EXISTS users (
         id INT AUTO_INCREMENT PRIMARY KEY,
+        student_id VARCHAR(64) DEFAULT NULL UNIQUE,
         name VARCHAR(120) NOT NULL,
         phone VARCHAR(20) DEFAULT NULL,
         email VARCHAR(120) NOT NULL UNIQUE,
@@ -62,10 +63,25 @@ export const initDB = async () => {
     await connection.query(createUsersTableQuery);
 
     // Safe schema alterations for existing DBs
+    try { await connection.query("ALTER TABLE users ADD COLUMN student_id VARCHAR(64) DEFAULT NULL UNIQUE;"); } catch (_) {}
     try { await connection.query("ALTER TABLE users MODIFY COLUMN address TEXT DEFAULT NULL;"); } catch (_) {}
     try { await connection.query("ALTER TABLE users MODIFY COLUMN phone VARCHAR(20) DEFAULT NULL;"); } catch (_) {}
     try { await connection.query("ALTER TABLE users ADD COLUMN avatar_url VARCHAR(500) DEFAULT NULL;"); } catch (_) {}
     try { await connection.query("ALTER TABLE users ADD COLUMN is_verified BOOLEAN DEFAULT TRUE;"); } catch (_) {}
+    try { await connection.query("ALTER TABLE users ADD COLUMN active_session_token VARCHAR(255) DEFAULT NULL;"); } catch (_) {}
+    try { await connection.query("ALTER TABLE users ADD COLUMN last_device_info VARCHAR(255) DEFAULT NULL;"); } catch (_) {}
+    try { await connection.query("ALTER TABLE users ADD COLUMN last_login_at TIMESTAMP DEFAULT NULL;"); } catch (_) {}
+
+    // Backfill any existing users who do not have a student_id yet
+    try {
+      const [existingUsersWithoutId] = await connection.query(
+        "SELECT id FROM users WHERE student_id IS NULL OR student_id = ''"
+      );
+      for (const u of existingUsersWithoutId) {
+        const generatedId = `KW-${new Date().getFullYear()}-${String(u.id).padStart(4, "0")}${Math.floor(100 + Math.random() * 900)}`;
+        await connection.query("UPDATE users SET student_id = ? WHERE id = ?", [generatedId, u.id]);
+      }
+    } catch (_) {}
 
     // Email OTPs table for Signup and Forgot Password verification
     const createOtpsTableQuery = `
@@ -840,6 +856,320 @@ export const initDB = async () => {
       }
       console.log("📦 Default 4 Packages seeded and linked with courses.");
     }
+
+    // 10. Payments table for Razorpay Orders & Transactions
+    const createPaymentsTableQuery = `
+      CREATE TABLE IF NOT EXISTS payments (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        user_name VARCHAR(120) DEFAULT NULL,
+        user_email VARCHAR(120) DEFAULT NULL,
+        package_id INT DEFAULT NULL,
+        package_name VARCHAR(150) DEFAULT NULL,
+        package_slug VARCHAR(100) DEFAULT NULL,
+        amount DECIMAL(10,2) NOT NULL,
+        currency VARCHAR(10) DEFAULT 'INR',
+        razorpay_order_id VARCHAR(100) NOT NULL,
+        razorpay_payment_id VARCHAR(100) DEFAULT NULL,
+        razorpay_signature VARCHAR(255) DEFAULT NULL,
+        referral_code VARCHAR(50) DEFAULT NULL,
+        status VARCHAR(50) DEFAULT 'pending',
+        payment_method VARCHAR(50) DEFAULT 'razorpay',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX (user_id),
+        INDEX (razorpay_order_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `;
+    await connection.query(createPaymentsTableQuery);
+
+    // 11. User Purchased Packages table (For student dashboard & package upgrade tracking)
+    const createUserPackagesTableQuery = `
+      CREATE TABLE IF NOT EXISTS user_packages (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        package_id INT NOT NULL,
+        package_slug VARCHAR(100) NOT NULL,
+        payment_id INT DEFAULT NULL,
+        amount_paid DECIMAL(10,2) DEFAULT 0.00,
+        enrolled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        status VARCHAR(50) DEFAULT 'active',
+        UNIQUE KEY user_pkg_unique (user_id, package_id),
+        INDEX (user_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `;
+    await connection.query(createUserPackagesTableQuery);
+
+    // 12. User Enrolled Courses table (For student dashboard course access & individual purchases)
+    const createUserCoursesTableQuery = `
+      CREATE TABLE IF NOT EXISTS user_courses (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        course_id INT NOT NULL,
+        payment_id INT DEFAULT NULL,
+        amount_paid DECIMAL(10,2) DEFAULT 0.00,
+        enrolled_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        status VARCHAR(50) DEFAULT 'active',
+        UNIQUE KEY user_course_unique (user_id, course_id),
+        INDEX (user_id),
+        INDEX (course_id)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `;
+    await connection.query(createUserCoursesTableQuery);
+
+    // 13. Affiliate Wallets table (Tracks real earnings and available withdrawal balance)
+    const createAffiliateWalletsTableQuery = `
+      CREATE TABLE IF NOT EXISTS affiliate_wallets (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL UNIQUE,
+        current_balance DECIMAL(10,2) DEFAULT 0.00,
+        total_earned DECIMAL(10,2) DEFAULT 0.00,
+        total_withdrawn DECIMAL(10,2) DEFAULT 0.00,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX (user_id),
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `;
+    await connection.query(createAffiliateWalletsTableQuery);
+
+    // 14. Affiliate Referrals table (Tracks per-transaction commissions on courses & packages)
+    const createAffiliateReferralsTableQuery = `
+      CREATE TABLE IF NOT EXISTS affiliate_referrals (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        referrer_id INT NOT NULL,
+        referred_user_id INT NOT NULL,
+        referred_user_name VARCHAR(150) DEFAULT NULL,
+        referred_user_email VARCHAR(150) DEFAULT NULL,
+        item_type VARCHAR(50) DEFAULT 'package',
+        item_id INT NOT NULL,
+        item_title VARCHAR(255) NOT NULL,
+        item_price DECIMAL(10,2) NOT NULL,
+        commission_type VARCHAR(20) DEFAULT 'percentage',
+        commission_value DECIMAL(10,2) NOT NULL,
+        commission_amount DECIMAL(10,2) NOT NULL,
+        payment_id INT DEFAULT NULL,
+        status VARCHAR(50) DEFAULT 'credited',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX (referrer_id),
+        INDEX (referred_user_id),
+        FOREIGN KEY (referrer_id) REFERENCES users(id) ON DELETE CASCADE,
+        FOREIGN KEY (referred_user_id) REFERENCES users(id) ON DELETE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `;
+    await connection.query(createAffiliateReferralsTableQuery);
+
+    // 15. Affiliate Payout Requests table (Tracks student bank/UPI withdrawal requests)
+    const createAffiliatePayoutsTableQuery = `
+      CREATE TABLE IF NOT EXISTS affiliate_payout_requests (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        user_name VARCHAR(150) DEFAULT NULL,
+        user_email VARCHAR(150) DEFAULT NULL,
+        user_phone VARCHAR(50) DEFAULT NULL,
+        amount DECIMAL(10,2) NOT NULL,
+        payout_method VARCHAR(20) DEFAULT 'upi',
+        upi_id VARCHAR(100) DEFAULT NULL,
+        bank_name VARCHAR(100) DEFAULT NULL,
+        account_number VARCHAR(100) DEFAULT NULL,
+        ifsc_code VARCHAR(50) DEFAULT NULL,
+        holder_name VARCHAR(150) DEFAULT NULL,
+        status VARCHAR(50) DEFAULT 'pending',
+        utr_number VARCHAR(100) DEFAULT NULL,
+        admin_note TEXT DEFAULT NULL,
+        payout_mode VARCHAR(50) DEFAULT 'manual',
+        razorpayx_payout_id VARCHAR(100) DEFAULT NULL,
+        rejection_reason TEXT DEFAULT NULL,
+        requested_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        processed_at DATETIME DEFAULT NULL,
+        INDEX (user_id),
+        INDEX (status),
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `;
+    await connection.query(createAffiliatePayoutsTableQuery);
+
+    // 16. Saved User Payout Methods table (Bank accounts and UPI IDs)
+    const createUserPayoutMethodsTableQuery = `
+      CREATE TABLE IF NOT EXISTS user_payout_methods (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT NOT NULL,
+        type VARCHAR(20) NOT NULL DEFAULT 'upi',
+        holder_name VARCHAR(150) DEFAULT NULL,
+        account_number VARCHAR(100) DEFAULT NULL,
+        ifsc_code VARCHAR(50) DEFAULT NULL,
+        bank_name VARCHAR(100) DEFAULT NULL,
+        upi_id VARCHAR(100) DEFAULT NULL,
+        is_default BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX (user_id),
+        FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `;
+    await connection.query(createUserPayoutMethodsTableQuery);
+
+    // 1. Admin Notifications Table
+    const createAdminNotificationsTableQuery = `
+      CREATE TABLE IF NOT EXISTS admin_notifications (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        type VARCHAR(50) NOT NULL,
+        title VARCHAR(255) NOT NULL,
+        message TEXT NOT NULL,
+        data JSON DEFAULT NULL,
+        is_read BOOLEAN DEFAULT FALSE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX (is_read),
+        INDEX (created_at)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `;
+    await connection.query(createAdminNotificationsTableQuery);
+
+    // 2. Admin Activity Logs / Audit History Table
+    const createAdminActivityLogsTableQuery = `
+      CREATE TABLE IF NOT EXISTS admin_activity_logs (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        admin_id INT DEFAULT NULL,
+        admin_name VARCHAR(120) DEFAULT 'System',
+        action VARCHAR(100) NOT NULL,
+        category VARCHAR(50) NOT NULL DEFAULT 'general',
+        details TEXT NOT NULL,
+        metadata JSON DEFAULT NULL,
+        ip_address VARCHAR(50) DEFAULT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        INDEX (category),
+        INDEX (action),
+        INDEX (created_at)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `;
+    await connection.query(createAdminActivityLogsTableQuery);
+
+    // Safe column additions for Sub-Admin and Role-Based Access Control in admins table
+    try { await connection.query("ALTER TABLE admins ADD COLUMN role_title VARCHAR(100) DEFAULT 'Super Administrator';"); } catch (_) {}
+    try { await connection.query("ALTER TABLE admins ADD COLUMN permissions JSON DEFAULT NULL;"); } catch (_) {}
+    try { await connection.query("ALTER TABLE admins ADD COLUMN is_active BOOLEAN DEFAULT TRUE;"); } catch (_) {}
+    try { await connection.query("ALTER TABLE admins ADD COLUMN created_by INT DEFAULT NULL;"); } catch (_) {}
+
+
+    // Safe column additions for packages & courses commission configuration (2-Tier System)
+    try { await connection.query("ALTER TABLE packages ADD COLUMN referral_commission_type VARCHAR(20) DEFAULT 'percentage';"); } catch (_) {}
+    try { await connection.query("ALTER TABLE packages ADD COLUMN referral_commission_value DECIMAL(10,2) DEFAULT 20.00;"); } catch (_) {}
+    try { await connection.query("ALTER TABLE packages ADD COLUMN leadership_commission_type VARCHAR(20) DEFAULT 'percentage';"); } catch (_) {}
+    try { await connection.query("ALTER TABLE packages ADD COLUMN leadership_commission_value DECIMAL(10,2) DEFAULT 5.00;"); } catch (_) {}
+
+    try { await connection.query("ALTER TABLE courses ADD COLUMN referral_commission_type VARCHAR(20) DEFAULT 'percentage';"); } catch (_) {}
+    try { await connection.query("ALTER TABLE courses ADD COLUMN referral_commission_value DECIMAL(10,2) DEFAULT 20.00;"); } catch (_) {}
+    try { await connection.query("ALTER TABLE courses ADD COLUMN leadership_commission_type VARCHAR(20) DEFAULT 'percentage';"); } catch (_) {}
+    try { await connection.query("ALTER TABLE courses ADD COLUMN leadership_commission_value DECIMAL(10,2) DEFAULT 5.00;"); } catch (_) {}
+
+    // Safe column additions for affiliate_referrals 2-tier tracking
+    try { await connection.query("ALTER TABLE affiliate_referrals ADD COLUMN commission_tier VARCHAR(20) DEFAULT 'direct';"); } catch (_) {}
+    try { await connection.query("ALTER TABLE affiliate_referrals ADD COLUMN tier_level INT DEFAULT 1;"); } catch (_) {}
+    try { await connection.query("ALTER TABLE affiliate_referrals ADD COLUMN direct_referrer_id INT DEFAULT NULL;"); } catch (_) {}
+
+    // Safe column additions for affiliate_wallets
+    try { await connection.query("ALTER TABLE affiliate_wallets ADD COLUMN direct_earnings DECIMAL(10,2) DEFAULT 0.00;"); } catch (_) {}
+    try { await connection.query("ALTER TABLE affiliate_wallets ADD COLUMN leadership_earnings DECIMAL(10,2) DEFAULT 0.00;"); } catch (_) {}
+
+    // Safe column additions for affiliate_payout_requests
+    try { await connection.query("ALTER TABLE affiliate_payout_requests ADD COLUMN payout_mode VARCHAR(50) DEFAULT 'manual';"); } catch (_) {}
+    try { await connection.query("ALTER TABLE affiliate_payout_requests ADD COLUMN razorpayx_payout_id VARCHAR(100) DEFAULT NULL;"); } catch (_) {}
+    try { await connection.query("ALTER TABLE affiliate_payout_requests ADD COLUMN rejection_reason TEXT DEFAULT NULL;"); } catch (_) {}
+
+    try { await connection.query("ALTER TABLE payments ADD COLUMN course_id INT DEFAULT NULL;"); } catch (_) {}
+    try { await connection.query("ALTER TABLE payments ADD COLUMN course_name VARCHAR(150) DEFAULT NULL;"); } catch (_) {}
+    try { await connection.query("ALTER TABLE payments ADD COLUMN item_type VARCHAR(50) DEFAULT 'package';"); } catch (_) {}
+
+    // Default system setting for minimum withdrawal limit & RazorpayX
+    try {
+      await connection.query(
+        "INSERT IGNORE INTO system_settings (setting_key, setting_value) VALUES ('min_affiliate_withdrawal_amount', '500'), ('razorpayx_is_active', 'true'), ('razorpayx_account_number', '2323230048123456')"
+      );
+    } catch (_) {}
+
+    // Backfill default commission values on packages if unassigned
+    try {
+      await connection.query("UPDATE packages SET referral_commission_type = 'percentage', referral_commission_value = 20.00, leadership_commission_type = 'percentage', leadership_commission_value = 5.00 WHERE slug = 'pro' AND (referral_commission_value IS NULL OR referral_commission_value = 0)");
+      await connection.query("UPDATE packages SET referral_commission_type = 'percentage', referral_commission_value = 22.00, leadership_commission_type = 'percentage', leadership_commission_value = 6.00 WHERE slug = 'supreme' AND (referral_commission_value IS NULL OR referral_commission_value = 0)");
+      await connection.query("UPDATE packages SET referral_commission_type = 'percentage', referral_commission_value = 25.00, leadership_commission_type = 'percentage', leadership_commission_value = 7.00 WHERE slug = 'premium' AND (referral_commission_value IS NULL OR referral_commission_value = 0)");
+      await connection.query("UPDATE packages SET referral_commission_type = 'percentage', referral_commission_value = 30.00, leadership_commission_type = 'percentage', leadership_commission_value = 8.00 WHERE slug = 'premium-plus' AND (referral_commission_value IS NULL OR referral_commission_value = 0)");
+    } catch (_) {}
+
+        // 3. Custom / Legal Policy Pages CMS Table
+    const createCustomPagesTableQuery = `
+      CREATE TABLE IF NOT EXISTS custom_pages (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        slug VARCHAR(255) NOT NULL UNIQUE,
+        content LONGTEXT NOT NULL,
+        meta_description VARCHAR(500) DEFAULT NULL,
+        is_published BOOLEAN DEFAULT TRUE,
+        show_in_footer BOOLEAN DEFAULT TRUE,
+        show_in_header BOOLEAN DEFAULT FALSE,
+        footer_category VARCHAR(100) DEFAULT 'legal',
+        sort_order INT DEFAULT 0,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX (slug),
+        INDEX (is_published)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `;
+    await connection.query(createCustomPagesTableQuery);
+
+    // Seed default policy pages if table is empty
+    try {
+      const [existingPages] = await connection.query("SELECT COUNT(*) as count FROM custom_pages");
+      if (existingPages[0].count === 0) {
+        await connection.query(`
+          INSERT INTO custom_pages (title, slug, content, meta_description, is_published, show_in_footer, footer_category, sort_order) VALUES
+          (
+            'Privacy Policy',
+            'privacy-policy',
+            '<h2>1. Introduction</h2><p>Welcome to Knowway. We value your privacy and are committed to protecting your personal data. This Privacy Policy explains how we collect, use, and safeguard your information when you access our e-learning platform and masterclasses.</p><h2>2. Information We Collect</h2><p>We collect information you provide directly, such as your full name, email address, mobile number, account credentials, and transaction records when purchasing skill packages or requesting affiliate payouts.</p><h2>3. How We Use Your Information</h2><ul><li>To provide and maintain your account and course enrollments</li><li>To process Razorpay payments and affiliate payout distributions</li><li>To prevent unauthorized concurrent logins and protect DRM video content</li><li>To send important transactional receipts and course updates</li></ul><h2>4. Contact Us</h2><p>If you have any questions regarding this Privacy Policy, please contact our support desk via our official email or help center.</p>',
+            'Official Privacy Policy and data protection terms for Knowway platform learners and affiliates.',
+            TRUE, TRUE, 'legal', 1
+          ),
+          (
+            'Terms of Service',
+            'terms-and-conditions',
+            '<h2>1. Acceptance of Terms</h2><p>By registering, accessing, or purchasing courses/packages on Knowway, you agree to be bound by these Terms of Service. If you do not agree, please do not use the platform.</p><h2>2. License & Account Access</h2><p>Upon enrollment, you receive a personal, non-transferable, revocable lifetime license to stream the video content. Account sharing, credential distribution, or downloading/re-uploading protected videos is strictly prohibited.</p><h2>3. Affiliate & Referral Program</h2><p>Affiliate commissions are paid according to the current 2-tier commission matrix upon successful, verified transactions. Fraudulent self-referrals or chargeback abuse will result in instant account termination.</p><h2>4. Intellectual Property</h2><p>All video masterclasses, curriculum, slides, and branding assets are the exclusive intellectual property of Knowway.</p>',
+            'Terms and conditions governing access, course streaming, and affiliate participation on Knowway.',
+            TRUE, TRUE, 'legal', 2
+          ),
+          (
+            'Refund & Cancellation Policy',
+            'refund-policy',
+            '<h2>1. Digital Product Policy</h2><p>At Knowway, all our skill packages and video masterclasses are digital educational goods that provide immediate access to proprietary curriculum upon purchase.</p><h2>2. 24-Hour Consideration Window</h2><p>We offer a 24-hour consideration refund guarantee if you face technical difficulties accessing your lessons and our support team is unable to resolve the issue within 48 business hours.</p><h2>3. Exceptions to Refund</h2><ul><li>Refunds are not granted after more than 10% of lessons have been watched.</li><li>Refund requests submitted after 24 hours of purchase will not be entertained.</li><li>Affiliate partner fees and payment gateway processing charges are non-refundable.</li></ul><h2>4. How to Request a Refund</h2><p>Please write to support@knowway.in with your Registered Email, Order ID, and reason for cancellation.</p>',
+            'Refund eligibility criteria and cancellation guidelines for digital courses and packages.',
+            TRUE, TRUE, 'legal', 3
+          ),
+          (
+            'Affiliate & Income Disclaimer',
+            'disclaimer',
+            '<h2>1. Educational Purpose Only</h2><p>All courses, tutorials, and training materials provided on Knowway are for educational and informational purposes only. We do not make any guarantees regarding income, job placements, or financial success.</p><h2>2. Affiliate Earning Transparency</h2><p>Affiliate partner earnings depend entirely on individual marketing effort, sales performance, and adherence to platform promotion guidelines. Past earnings of other affiliates do not guarantee future results.</p>',
+            'Earnings disclosure, educational purpose and legal liability disclaimer for Knowway platform.',
+            TRUE, TRUE, 'legal', 4
+          )
+        `);
+      }
+    } catch (_) {}
+
+    // Default system settings for Website Branding, Contact Info & Socials
+    try {
+      await connection.query(`
+        INSERT IGNORE INTO system_settings (setting_key, setting_value) VALUES 
+        ('site_name', 'Knowway'),
+        ('site_tagline', 'Simple learning paths, practical digital skills and useful knowledge designed to help you keep progressing.'),
+        ('site_logo', '/images/logo/logo.png'),
+        ('contact_email', 'support@knowway.in'),
+        ('contact_phone', '+91 98765 43210'),
+        ('contact_address', 'Knowway EdTech Tower, Tech Zone 4, Greater Noida, UP - 201306'),
+        ('social_instagram', 'https://instagram.com/knowway'),
+        ('social_youtube', 'https://youtube.com/@knowway'),
+        ('social_linkedin', 'https://linkedin.com/company/knowway'),
+        ('social_telegram', 'https://t.me/knowway_official'),
+        ('social_twitter', 'https://twitter.com/knowway'),
+        ('copyright_text', 'Knowway. All rights reserved.')
+      `);
+    } catch (_) {}
 
     connection.release();
   } catch (err) {

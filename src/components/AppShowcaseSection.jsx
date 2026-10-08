@@ -22,29 +22,29 @@ export default function CreatorProgramSection() {
         <div
           className="
             relative overflow-hidden rounded-[34px]
-            border border-[#0f5c53]/30
-            bg-[radial-gradient(circle_at_top_left,_rgba(20,122,104,.28),_transparent_34%),linear-gradient(135deg,#042f2b_0%,#053a33_45%,#06483f_100%)]
+            border border-white/20
+            bg-[radial-gradient(circle_at_top_left,_rgba(255,255,255,.24),_transparent_40%),linear-gradient(135deg,#035BE3_0%,#155DFC_48%,#023ea6_100%)]
             px-6 py-8 sm:px-8 sm:py-10 lg:px-12 lg:py-14
-            shadow-[0_25px_80px_rgba(4,48,43,.18)]
+            shadow-[0_25px_80px_rgba(3,91,227,.30)]
           "
         >
           {/* subtle overlays */}
-          <div className="pointer-events-none absolute -left-20 top-0 h-72 w-72 rounded-full bg-[#0d8a76]/10 blur-3xl" />
-          <div className="pointer-events-none absolute right-0 top-0 h-64 w-64 rounded-full bg-[#11b89b]/10 blur-3xl" />
-          <div className="pointer-events-none absolute bottom-0 right-10 h-52 w-52 rounded-full bg-[#ffffff08] blur-3xl" />
+          <div className="pointer-events-none absolute -left-20 top-0 h-72 w-72 rounded-full bg-white/10 blur-3xl" />
+          <div className="pointer-events-none absolute right-0 top-0 h-64 w-64 rounded-full bg-blue-300/15 blur-3xl" />
+          <div className="pointer-events-none absolute bottom-0 right-10 h-52 w-52 rounded-full bg-white/10 blur-3xl" />
 
           <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
             {/* LEFT CONTENT */}
             <div className="relative z-10 max-w-[680px]">
-              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-2 backdrop-blur-sm">
-                <Sparkles size={13} className="text-[#7FE8D4]" />
-                <span className="text-[12px] font-semibold tracking-[0.02em] text-[#D9F5EE]">
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/15 px-4 py-2 backdrop-blur-md">
+                <Sparkles size={13} className="text-white" />
+                <span className="text-[12px] font-semibold tracking-[0.02em] text-white">
                   Creator Program
                 </span>
               </div>
 
-              <div className="max-w-[560px] rounded-[28px] border border-white/8 bg-white/[0.03] p-6 sm:p-7">
-                <p className="text-[18px] leading-[1.5] text-white sm:text-[22px]">
+              <div className="max-w-[560px] rounded-[28px] border border-white/20 bg-white/10 p-6 sm:p-7 backdrop-blur-sm">
+                <p className="text-[18px] leading-[1.5] text-blue-100 sm:text-[22px] font-medium">
                   Turn learning into
                 </p>
 
@@ -52,7 +52,7 @@ export default function CreatorProgramSection() {
                   Real Progress.
                 </h2>
 
-                <p className="mt-5 max-w-[500px] text-[14px] leading-7 text-[#D0E8E2] sm:text-[15px]">
+                <p className="mt-5 max-w-[500px] text-[14px] leading-7 text-blue-50 sm:text-[15px] font-medium">
                   Join a guided learning environment where you can build better
                   skills, stay consistent, practice with direction and move
                   closer to real digital opportunities.
@@ -63,11 +63,11 @@ export default function CreatorProgramSection() {
                 {points.map((point) => (
                   <li
                     key={point}
-                    className="flex items-start gap-3 text-[14px] leading-7 text-white/95 sm:text-[15px]"
+                    className="flex items-start gap-3 text-[14px] leading-7 text-white font-medium sm:text-[15px]"
                   >
                     <CheckCircle2
                       size={18}
-                      className="mt-1 shrink-0 text-[#7FE8D4]"
+                      className="mt-1 shrink-0 text-amber-300"
                     />
                     <span>{point}</span>
                   </li>
@@ -76,8 +76,8 @@ export default function CreatorProgramSection() {
 
               <div className="mt-8 flex flex-wrap items-center gap-4">
                 <a
-                  href="/creator-program"
-                  className="inline-flex h-[54px] items-center gap-3 rounded-full bg-[#FA8C03] px-5 pr-2 text-[13px] font-semibold text-white transition-colors duration-200 hover:bg-[#e07b02] shadow-lg shadow-[#FA8C03]/25"
+                  href="/signup"
+                  className="inline-flex h-[54px] items-center gap-3 rounded-full bg-[#FA8C03] px-6 pr-2 text-[13px] font-bold text-white transition-all duration-200 hover:bg-[#e07b02] shadow-xl shadow-black/20 cursor-pointer transform hover:-translate-y-0.5"
                 >
                   Join Now
                   <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#FA8C03]">
@@ -85,8 +85,8 @@ export default function CreatorProgramSection() {
                   </span>
                 </a>
 
-                <div className="inline-flex items-center gap-2 rounded-full border border-white/10 bg-white/5 px-4 py-3 text-[12px] font-medium text-[#D7EEE8]">
-                  <BriefcaseBusiness size={14} className="text-[#7FE8D4]" />
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/15 px-4 py-3 text-[12px] font-semibold text-white backdrop-blur-md">
+                  <BriefcaseBusiness size={14} className="text-amber-300" />
                   Practical Growth Experience
                 </div>
               </div>
@@ -95,7 +95,7 @@ export default function CreatorProgramSection() {
             {/* RIGHT VISUAL */}
             <div className="relative z-10 flex min-h-[560px] items-center justify-center lg:justify-end">
               {/* back card glow */}
-              <div className="absolute h-[420px] w-[420px] rounded-full bg-[#0ea58f]/10 blur-3xl" />
+              <div className="absolute h-[420px] w-[420px] rounded-full bg-white/15 blur-3xl" />
 
               {/* back phone */}
               <PhoneMockup
@@ -128,15 +128,15 @@ export default function CreatorProgramSection() {
               />
 
               {/* little info chips */}
-              <div className="absolute bottom-6 left-0 hidden rounded-2xl border border-white/10 bg-white/10 px-4 py-3 backdrop-blur-md lg:flex lg:items-center lg:gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0e7b68] text-white">
+              <div className="absolute bottom-6 left-0 hidden rounded-2xl border border-white/20 bg-white/20 px-4 py-3 backdrop-blur-md lg:flex lg:items-center lg:gap-3 shadow-lg">
+                <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white text-[#035BE3]">
                   <MessageCircleMore size={18} />
                 </div>
                 <div>
-                  <p className="text-[12px] font-semibold text-white">
+                  <p className="text-[12px] font-bold text-white">
                     Guided community vibe
                   </p>
-                  <p className="text-[10px] text-[#D0E8E2]">
+                  <p className="text-[10px] text-blue-100 font-medium">
                     Interactive learning support
                   </p>
                 </div>
@@ -145,13 +145,13 @@ export default function CreatorProgramSection() {
           </div>
 
           {/* tiny bottom strip */}
-          <div className="relative z-10 mt-10 border-t border-white/8 pt-5">
+          <div className="relative z-10 mt-10 border-t border-white/15 pt-5">
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <p className="text-[12px] font-medium text-[#D4ECE5]">
+              <p className="text-[12px] font-semibold text-white/95">
                 Learn better • Practice consistently • Progress with confidence
               </p>
-              <p className="text-[11px] text-[#A9CFC6]">
-                Use this section before “How It Works”
+              <p className="text-[11px] text-blue-100">
+                KnowWay Guided Learning Platform
               </p>
             </div>
           </div>
@@ -171,8 +171,8 @@ function PhoneMockup({
   return (
     <div
       className={`
-        relative rounded-[42px] border border-white/10 bg-[#0a0d10]
-        p-[10px] shadow-[0_30px_80px_rgba(0,0,0,.45)]
+        relative rounded-[42px] border border-white/15 bg-[#0a0d10]
+        p-[10px] shadow-[0_30px_80px_rgba(0,0,0,.5)]
         ${small ? "w-[250px]" : "w-[300px] sm:w-[320px]"}
         ${className}
       `}
@@ -191,7 +191,7 @@ function PhoneMockup({
 
         {/* header */}
         <div className="flex items-center gap-3 px-5 pb-4 pt-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#0f6d5f] text-white">
+          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#035BE3] text-white">
             <MessageCircleMore size={18} />
           </div>
 
@@ -206,10 +206,11 @@ function PhoneMockup({
           {lines.map((line, idx) => (
             <div
               key={idx}
-              className={`max-w-[88%] rounded-2xl px-4 py-3 text-[12px] leading-5 ${idx % 2 === 0
-                ? "bg-[#1a1f25] text-white/90"
-                : "ml-auto bg-[#202830] text-white/90"
-                }`}
+              className={`max-w-[88%] rounded-2xl px-4 py-3 text-[12px] leading-5 ${
+                idx % 2 === 0
+                  ? "bg-[#1a1f25] text-white/90"
+                  : "ml-auto bg-[#155DFC]/30 border border-[#155DFC]/40 text-blue-100"
+              }`}
             >
               {line}
             </div>

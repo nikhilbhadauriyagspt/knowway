@@ -6,7 +6,9 @@ import {
   sendForgotPasswordOtp,
   resetPassword,
   getMe,
+  logout,
 } from "../controllers/authController.js";
+import { getVideoSecuritySettings } from "../controllers/adminController.js";
 import {
   getCourseQuiz,
   submitCourseQuiz,
@@ -20,9 +22,11 @@ const router = express.Router();
 router.post("/send-signup-otp", sendSignupOtp);
 router.post("/register", register);
 router.post("/login", login);
+router.post("/logout", logout);
 router.post("/forgot-password-otp", sendForgotPasswordOtp);
 router.post("/reset-password", resetPassword);
 router.get("/me", getMe);
+router.get("/video-security-config", getVideoSecuritySettings);
 
 // Course Quiz & Certification Endpoints
 router.get("/courses/:courseId/quiz", getCourseQuiz);

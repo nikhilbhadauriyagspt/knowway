@@ -244,13 +244,14 @@ function PackageHorizontal({ pkg }) {
             {pkg.name}
           </h3>
 
-          <p className="mt-3 max-w-[380px] text-[13.5px] leading-[1.75] text-[#5E697D]">
+          {/* Description commented out as per user request */}
+          {/* <p className="mt-3 max-w-[380px] text-[13.5px] leading-[1.75] text-[#5E697D]">
             {pkg.description}
-          </p>
+          </p> */}
 
           <Link
             to={pkg.link}
-            className="mt-7 inline-flex h-[47px] items-center gap-3 rounded-full bg-[#035BE3] pl-5 pr-2 text-[12.5px] font-semibold text-white transition-colors duration-200 hover:bg-[#FA8C03] shadow-sm shadow-[#035BE3]/20"
+            className="mt-6 inline-flex h-[47px] items-center gap-3 rounded-full bg-[#035BE3] pl-5 pr-2 text-[12.5px] font-semibold text-white transition-colors duration-200 hover:bg-[#FA8C03] shadow-sm shadow-[#035BE3]/20"
           >
             Explore Package
 
@@ -341,13 +342,14 @@ function PackageVertical({ pkg }) {
         </div>
 
         <div>
-          <p className="min-h-[67px] text-[13px] leading-[1.7] text-[#566176]">
+          {/* Description commented out as per user request */}
+          {/* <p className="min-h-[67px] text-[13px] leading-[1.7] text-[#566176]">
             {pkg.description}
-          </p>
+          </p> */}
 
           <Link
             to={pkg.link}
-            className="mt-5 inline-flex h-[47px] items-center gap-3 rounded-full bg-[#035BE3] pl-5 pr-2 text-[12.5px] font-semibold text-white transition-colors duration-200 hover:bg-[#FA8C03] shadow-sm shadow-[#035BE3]/20"
+            className="mt-2 inline-flex h-[47px] items-center gap-3 rounded-full bg-[#035BE3] pl-5 pr-2 text-[12.5px] font-semibold text-white transition-colors duration-200 hover:bg-[#FA8C03] shadow-sm shadow-[#035BE3]/20"
           >
             Explore Package
 

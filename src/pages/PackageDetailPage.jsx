@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useSearchParams, useNavigate } from "react-router-dom";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import { getPackageBySlugApi } from "../services/api";
+import { getPackageBySlugApi, getUserData, isUserAuthenticated } from "../services/api";
 
 // Fallback Courses
 const fallbackCourses = [
@@ -270,7 +270,15 @@ function CourseCard({ course }) {
 
 export default function PackageDetail() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const currentSlug = (id || "pro").toLowerCase().trim();
+
+  // Check if logged-in user has global referral code or if URL has referral parameter
+  const currentUser = getUserData();
+  const urlRef = searchParams.get("ref") || searchParams.get("referral");
+  const activeReferralCode = currentUser?.referralCode || currentUser?.referral_code || urlRef || null;
+  const isReferralApplied = Boolean(activeReferralCode);
 
   // Get fallback object for initial state
   const fallback = fallbackPackagesMap[currentSlug] || fallbackPackagesMap["pro"];
@@ -307,7 +315,8 @@ export default function PackageDetail() {
   }, [currentSlug, fallback]);
 
   const goToCheckout = () => {
-    window.location.href = `/signup?package=${packageData.slug || currentSlug}`;
+    const refParam = activeReferralCode ? `?ref=${encodeURIComponent(activeReferralCode)}` : "";
+    navigate(`/checkout/${packageData.slug || currentSlug}${refParam}`);
   };
 
   const coursesList = packageData.courses || fallbackCourses;
@@ -426,54 +435,112 @@ export default function PackageDetail() {
           <div className="mx-auto max-w-[1540px] px-6 md:px-10 lg:px-16 2xl:max-w-[1700px]">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
               {/* Left Side: MRP Price Card */}
-              <div className="lg:col-span-4 rounded-[22px] border border-[#E9EDF5] bg-[#F8FAFF] p-6 shadow-2xs">
+              <div
+                className={`lg:col-span-4 rounded-[22px] border p-6 transition-all ${
+                  isReferralApplied
+                    ? "border-[#E2E8F0] bg-[#FAFBFF]"
+                    : "border-[#155DFC] bg-[#EEF4FF] shadow-xs"
+                }`}
+              >
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1.5">
                     <ShieldCheck size={14} className="text-[#155DFC]" />
-                    MRP Price
+                    Standard MRP
                   </span>
-                  <span className="text-xl sm:text-2xl font-black text-[#141A29]">
+                  <span
+                    className={`text-xl sm:text-2xl font-black ${
+                      isReferralApplied
+                        ? "line-through text-slate-400 font-bold decoration-slate-400 decoration-2"
+                        : "text-[#141A29]"
+                    }`}
+                  >
                     ₹ {Number(packageData.mrp_price || 11800).toLocaleString("en-IN")}
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 leading-relaxed font-medium">
                   {packageData.mrp_note || fallback.mrp_note}
                 </p>
+                {isReferralApplied && (
+                  <span className="inline-block mt-2 text-[10px] font-bold text-slate-400 bg-slate-100 px-2 py-0.5 rounded-md">
+                    Regular non-discounted price
+                  </span>
+                )}
               </div>
 
               {/* Middle: Centered Buy Now & Explore Courses Buttons */}
               <div className="lg:col-span-4 flex flex-col items-center justify-center gap-3 text-center">
                 <button
                   onClick={goToCheckout}
-                  className="w-full sm:w-auto min-w-[220px] inline-flex items-center justify-center gap-2.5 rounded-full bg-[#155DFC] hover:bg-[#104ACF] px-9 py-4 text-sm font-bold text-white transition shadow-lg shadow-blue-500/25 cursor-pointer transform hover:-translate-y-0.5"
+                  className="w-full sm:w-auto min-w-[240px] inline-flex items-center justify-center gap-2.5 rounded-full bg-[#155DFC] hover:bg-[#104ACF] px-8 py-4 text-sm font-bold text-white transition shadow-lg shadow-blue-500/25 cursor-pointer transform hover:-translate-y-0.5"
                 >
-                  <span>Buy Now</span>
+                  <span>
+                    {isReferralApplied
+                      ? `Buy Now • ₹${Number(packageData.promo_price || 7999).toLocaleString("en-IN")}`
+                      : `Buy Now • ₹${Number(packageData.mrp_price || 11800).toLocaleString("en-IN")}`}
+                  </span>
                   <ArrowUpRight size={18} />
                 </button>
 
+                {isReferralApplied ? (
+                  <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-600 bg-emerald-50 px-3.5 py-1 rounded-full border border-emerald-200">
+                    <Check size={13} className="text-emerald-600" />
+                    <span>Referral Code Active ({activeReferralCode})</span>
+                  </div>
+                ) : (
+                  <span className="text-[11px] font-medium text-slate-500">
+                    Apply Referral Code at signup to get this at ₹{Number(packageData.promo_price || 7999).toLocaleString("en-IN")}
+                  </span>
+                )}
+
                 <a
                   href="#courses"
-                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#24304A] hover:text-[#155DFC] transition"
+                  className="inline-flex items-center gap-1.5 text-xs font-semibold text-[#24304A] hover:text-[#155DFC] transition mt-0.5"
                 >
                   <span>Explore Courses</span>
                   <ArrowRight size={14} />
                 </a>
               </div>
 
-              {/* Right Side: With Promocode Card with Icon */}
-              <div className="lg:col-span-4 rounded-[22px] border-2 border-[#155DFC] bg-[#EEF4FF] p-6 shadow-xs">
+              {/* Right Side: With Promocode / Referral Discount Card */}
+              <div
+                className={`lg:col-span-4 rounded-[22px] border-2 p-6 transition-all ${
+                  isReferralApplied
+                    ? "border-emerald-500 bg-[#F0FDF4] shadow-md shadow-emerald-500/10"
+                    : "border-[#155DFC] bg-[#EEF4FF] shadow-xs"
+                }`}
+              >
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-extrabold text-[#155DFC] uppercase tracking-wider flex items-center gap-1.5">
+                  <span
+                    className={`text-xs font-extrabold uppercase tracking-wider flex items-center gap-1.5 ${
+                      isReferralApplied ? "text-emerald-700" : "text-[#155DFC]"
+                    }`}
+                  >
                     <Tag size={14} />
-                    With Promocode
+                    {isReferralApplied ? "✓ Referral Price Applied" : "With Referral Code"}
                   </span>
-                  <span className="text-2xl font-black text-[#141A29]">
+                  <span
+                    className={`text-2xl font-black ${
+                      isReferralApplied ? "text-emerald-700" : "text-[#141A29]"
+                    }`}
+                  >
                     ₹ {Number(packageData.promo_price || 7999).toLocaleString("en-IN")}
                   </span>
                 </div>
-                <p className="text-xs text-slate-700 leading-relaxed font-medium">
+                <p
+                  className={`text-xs leading-relaxed font-medium ${
+                    isReferralApplied ? "text-emerald-900" : "text-slate-700"
+                  }`}
+                >
                   {packageData.promo_note || fallback.promo_note}
                 </p>
+                {isReferralApplied && (
+                  <div className="mt-2.5 flex items-center justify-between text-[11px] font-bold text-emerald-700 pt-2 border-t border-emerald-200">
+                    <span>Discount Applied:</span>
+                    <span className="bg-emerald-100 px-2.5 py-0.5 rounded-full text-emerald-800">
+                      Save ₹{Number((packageData.mrp_price || 11800) - (packageData.promo_price || 7999)).toLocaleString("en-IN")}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
