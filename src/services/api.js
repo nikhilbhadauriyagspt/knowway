@@ -359,4 +359,37 @@ export const getCertificateByNumberApi = (certificateNo) => {
   return apiRequest(`/auth/certificates/${certificateNo}`);
 };
 
+// ============================================================
+// PACKAGES API (PUBLIC & ADMIN)
+// ============================================================
+
+export const getPackagesApi = () => {
+  return apiRequest("/packages");
+};
+
+export const getPackageBySlugApi = (slugOrId) => {
+  return apiRequest(`/packages/${slugOrId}`);
+};
+
+export const createPackageApi = (packageData) => {
+  return apiRequest("/packages", {
+    method: "POST",
+    body: JSON.stringify(packageData),
+  });
+};
+
+export const updatePackageApi = (id, packageData) => {
+  return apiRequest(`/packages/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(packageData),
+  });
+};
+
+export const deletePackageApi = (id) => {
+  return apiRequest(`/packages/${id}`, {
+    method: "DELETE",
+  });
+};
+
+
 

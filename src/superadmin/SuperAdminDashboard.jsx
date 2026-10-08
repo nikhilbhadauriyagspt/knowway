@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate, Link, useSearchParams } from "react-router-dom";
 import {
   Users,
   Layers3,
@@ -53,6 +53,11 @@ import {
   createCourseApi,
   updateCourseApi,
   deleteCourseApi,
+  getPackagesApi,
+  getPackageBySlugApi,
+  createPackageApi,
+  updatePackageApi,
+  deletePackageApi,
   getSystemSettingsApi,
   saveSystemSettingsApi,
   testSmtpApi,
@@ -64,13 +69,33 @@ export default function SuperAdminDashboard() {
   const navigate = useNavigate();
 
   // Theme & Layout States
-  const [darkMode, setDarkMode] = useState(false);
+  const [searchParams] = useSearchParams();
+  const [darkMode, setDarkMode] = useState(() => {
+    try {
+      const saved = localStorage.getItem("admin_dark_mode");
+      if (saved !== null) return saved === "true";
+      return false;
+    } catch {
+      return false;
+    }
+  });
   const [sidebarHovered, setSidebarHovered] = useState(false);
-  const [activeTab, setActiveTab] = useState("dashboard"); // 'dashboard' | 'mentors' | 'courses' | 'users' | 'settings'
+  const [internalTab, setInternalTab] = useState("dashboard");
+  const tabFromUrl = searchParams.get("tab");
+  const activeTab = tabFromUrl || internalTab;
+  const setActiveTab = (t) => setInternalTab(t);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [notificationMsg, setNotificationMsg] = useState(null);
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [darkMode]);
 
   // Data States
   const [adminUser, setAdminUser] = useState(getAdminUser());
@@ -85,6 +110,39 @@ export default function SuperAdminDashboard() {
   const [usersList, setUsersList] = useState([]);
   const [mentorsList, setMentorsList] = useState([]);
   const [coursesList, setCoursesList] = useState([]);
+  const [packagesList, setPackagesList] = useState([]);
+
+  // Package Studio Modal State
+  const [isPackageModalOpen, setIsPackageModalOpen] = useState(false);
+  const [editingPackageId, setEditingPackageId] = useState(null);
+  const [uploadingPackageImg, setUploadingPackageImg] = useState(false);
+  const [packageFormData, setPackageFormData] = useState({
+    name: "",
+    slug: "",
+    tagline: "",
+    image_url: "/images/packages/pro.png",
+    mrp_price: 11800,
+    promo_price: 7999,
+    mrp_note: "Full access to value-packed courses, ideal for beginners, freelancers, content creators",
+    promo_note: "Launch your Freelance career with high-value courses + lifetime access, tools, and community.",
+    total_hours: "25+ Hours",
+    enrolled_students: "45K+ Students Enrolled",
+    overview_heading: "Unlock lifetime access, certification, and community support to grow, earn, and thrive confidently.",
+    overview_desc: "A complete ecosystem designed for individuals who are serious about building their freelance career that leads to real results.",
+    what_you_will_learn: [
+      "Learn Artificial Intelligence tools to improve productivity and work smarter.",
+      "Master Video Editing with Premiere Pro, Filmora, and create engaging content.",
+      "Learn freelancing skills to find clients and start earning online.",
+    ],
+    faqs: [
+      {
+        question: "What’s included in this package?",
+        answer: "The package includes full lifetime access to in-demand courses, verifiable certification, and community.",
+      },
+    ],
+    course_ids: [],
+  });
+
   const [cloudinarySettings, setCloudinarySettings] = useState({
     cloud_name: "",
     api_key: "",
@@ -196,6 +254,14 @@ export default function SuperAdminDashboard() {
         if (coursesRes?.courses) setCoursesList(coursesRes.courses);
       } catch (e) {
         console.warn("Courses notice:", e.message);
+      }
+
+      // 5. Packages
+      try {
+        const packagesRes = await getPackagesApi();
+        if (packagesRes?.packages) setPackagesList(packagesRes.packages);
+      } catch (e) {
+        console.warn("Packages notice:", e.message);
       }
 
       // 5. Cloudinary & SMTP Settings
@@ -420,12 +486,132 @@ export default function SuperAdminDashboard() {
         await deleteCourseApi(itemToDelete.id);
         setCoursesList((prev) => prev.filter((c) => c.id !== itemToDelete.id));
         showToast("Course removed.");
+      } else if (itemToDelete.type === "package") {
+        await deletePackageApi(itemToDelete.id);
+        setPackagesList((prev) => prev.filter((p) => p.id !== itemToDelete.id));
+        showToast("Package removed.");
       }
     } catch (err) {
       showToast(err.message || "Delete failed", "error");
     } finally {
       setIsProcessing(false);
       setItemToDelete(null);
+    }
+  };
+
+  // Package Management Handlers
+  const handleOpenCreatePackage = () => {
+    setEditingPackageId(null);
+    setPackageFormData({
+      name: "",
+      slug: "",
+      tagline: "",
+      image_url: "/images/packages/pro.png",
+      mrp_price: 11800,
+      promo_price: 7999,
+      mrp_note: "Full access to 9 value-packed courses, ideal for beginners, freelancers, content creators",
+      promo_note: "Launch your Freelance career with 9+ High Value courses + lifetime access, tools, and community.",
+      total_hours: "25+ Hours",
+      enrolled_students: "45K+ Students Enrolled",
+      overview_heading: "Unlock lifetime access, certification, and community support to grow, earn, and thrive confidently.",
+      overview_desc: "A complete ecosystem designed for individuals who are serious about building their freelance career that leads to real results.",
+      what_you_will_learn: [
+        "Learn Artificial Intelligence tools to improve productivity and work smarter.",
+        "Master Video Editing with Premiere Pro, Filmora, and create engaging content.",
+        "Learn freelancing skills to find clients and start earning online.",
+      ],
+      faqs: [
+        {
+          question: "What’s included in this package?",
+          answer: "The package includes full lifetime access to in-demand courses, verifiable certification, and community.",
+        },
+      ],
+      course_ids: coursesList.map((c) => c.id),
+    });
+    setIsPackageModalOpen(true);
+  };
+
+  const handleOpenEditPackage = async (pkg) => {
+    setEditingPackageId(pkg.id);
+    let linkedCourseIds = [];
+    try {
+      const res = await getPackageBySlugApi(pkg.slug || pkg.id);
+      if (res && res.package && Array.isArray(res.package.courses)) {
+        linkedCourseIds = res.package.courses.map((c) => c.id);
+      }
+    } catch {
+      linkedCourseIds = [];
+    }
+
+    setPackageFormData({
+      name: pkg.name || "",
+      slug: pkg.slug || "",
+      tagline: pkg.tagline || "",
+      image_url: pkg.image_url || "/images/packages/pro.png",
+      mrp_price: pkg.mrp_price || 11800,
+      promo_price: pkg.promo_price || 7999,
+      mrp_note: pkg.mrp_note || "Full access to value-packed courses",
+      promo_note: pkg.promo_note || "Launch your career with high-value courses",
+      total_hours: pkg.total_hours || "25+ Hours",
+      enrolled_students: pkg.enrolled_students || "45K+ Students Enrolled",
+      overview_heading: pkg.overview_heading || "Unlock lifetime access, certification, and community support",
+      overview_desc: pkg.overview_desc || "A complete ecosystem designed for individuals who are serious about building their career",
+      what_you_will_learn: Array.isArray(pkg.what_you_will_learn) && pkg.what_you_will_learn.length > 0 ? pkg.what_you_will_learn : [
+        "Learn Artificial Intelligence tools to improve productivity and work smarter.",
+        "Master Video Editing with Premiere Pro, Filmora, and create engaging content."
+      ],
+      faqs: Array.isArray(pkg.faqs) && pkg.faqs.length > 0 ? pkg.faqs : [
+        {
+          question: "What’s included in this package?",
+          answer: "The package includes full lifetime access to in-demand courses, verifiable certification, and community.",
+        }
+      ],
+      course_ids: linkedCourseIds,
+    });
+    setIsPackageModalOpen(true);
+  };
+
+  const handleSavePackage = async (e) => {
+    e.preventDefault();
+    if (!packageFormData.name.trim()) {
+      showToast("Please enter package name", "error");
+      return;
+    }
+
+    setIsProcessing(true);
+    try {
+      if (editingPackageId) {
+        await updatePackageApi(editingPackageId, packageFormData);
+        showToast("Package updated successfully!");
+      } else {
+        await createPackageApi(packageFormData);
+        showToast("Package created successfully!");
+      }
+      setIsPackageModalOpen(false);
+      // Refresh list
+      const res = await getPackagesApi();
+      if (res && res.packages) setPackagesList(res.packages);
+    } catch (err) {
+      showToast(err.message || "Failed to save package", "error");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleUploadPackageImg = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingPackageImg(true);
+    try {
+      const res = await uploadImageApi(file, "knowway_packages");
+      if (res && res.url) {
+        setPackageFormData((prev) => ({ ...prev, image_url: res.url }));
+        showToast("Package banner uploaded to Cloudinary!");
+      }
+    } catch (err) {
+      showToast(err.message || "Upload failed", "error");
+    } finally {
+      setUploadingPackageImg(false);
     }
   };
 
@@ -447,6 +633,12 @@ export default function SuperAdminDashboard() {
     const q = searchQuery.toLowerCase();
     return mentorsList.filter((m) => m.name?.toLowerCase().includes(q) || m.role_title?.toLowerCase().includes(q));
   }, [mentorsList, searchQuery]);
+
+  const filteredPackages = useMemo(() => {
+    if (!searchQuery.trim()) return packagesList;
+    const q = searchQuery.toLowerCase();
+    return packagesList.filter((p) => p.name?.toLowerCase().includes(q) || p.slug?.toLowerCase().includes(q) || p.tagline?.toLowerCase().includes(q));
+  }, [packagesList, searchQuery]);
 
   return (
     <div
@@ -839,7 +1031,138 @@ export default function SuperAdminDashboard() {
           )}
 
           {/* ======================================================== */}
-          {/* TAB 4: STUDENTS DIRECTORY */}
+          {/* TAB 4: PACKAGE STUDIO & COURSE BUNDLES */}
+          {/* ======================================================== */}
+          {activeTab === "packages" && (
+            <div className="space-y-6">
+              {/* Header Banner */}
+              <div
+                className={`rounded-[28px] p-6 sm:p-8 border flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+                  darkMode ? "bg-[#131926] border-[#222B3D]" : "bg-white border-[#E2E8F0]"
+                }`}
+              >
+                <div className="flex items-center gap-3.5">
+                  <div className="w-12 h-12 rounded-2xl bg-[#035BE3]/10 text-[#035BE3] flex items-center justify-center border border-[#035BE3]/15 shrink-0">
+                    <Layers3 className="w-6 h-6" />
+                  </div>
+                  <div>
+                    <h2 className="text-lg sm:text-xl font-bold">Package Studio & Course Bundles</h2>
+                    <p className={`text-xs mt-0.5 ${darkMode ? "text-[#94A3B8]" : "text-[#64748B]"}`}>
+                      Configure training bundles (Pro, Supreme, Premium, etc.). Set pricing, banner, and select which courses are included.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2.5 shrink-0">
+                  <Link
+                    to="/admin/packages/create"
+                    className="px-5 py-2.5 bg-[#035BE3] hover:bg-[#024bc0] text-white font-semibold text-xs rounded-full transition shadow-xs flex items-center gap-2 cursor-pointer no-underline"
+                  >
+                    <Plus className="w-4 h-4" />
+                    <span>Create New Package</span>
+                  </Link>
+                </div>
+              </div>
+
+              {/* Packages Cards Grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                {filteredPackages.map((pkg) => (
+                  <div
+                    key={pkg.id}
+                    className={`rounded-[28px] border overflow-hidden flex flex-col justify-between transition-all hover:shadow-md ${
+                      darkMode ? "bg-[#131926] border-[#222B3D]" : "bg-white border-[#E2E8F0]"
+                    }`}
+                  >
+                    <div>
+                      {/* Image Preview Banner */}
+                      <div className="relative aspect-[16/10] bg-[#EFF4FF] dark:bg-gray-800 overflow-hidden flex items-center justify-center p-4">
+                        <img
+                          src={pkg.image_url || "/images/packages/pro.png"}
+                          alt={pkg.name}
+                          className="max-h-full max-w-full object-contain transition-transform hover:scale-105 duration-300"
+                          onError={(e) => {
+                            e.currentTarget.src = "/images/packages/pro.png";
+                          }}
+                        />
+                        <div className="absolute top-3 left-3">
+                          <span className="px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-white text-[10px] font-bold">
+                            {pkg.total_courses || 0} Courses Included
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Content Info */}
+                      <div className="p-5">
+                        <div className="flex items-center justify-between">
+                          <h3 className="text-base font-bold">{pkg.name}</h3>
+                          <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#035BE3]/10 text-[#035BE3]">
+                            /{pkg.slug}
+                          </span>
+                        </div>
+
+                        <p className={`text-xs mt-2 line-clamp-2 ${darkMode ? "text-[#94A3B8]" : "text-[#64748B]"}`}>
+                          {pkg.tagline || "High-value skill package designed for digital career success."}
+                        </p>
+
+                        {/* Pricing Box */}
+                        <div className="mt-4 p-3 rounded-2xl bg-[#F8FAFD] dark:bg-[#0B0F17] border border-[#E2E8F0] dark:border-[#222B3D] flex items-center justify-between">
+                          <div>
+                            <span className="text-[10px] uppercase font-bold text-gray-400">Offer Price</span>
+                            <div className="text-sm font-extrabold text-[#035BE3]">
+                              ₹{Number(pkg.promo_price || 7999).toLocaleString("en-IN")}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <span className="text-[10px] uppercase font-bold text-gray-400">MRP</span>
+                            <div className="text-xs font-semibold text-gray-400 line-through">
+                              ₹{Number(pkg.mrp_price || 11800).toLocaleString("en-IN")}
+                            </div>
+                          </div>
+                        </div>
+
+                        <div className="mt-3 flex items-center justify-between text-[11px] text-[#64748B]">
+                          <span>{pkg.total_hours || "25+ Hours"}</span>
+                          <span>{pkg.enrolled_students || "45K+ Students"}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Bottom Action Bar */}
+                    <div className="p-5 pt-0 border-t border-inherit mt-3 flex items-center justify-between">
+                      <Link
+                        to={`/package/${pkg.slug}`}
+                        target="_blank"
+                        className="inline-flex items-center gap-1.5 text-xs font-bold text-[#035BE3] hover:underline"
+                      >
+                        <span>View Live Page</span>
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </Link>
+
+                      <div className="flex items-center gap-1.5">
+                        <Link
+                          to={`/admin/packages/edit/${pkg.slug || pkg.id}`}
+                          className="p-2 text-[#035BE3] hover:bg-[#035BE3]/10 rounded-full transition cursor-pointer"
+                          title="Edit Package Studio"
+                        >
+                          <Pencil className="w-4 h-4" />
+                        </Link>
+                        <button
+                          onClick={() => setItemToDelete({ type: "package", id: pkg.id, name: pkg.name })}
+                          className="p-2 text-[#94A3B8] hover:text-red-600 hover:bg-red-500/10 rounded-full transition cursor-pointer"
+                          title="Delete Package"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          {/* ======================================================== */}
+          {/* TAB 5: STUDENTS DIRECTORY */}
           {/* ======================================================== */}
           {activeTab === "users" && (
             <div className="space-y-6">
@@ -1473,6 +1796,382 @@ export default function SuperAdminDashboard() {
       )}
 
 
+
+      {/* ======================================================== */}
+      {/* MODAL 3: CREATE / EDIT PACKAGE STUDIO */}
+      {/* ======================================================== */}
+      {isPackageModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-xs flex items-center justify-center p-4 overflow-y-auto">
+          <div
+            className={`rounded-[32px] max-w-3xl w-full p-6 sm:p-8 border my-8 animate-in zoom-in-95 duration-150 max-h-[90vh] overflow-y-auto ${
+              darkMode ? "bg-[#131926] border-[#222B3D] text-white" : "bg-white border-[#E2E8F0] text-[#0F172A]"
+            }`}
+          >
+            <div className="flex items-center justify-between pb-4 border-b border-inherit sticky top-0 bg-inherit z-10">
+              <div>
+                <h3 className="text-base sm:text-lg font-bold">
+                  {editingPackageId ? `Edit Package: ${packageFormData.name}` : "Create New Learning Package"}
+                </h3>
+                <p className="text-xs text-[#64748B]">
+                  Configure dynamic pricing, included courses, learnings, and FAQs
+                </p>
+              </div>
+              <button
+                onClick={() => setIsPackageModalOpen(false)}
+                className="p-1 rounded-full hover:bg-gray-100 dark:hover:bg-gray-800 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleSavePackage} className="space-y-5 mt-5">
+              {/* 1. Basic Info */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold mb-1">Package Name *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Pro, Supreme, Elite"
+                    value={packageFormData.name}
+                    onChange={(e) => setPackageFormData({ ...packageFormData, name: e.target.value })}
+                    className={`w-full rounded-2xl border px-4 py-2.5 text-xs outline-none focus:border-[#035BE3] ${
+                      darkMode ? "bg-[#0B0F17] border-[#222B3D]" : "bg-[#F8FAFD] border-[#E2E8F0]"
+                    }`}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold mb-1">Custom Slug (URL: /package/slug)</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. pro, supreme (Auto-generated if empty)"
+                    value={packageFormData.slug}
+                    onChange={(e) => setPackageFormData({ ...packageFormData, slug: e.target.value })}
+                    className={`w-full rounded-2xl border px-4 py-2.5 text-xs outline-none focus:border-[#035BE3] ${
+                      darkMode ? "bg-[#0B0F17] border-[#222B3D]" : "bg-[#F8FAFD] border-[#E2E8F0]"
+                    }`}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold mb-1">Tagline / Subtitle Pitch</label>
+                <textarea
+                  rows={2}
+                  placeholder="Our step-by-step, skill-focused, and practical growth package..."
+                  value={packageFormData.tagline}
+                  onChange={(e) => setPackageFormData({ ...packageFormData, tagline: e.target.value })}
+                  className={`w-full rounded-2xl border px-4 py-2.5 text-xs outline-none focus:border-[#035BE3] ${
+                    darkMode ? "bg-[#0B0F17] border-[#222B3D]" : "bg-[#F8FAFD] border-[#E2E8F0]"
+                  }`}
+                />
+              </div>
+
+              {/* Banner Image with Upload */}
+              <div className="p-4 rounded-2xl border border-inherit space-y-3">
+                <div className="flex items-center justify-between">
+                  <label className="block text-xs font-bold">Package Banner Image</label>
+                  <label className="cursor-pointer text-xs font-bold text-[#035BE3] hover:underline flex items-center gap-1">
+                    <Cloud className="w-3.5 h-3.5" />
+                    <span>{uploadingPackageImg ? "Uploading..." : "Upload to Cloudinary"}</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={handleUploadPackageImg}
+                      className="hidden"
+                      disabled={uploadingPackageImg}
+                    />
+                  </label>
+                </div>
+
+                <div className="flex gap-3 items-center">
+                  <input
+                    type="text"
+                    placeholder="/images/packages/pro.png or https://res.cloudinary.com/..."
+                    value={packageFormData.image_url}
+                    onChange={(e) => setPackageFormData({ ...packageFormData, image_url: e.target.value })}
+                    className={`flex-1 rounded-2xl border px-4 py-2 text-xs outline-none focus:border-[#035BE3] ${
+                      darkMode ? "bg-[#0B0F17] border-[#222B3D]" : "bg-[#F8FAFD] border-[#E2E8F0]"
+                    }`}
+                  />
+                  {packageFormData.image_url && (
+                    <img
+                      src={packageFormData.image_url}
+                      alt="Preview"
+                      className="w-10 h-10 object-contain rounded-xl border p-1 bg-white"
+                      onError={(e) => { e.currentTarget.style.display = 'none'; }}
+                    />
+                  )}
+                </div>
+              </div>
+
+              {/* 2. Pricing & Stats */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div>
+                  <label className="block text-xs font-bold mb-1">MRP Price (₹) *</label>
+                  <input
+                    type="number"
+                    required
+                    value={packageFormData.mrp_price}
+                    onChange={(e) => setPackageFormData({ ...packageFormData, mrp_price: e.target.value })}
+                    className={`w-full rounded-2xl border px-4 py-2.5 text-xs outline-none focus:border-[#035BE3] ${
+                      darkMode ? "bg-[#0B0F17] border-[#222B3D]" : "bg-[#F8FAFD] border-[#E2E8F0]"
+                    }`}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold mb-1">Offer Price (₹) *</label>
+                  <input
+                    type="number"
+                    required
+                    value={packageFormData.promo_price}
+                    onChange={(e) => setPackageFormData({ ...packageFormData, promo_price: e.target.value })}
+                    className={`w-full rounded-2xl border px-4 py-2.5 text-xs outline-none focus:border-[#035BE3] ${
+                      darkMode ? "bg-[#0B0F17] border-[#222B3D]" : "bg-[#F8FAFD] border-[#E2E8F0]"
+                    }`}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold mb-1">Total Hours Badge</label>
+                  <input
+                    type="text"
+                    value={packageFormData.total_hours}
+                    onChange={(e) => setPackageFormData({ ...packageFormData, total_hours: e.target.value })}
+                    className={`w-full rounded-2xl border px-4 py-2.5 text-xs outline-none focus:border-[#035BE3] ${
+                      darkMode ? "bg-[#0B0F17] border-[#222B3D]" : "bg-[#F8FAFD] border-[#E2E8F0]"
+                    }`}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold mb-1">Students Enrolled Badge</label>
+                  <input
+                    type="text"
+                    value={packageFormData.enrolled_students}
+                    onChange={(e) => setPackageFormData({ ...packageFormData, enrolled_students: e.target.value })}
+                    className={`w-full rounded-2xl border px-4 py-2.5 text-xs outline-none focus:border-[#035BE3] ${
+                      darkMode ? "bg-[#0B0F17] border-[#222B3D]" : "bg-[#F8FAFD] border-[#E2E8F0]"
+                    }`}
+                  />
+                </div>
+              </div>
+
+              {/* 3. Included Courses Multi-Select Checklist (Core Requirement) */}
+              <div className="p-4 rounded-2xl border border-inherit space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <span className="text-xs font-bold">Select Courses to Include in this Package Bundle</span>
+                    <p className="text-[11px] text-[#64748B]">
+                      {packageFormData.course_ids.length} of {coursesList.length} courses included
+                    </p>
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setPackageFormData({ ...packageFormData, course_ids: coursesList.map((c) => c.id) })}
+                      className="text-[11px] font-bold text-[#035BE3] hover:underline cursor-pointer"
+                    >
+                      Select All
+                    </button>
+                    <span className="text-gray-300">|</span>
+                    <button
+                      type="button"
+                      onClick={() => setPackageFormData({ ...packageFormData, course_ids: [] })}
+                      className="text-[11px] font-bold text-gray-400 hover:underline cursor-pointer"
+                    >
+                      Deselect All
+                    </button>
+                  </div>
+                </div>
+
+                <div className="max-h-56 overflow-y-auto space-y-2 pr-1">
+                  {coursesList.length === 0 ? (
+                    <p className="text-xs text-gray-400 italic py-2">No courses available. Create courses first in Course Management.</p>
+                  ) : (
+                    coursesList.map((c) => {
+                      const isSelected = packageFormData.course_ids.includes(c.id);
+                      return (
+                        <div
+                          key={c.id}
+                          onClick={() => {
+                            const current = [...packageFormData.course_ids];
+                            const next = isSelected ? current.filter((id) => id !== c.id) : [...current, c.id];
+                            setPackageFormData({ ...packageFormData, course_ids: next });
+                          }}
+                          className={`p-2.5 rounded-xl border flex items-center justify-between gap-3 cursor-pointer transition ${
+                            isSelected
+                              ? "border-[#035BE3] bg-[#EFF4FF] dark:bg-[#035BE3]/10"
+                              : "border-gray-200/70 dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800/50"
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <input
+                              type="checkbox"
+                              checked={isSelected}
+                              onChange={() => {}}
+                              className="rounded text-[#035BE3] pointer-events-none"
+                            />
+                            {c.thumbnail_url && (
+                              <img
+                                src={c.thumbnail_url}
+                                alt={c.title}
+                                className="w-9 h-7 object-cover rounded-md shrink-0"
+                              />
+                            )}
+                            <div className="min-w-0">
+                              <p className="text-xs font-bold truncate">{c.title}</p>
+                              <p className="text-[10px] text-gray-400 truncate">
+                                {c.category} • {c.mentor_name || "Instructor"} • {c.duration}
+                              </p>
+                            </div>
+                          </div>
+                          <span
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 ${
+                              isSelected
+                                ? "bg-[#035BE3] text-white"
+                                : "bg-gray-100 dark:bg-gray-800 text-gray-500"
+                            }`}
+                          >
+                            {isSelected ? "Included" : "Excluded"}
+                          </span>
+                        </div>
+                      );
+                    })
+                  )}
+                </div>
+              </div>
+
+              {/* 4. What you'll learn dynamic checklist */}
+              <div className="p-4 rounded-2xl border border-inherit space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold">What You'll Learn in this Package ({packageFormData.what_you_will_learn.length} points)</span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPackageFormData({
+                        ...packageFormData,
+                        what_you_will_learn: [...packageFormData.what_you_will_learn, ""],
+                      })
+                    }
+                    className="text-xs font-bold text-[#035BE3] hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add Point</span>
+                  </button>
+                </div>
+
+                {packageFormData.what_you_will_learn.map((pt, pIdx) => (
+                  <div key={pIdx} className="flex gap-2">
+                    <input
+                      type="text"
+                      placeholder={`Learning Point #${pIdx + 1}`}
+                      value={pt}
+                      onChange={(e) => {
+                        const updated = [...packageFormData.what_you_will_learn];
+                        updated[pIdx] = e.target.value;
+                        setPackageFormData({ ...packageFormData, what_you_will_learn: updated });
+                      }}
+                      className={`flex-1 rounded-xl border px-3 py-2 text-xs outline-none focus:border-[#035BE3] ${
+                        darkMode ? "bg-[#0B0F17] border-[#222B3D]" : "bg-white border-[#E2E8F0]"
+                      }`}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const updated = packageFormData.what_you_will_learn.filter((_, i) => i !== pIdx);
+                        setPackageFormData({ ...packageFormData, what_you_will_learn: updated });
+                      }}
+                      className="p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-xl cursor-pointer"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              {/* 5. FAQs Section */}
+              <div className="p-4 rounded-2xl border border-inherit space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-bold">Frequently Asked Questions ({packageFormData.faqs.length} FAQs)</span>
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setPackageFormData({
+                        ...packageFormData,
+                        faqs: [...packageFormData.faqs, { question: "", answer: "" }],
+                      })
+                    }
+                    className="text-xs font-bold text-[#035BE3] hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <Plus className="w-3.5 h-3.5" />
+                    <span>Add FAQ</span>
+                  </button>
+                </div>
+
+                {packageFormData.faqs.map((faq, fIdx) => (
+                  <div key={fIdx} className="p-3 rounded-xl bg-gray-50 dark:bg-gray-800/40 border border-gray-200/60 dark:border-gray-700/60 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <input
+                        type="text"
+                        placeholder="Question"
+                        value={faq.question}
+                        onChange={(e) => {
+                          const updated = [...packageFormData.faqs];
+                          updated[fIdx].question = e.target.value;
+                          setPackageFormData({ ...packageFormData, faqs: updated });
+                        }}
+                        className="flex-1 rounded-xl border border-gray-200 dark:border-gray-700 p-2 text-xs bg-white dark:bg-gray-900 outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const updated = packageFormData.faqs.filter((_, i) => i !== fIdx);
+                          setPackageFormData({ ...packageFormData, faqs: updated });
+                        }}
+                        className="p-1.5 text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 rounded-lg cursor-pointer"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                      </button>
+                    </div>
+                    <textarea
+                      rows={2}
+                      placeholder="Answer"
+                      value={faq.answer}
+                      onChange={(e) => {
+                        const updated = [...packageFormData.faqs];
+                        updated[fIdx].answer = e.target.value;
+                        setPackageFormData({ ...packageFormData, faqs: updated });
+                      }}
+                      className="w-full rounded-xl border border-gray-200 dark:border-gray-700 p-2 text-xs bg-white dark:bg-gray-900 outline-none"
+                    />
+                  </div>
+                ))}
+              </div>
+
+              {/* Submit Buttons */}
+              <div className="flex gap-3 pt-3 sticky bottom-0 bg-inherit z-10 border-t border-inherit">
+                <button
+                  type="button"
+                  onClick={() => setIsPackageModalOpen(false)}
+                  className="flex-1 py-3 rounded-full border text-xs font-semibold cursor-pointer"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  disabled={isProcessing}
+                  className="flex-1 py-3 rounded-full bg-[#035BE3] text-white text-xs font-semibold hover:bg-[#024bc0] transition cursor-pointer disabled:opacity-50"
+                >
+                  {isProcessing ? "Saving Package..." : editingPackageId ? "Update Package" : "Create Package"}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* ======================================================== */}
       {/* DELETE CONFIRMATION MODAL */}

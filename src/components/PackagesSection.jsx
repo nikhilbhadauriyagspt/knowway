@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import {
   ArrowUpRight,
@@ -6,59 +6,99 @@ import {
   BookOpen,
   Layers3,
 } from "lucide-react";
+import { getPackagesApi } from "../services/api";
+
+const defaultPackages = [
+  {
+    id: "pro",
+    name: "Pro",
+    description:
+      "Build practical digital skills and create a strong foundation for your online career.",
+    image: "/images/packages/pro.png",
+    link: "/package/pro",
+    type: "horizontal",
+    cardClass: "bg-[#EEF3FF] border-[#DDE7FF]",
+    accent: "#315FD8",
+  },
+  {
+    id: "supreme",
+    name: "Supreme",
+    description:
+      "Go deeper with advanced learning paths designed for digital growth and business skills.",
+    image: "/images/packages/supreme.png",
+    link: "/package/supreme",
+    type: "horizontal",
+    cardClass: "bg-[#FFF8E9] border-[#F6E7BD]",
+    accent: "#D99B1D",
+  },
+  {
+    id: "premium",
+    name: "Premium",
+    description:
+      "Learn how digital commerce works and explore the skills behind building an online business.",
+    image: "/images/packages/premium.png",
+    link: "/package/premium",
+    type: "vertical",
+    cardClass: "bg-[#EFF7FF] border-[#D7E9FF]",
+    accent: "#356AE6",
+  },
+  {
+    id: "premium-plus",
+    name: "Premium Plus",
+    description:
+      "Explore content creation, personal branding and modern digital communication skills.",
+    image: "/images/packages/premium-plus.png",
+    link: "/package/premium-plus",
+    type: "vertical",
+    cardClass: "bg-[#F6F0FF] border-[#E5D9FF]",
+    accent: "#7555E8",
+    featured: true,
+  },
+];
 
 export default function PackagesSection() {
-  const packages = [
-    {
-      id: "pro",
-      name: "Pro",
-      description:
-        "Build practical digital skills and create a strong foundation for your online career.",
-      image: "/images/packages/pro.png",
-      link: "/package/pro",
-      type: "horizontal",
-      cardClass:
-        "bg-[#EEF3FF] border-[#DDE7FF]",
-      accent: "#315FD8",
-    },
-    {
-      id: "supreme",
-      name: "Supreme",
-      description:
-        "Go deeper with advanced learning paths designed for digital growth and business skills.",
-      image: "/images/packages/supreme.png",
-      link: "/package/supreme",
-      type: "horizontal",
-      cardClass:
-        "bg-[#FFF8E9] border-[#F6E7BD]",
-      accent: "#D99B1D",
-    },
-    {
-      id: "premium",
-      name: "Premium",
-      description:
-        "Learn how digital commerce works and explore the skills behind building an online business.",
-      image: "/images/packages/premium.png",
-      link: "/package/premium",
-      type: "vertical",
-      cardClass:
-        "bg-[#EFF7FF] border-[#D7E9FF]",
-      accent: "#356AE6",
-    },
-    {
-      id: "premium-plus",
-      name: "Premium Plus",
-      description:
-        "Explore content creation, personal branding and modern digital communication skills.",
-      image: "/images/packages/premium-plus.png",
-      link: "/package/premium-plus",
-      type: "vertical",
-      cardClass:
-        "bg-[#F6F0FF] border-[#E5D9FF]",
-      accent: "#7555E8",
-      featured: true,
-    },
-  ];
+  const [packages, setPackages] = useState(defaultPackages);
+
+  useEffect(() => {
+    let isMounted = true;
+    const loadPackages = async () => {
+      try {
+        const res = await getPackagesApi();
+        if (res && res.success && res.packages && res.packages.length > 0 && isMounted) {
+          const stylingConfigs = [
+            { type: "horizontal", cardClass: "bg-[#EEF3FF] border-[#DDE7FF]", accent: "#315FD8" },
+            { type: "horizontal", cardClass: "bg-[#FFF8E9] border-[#F6E7BD]", accent: "#D99B1D" },
+            { type: "vertical", cardClass: "bg-[#EFF7FF] border-[#D7E9FF]", accent: "#356AE6" },
+            { type: "vertical", cardClass: "bg-[#F6F0FF] border-[#E5D9FF]", accent: "#7555E8", featured: true },
+          ];
+
+          const formatted = res.packages.map((pkg, idx) => {
+            const style = stylingConfigs[idx % stylingConfigs.length];
+            return {
+              id: pkg.slug || pkg.id,
+              name: pkg.name,
+              description: pkg.tagline || pkg.overview_desc || "Explore learning paths designed for digital growth.",
+              image: pkg.image_url || defaultPackages[idx % defaultPackages.length]?.image || "/images/packages/pro.png",
+              link: `/package/${pkg.slug || pkg.id}`,
+              type: style.type,
+              cardClass: style.cardClass,
+              accent: style.accent,
+              featured: style.featured || false,
+            };
+          });
+
+          setPackages(formatted);
+        }
+      } catch (err) {
+        console.warn("Using default packages list:", err.message);
+      }
+    };
+
+    loadPackages();
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <section

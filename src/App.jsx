@@ -10,6 +10,7 @@ import PackageDetailPage from "./pages/PackageDetailPage";
 import SuperAdminLoginPage from "./superadmin/SuperAdminLoginPage";
 import SuperAdminDashboard from "./superadmin/SuperAdminDashboard";
 import CreateCoursePage from "./superadmin/CreateCoursePage";
+import CreatePackagePage from "./superadmin/CreatePackagePage";
 
 export default function App() {
   return (
@@ -34,6 +35,8 @@ export default function App() {
         <Route path="/admin/dashboard" element={<SuperAdminDashboard />} />
         <Route path="/admin/courses/create" element={<CreateCoursePage />} />
         <Route path="/admin/courses/edit/:id" element={<CreateCoursePage />} />
+        <Route path="/admin/packages/create" element={<CreatePackagePage />} />
+        <Route path="/admin/packages/edit/:id" element={<CreatePackagePage />} />
         <Route path="/admin" element={<Navigate to="/admin/dashboard" replace />} />
 
         {/* Catch-all fallback */}

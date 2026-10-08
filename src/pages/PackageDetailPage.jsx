@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect, useMemo } from "react";
+import { useParams, Link } from "react-router-dom";
 import {
   ArrowRight,
   ArrowUpRight,
@@ -9,19 +9,18 @@ import {
   Clock,
   Play,
   Sparkles,
-  GraduationCap,
   Users,
   Award,
-  CheckCircle2,
   Tag,
   ShieldCheck,
-  Zap,
+  GraduationCap,
 } from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
+import { getPackageBySlugApi } from "../services/api";
 
-// All 24 Course Offerings provided by user
-const courses = [
+// Fallback Courses
+const fallbackCourses = [
   {
     title: "Freelance Course (English)",
     instructor: "Miss. Reshu Sharma",
@@ -85,158 +84,152 @@ const courses = [
     category: "Design",
     image: "https://images.unsplash.com/photo-1626785774573-4b799315345d?q=80&w=600&auto=format&fit=crop",
   },
-  {
-    title: "Design Smarter with Canva (Tamil)",
-    instructor: "Saranya NM",
-    duration: "2.55 Hours, Tamil",
-    category: "Design",
-    image: "https://images.unsplash.com/photo-1558655146-d09347e92766?q=80&w=600&auto=format&fit=crop",
-  },
-  {
-    title: "Mobile Video Editing (Kannada)",
-    instructor: "Syed Zabiulla",
-    duration: "7.5 Hours, Kannada",
-    category: "Video Editing",
-    image: "https://images.unsplash.com/photo-1574717024453-354056aef977?q=80&w=600&auto=format&fit=crop",
-  },
-  {
-    title: "Complete Guide to Freelancing (Kannada)",
-    instructor: "Tejas Girish",
-    duration: "3 hours, Kannada",
-    category: "Freelancing",
-    image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?q=80&w=600&auto=format&fit=crop",
-  },
-  {
-    title: "Complete Guide to Freelancing (Tamil)",
-    instructor: "Saranya NM",
-    duration: "4.5 Hours, Tamil",
-    category: "Freelancing",
-    image: "https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?q=80&w=600&auto=format&fit=crop",
-  },
-  {
-    title: "The Complete Prompt Engineering (Telugu)",
-    instructor: "Maneesh Bommakanti",
-    duration: "4.50 Hours, Telugu",
-    category: "AI Skills",
-    image: "https://images.unsplash.com/photo-1677442136019-21780ecad995?q=80&w=600&auto=format&fit=crop",
-  },
-  {
-    title: "Meta Ads Beginner to Advance",
-    instructor: "Saranya NM",
-    duration: "6h 45m, Tamil",
-    category: "Marketing",
-    image: "https://images.unsplash.com/photo-1563986768609-322da13575f3?q=80&w=600&auto=format&fit=crop",
-  },
-  {
-    title: "Meta Ads That Sell",
-    instructor: "Preet Kaur",
-    duration: "9h 51m, Hindi",
-    category: "Marketing",
-    image: "https://images.unsplash.com/photo-1557838923-2985c318be48?q=80&w=600&auto=format&fit=crop",
-  },
-  {
-    title: "Creative Suite Mastery",
-    instructor: "Shikhar Gupta",
-    duration: "12.73 Hours, Hindi, English, Telugu",
-    category: "Design",
-    image: "https://images.unsplash.com/photo-1550745165-9bc0b252726f?q=80&w=600&auto=format&fit=crop",
-  },
-  {
-    title: "Mastering AI Tools for Success",
-    instructor: "Kautilya Roshan",
-    duration: "4.36 Hours, English",
-    category: "AI Skills",
-    image: "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=600&auto=format&fit=crop",
-  },
-  {
-    title: "Ultimate Instagram Growth",
-    instructor: "Ashutosh Pratihast",
-    duration: "1 Hour 30 Min, Hindi",
-    category: "Social Media",
-    image: "https://images.unsplash.com/photo-1611162616305-c69b3fa7fbe0?q=80&w=600&auto=format&fit=crop",
-  },
-  {
-    title: "Premiere Pro Unlocked",
-    instructor: "Mohanish Ved",
-    duration: "1.5 Hours, Hindi, English",
-    category: "Video Editing",
-    image: "https://images.unsplash.com/photo-1535016120720-40c646be5580?q=80&w=600&auto=format&fit=crop",
-  },
-  {
-    title: "Content Marketing",
-    instructor: "Sahil Gujral",
-    duration: "1 Hour, Hindi, English",
-    category: "Marketing",
-    image: "https://images.unsplash.com/photo-1432888498266-38ffec3eaf0a?q=80&w=600&auto=format&fit=crop",
-  },
-  {
-    title: "Marketing Mindset",
-    instructor: "Ashutosh Pratihast",
-    duration: "52 Minutes, Hindi, Tamil, Telugu",
-    category: "Mindset",
-    image: "https://images.unsplash.com/photo-1507679799987-c73779587ccf?q=80&w=600&auto=format&fit=crop",
-  },
-  {
-    title: "Short VideoPreneur",
-    instructor: "Ashutosh Pratihast",
-    duration: "1.28 Hours, Hindi",
-    category: "Video Editing",
-    image: "https://images.unsplash.com/photo-1518770660439-4636190af475?q=80&w=600&auto=format&fit=crop",
-  },
-  {
-    title: "Wondershare Filmora",
-    instructor: "IDigitalPreneur",
-    duration: "5.78 Hours, Hindi",
-    category: "Video Editing",
-    image: "https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?q=80&w=600&auto=format&fit=crop",
-  },
 ];
 
-const learnings = [
-  "Learn Artificial Intelligence tools to improve productivity and work smarter.",
-  "Master Video Editing with Premiere Pro, Filmora, and create engaging content.",
-  "Learn freelancing skills to find clients and start earning online.",
-  "Design professional graphics using Canva for personal and business needs.",
-  "Grow your Instagram presence with effective growth strategies.",
-  "Understand Content Marketing and create content that attracts audiences.",
-  "Create short-form videos that engage viewers and build digital presence.",
-];
-
-const faqs = [
-  {
-    question: "What’s included in this package?",
-    answer:
-      "The Pro package includes full lifetime access to 9+ in-demand courses covering Freelancing, Video Editing, AI Tools, Graphic Design, Canva, and Social Media Marketing. You also get accredited completion certificates, downloadable project files, and access to our private community.",
+const fallbackPackagesMap = {
+  pro: {
+    name: "Pro",
+    slug: "pro",
+    tagline: "Our step-by-step, skill-focused, and practical growth package. Specially designed for people who want to learn high-income digital skills and start their freelancing journey.",
+    image_url: "/images/packages/pro.png",
+    mrp_price: 11800,
+    promo_price: 7999,
+    mrp_note: "Full access to 9 value-packed courses, ideal for beginners, freelancers, content creators",
+    promo_note: "Launch your Freelance career with 9+ High Value courses + lifetime access, tools, and community.",
+    total_hours: "25+ Hours",
+    enrolled_students: "45K+ Students Enrolled",
+    overview_heading: "Unlock lifetime access, certification, and community support to grow, earn, and thrive confidently.",
+    overview_desc: "A complete ecosystem designed for individuals who are serious about building their freelance career that leads to real results.",
+    what_you_will_learn: [
+      "Learn Artificial Intelligence tools to improve productivity and work smarter.",
+      "Master Video Editing with Premiere Pro, Filmora, and create engaging content.",
+      "Learn freelancing skills to find clients and start earning online.",
+      "Design professional graphics using Canva for personal and business needs.",
+      "Grow your Instagram presence with effective growth strategies.",
+      "Understand Content Marketing and create content that attracts audiences.",
+      "Create short-form videos that engage viewers and build digital presence.",
+    ],
+    faqs: [
+      {
+        question: "What’s included in this package?",
+        answer: "The Pro package includes full lifetime access to 9+ in-demand courses covering Freelancing, Video Editing, AI Tools, Graphic Design, Canva, and Social Media Marketing. You also get accredited completion certificates, downloadable project files, and access to our private community.",
+      },
+      {
+        question: "Who is this package ideal for?",
+        answer: "Perfect for students and beginners who are exploring online earning or freelancing for the first time.",
+      },
+      {
+        question: "Will I get lifetime access to the content?",
+        answer: "Yes! You receive 100% lifetime access to all included courses, future video lessons, assignments, and downloadable resources.",
+      },
+      {
+        question: "Can I upgrade to a higher package later?",
+        answer: "Yes, you can easily upgrade to Supreme, Premium, or Premium Plus packages from your student dashboard at any time by paying only the upgrade difference.",
+      },
+      {
+        question: "What kind of certificate or recognition will I receive?",
+        answer: "Upon scoring 60% or higher in the module quiz assessment, you will receive an official ISO-certified, verifiable digital certificate with unique QR code verification to add directly to your LinkedIn, resume, or client proposals.",
+      },
+    ],
+    courses: fallbackCourses,
   },
-  {
-    question: "Who is this package ideal for?",
-    answer:
-      "Perfect for students and beginners who are exploring online earning or freelancing for the first time.",
+  supreme: {
+    name: "Supreme",
+    slug: "supreme",
+    tagline: "Go deeper with advanced learning paths designed for digital growth and business skills. Master high-converting digital marketing, client scaling, and business workflows.",
+    image_url: "/images/packages/supreme.png",
+    mrp_price: 14800,
+    promo_price: 9999,
+    mrp_note: "Complete access to performance marketing, sales funnels, and growth strategies",
+    promo_note: "Grow your client pipeline with Meta Ads, Google Ads, and high-ticket client acquisition.",
+    total_hours: "40+ Hours",
+    enrolled_students: "28K+ Students Enrolled",
+    overview_heading: "Scale your revenue with advanced paid media, sales funnel architecture, and outreach strategies.",
+    overview_desc: "Designed for intermediate to advanced freelancers and entrepreneurs wanting to close 4-5 figure retainers.",
+    what_you_will_learn: [
+      "Meta Ads Manager from beginner to advanced scaling workflows.",
+      "Google Ads search and display campaign architectures.",
+      "High-converting landing page creation and lead generation funnels.",
+      "Client outreach templates for cold email, LinkedIn, and Instagram.",
+      "Closing sales calls and managing client retainer objections effortlessly.",
+    ],
+    faqs: [
+      {
+        question: "Is Pro package included in Supreme?",
+        answer: "Yes! Supreme package includes everything inside Pro, plus all advanced marketing and growth tracks.",
+      },
+      {
+        question: "Are there practical ad campaigns included?",
+        answer: "Yes, you will build live ad campaigns, pixel tracking, and custom conversion events step-by-step.",
+      },
+    ],
+    courses: fallbackCourses,
   },
-  {
-    question: "Will I get lifetime access to the content?",
-    answer:
-      "Yes! You receive 100% lifetime access to all included courses, future video lessons, assignments, and downloadable resources.",
+  premium: {
+    name: "Premium",
+    slug: "premium",
+    tagline: "Learn how digital commerce works and explore the skills behind building an online business. End-to-end frontend development, digital product selling, and practical monetization.",
+    image_url: "/images/packages/premium.png",
+    mrp_price: 18800,
+    promo_price: 12999,
+    mrp_note: "Full tech & digital commerce suite with 1-on-1 mentorship sessions",
+    promo_note: "Build custom web portals, design brand identities, and launch digital storefronts.",
+    total_hours: "60+ Hours",
+    enrolled_students: "18K+ Students Enrolled",
+    overview_heading: "End-to-end fullstack web development, design systems, and digital product monetization.",
+    overview_desc: "For developers, creators, and agency owners who want comprehensive tech mastery.",
+    what_you_will_learn: [
+      "Complete frontend and web application foundations.",
+      "Digital storefront setup and automated payment gateway integrations.",
+      "Full stack architecture, database models, and API integrations.",
+      "Brand identity design and responsive user interface creation.",
+    ],
+    faqs: [
+      {
+        question: "Do I need coding background for Premium?",
+        answer: "No, the modules start from foundational web concepts and guide you to production development.",
+      },
+    ],
+    courses: fallbackCourses,
   },
-  {
-    question: "Can I upgrade to a higher package later?",
-    answer:
-      "Yes, you can easily upgrade to Supreme, Premium, or Premium Plus packages from your student dashboard at any time by paying only the upgrade difference.",
+  "premium-plus": {
+    name: "Premium Plus",
+    slug: "premium-plus",
+    tagline: "Explore content creation, personal branding, AI automation, and VIP founder community access.",
+    image_url: "/images/packages/premium-plus.png",
+    mrp_price: 24800,
+    promo_price: 16999,
+    mrp_note: "VIP all-access lifetime pass to every course, live workshop, and mentorship",
+    promo_note: "Direct founder community access with weekly live coaching calls and deal review.",
+    total_hours: "100+ Hours",
+    enrolled_students: "9.5K+ Students Enrolled",
+    overview_heading: "The ultimate VIP all-inclusive learning track for visionary builders and high-income consultants.",
+    overview_desc: "Master everything from AI pipelines to premium client closing and personal branding.",
+    what_you_will_learn: [
+      "Complete access to every course and future releases on KnowWay.",
+      "Weekly live Q&A webinars and masterclasses with industry practitioners.",
+      "Direct founder mastermind network and private deal flow community.",
+      "Personal branding playbooks for multi-channel audience growth.",
+    ],
+    faqs: [
+      {
+        question: "Does Premium Plus include all future courses?",
+        answer: "Yes, you receive permanent VIP access to all present and upcoming courses without extra charge.",
+      },
+    ],
+    courses: fallbackCourses,
   },
-  {
-    question: "What kind of certificate or recognition will I receive?",
-    answer:
-      "Upon scoring 60% or higher in the module quiz assessment, you will receive an official ISO-certified, verifiable digital certificate with unique QR code verification to add directly to your LinkedIn, resume, or client proposals.",
-  },
-];
+};
 
 function CourseCard({ course }) {
+  const cardLink = course.id ? `/courses/${course.id}` : "#";
+
   return (
     <article className="group min-w-0 flex flex-col justify-between">
-      <div>
+      <Link to={cardLink} className="block">
         <div className="relative aspect-[16/10] overflow-hidden rounded-[16px] bg-[#F0F3FF]">
           <img
-            src={course.image}
+            src={course.image || course.thumbnail_url || "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=600&auto=format&fit=crop"}
             alt={course.title}
             loading="lazy"
             className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-[1.045]"
@@ -248,7 +241,7 @@ function CourseCard({ course }) {
 
           <div className="absolute left-3 top-3">
             <span className="px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-white text-[10px] font-bold">
-              {course.category}
+              {course.category || "Skill Track"}
             </span>
           </div>
         </div>
@@ -259,13 +252,13 @@ function CourseCard({ course }) {
           </h3>
 
           <p className="mt-1 text-xs font-semibold text-slate-500">
-            {course.instructor}
+            {course.instructor || course.mentor_name || "KnowWay Instructor"}
           </p>
         </div>
-      </div>
+      </Link>
 
       <div className="mt-3 pt-2.5 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400 font-medium">
-        <span>{course.duration}</span>
+        <span>{course.duration || "2 Hours, English"}</span>
         <span className="inline-flex items-center gap-1 text-[#285FFA] font-semibold text-[11px]">
           <Play size={10} />
           Included
@@ -276,11 +269,75 @@ function CourseCard({ course }) {
 }
 
 export default function PackageDetail() {
-  const [activeFaq, setActiveFaq] = useState(1);
+  const { id } = useParams();
+  const currentSlug = (id || "pro").toLowerCase().trim();
+
+  // Get fallback object for initial state
+  const fallback = fallbackPackagesMap[currentSlug] || fallbackPackagesMap["pro"];
+
+  const [packageData, setPackageData] = useState(fallback);
+  const [activeFaq, setActiveFaq] = useState(0);
+
+  // Fetch live package from MySQL API
+  useEffect(() => {
+    let isMounted = true;
+
+    const fetchPackage = async () => {
+      try {
+        const res = await getPackageBySlugApi(currentSlug);
+        if (res && res.success && res.package && isMounted) {
+          setPackageData({
+            ...res.package,
+            // If linked courses array from DB is empty, retain fallback courses so UI stays populated
+            courses: res.package.courses && res.package.courses.length > 0 ? res.package.courses : fallback.courses,
+            what_you_will_learn: res.package.what_you_will_learn && res.package.what_you_will_learn.length > 0 ? res.package.what_you_will_learn : fallback.what_you_will_learn,
+            faqs: res.package.faqs && res.package.faqs.length > 0 ? res.package.faqs : fallback.faqs,
+          });
+        }
+      } catch (err) {
+        console.warn("Using fallback package data:", err.message);
+      }
+    };
+
+    fetchPackage();
+
+    return () => {
+      isMounted = false;
+    };
+  }, [currentSlug, fallback]);
 
   const goToCheckout = () => {
-    window.location.href = "/signup?package=pro";
+    window.location.href = `/signup?package=${packageData.slug || currentSlug}`;
   };
+
+  const coursesList = packageData.courses || fallbackCourses;
+  const learningsList = packageData.what_you_will_learn || fallback.what_you_will_learn;
+  const faqsList = packageData.faqs || fallback.faqs;
+
+  const packageMentors = useMemo(() => {
+    const mentorMap = new Map();
+    coursesList.forEach((c) => {
+      const name = c.instructor || c.mentor_name || "Lead Instructor";
+      if (!mentorMap.has(name)) {
+        mentorMap.set(name, {
+          name,
+          role: c.mentor_role || `${c.category || "Digital Skills"} Specialist`,
+          photo:
+            c.mentor_photo ||
+            c.image ||
+            "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop",
+          experience_badge: c.mentor_exp || "Industry Mentor",
+          bio:
+            c.mentor_bio ||
+            "Practitioner guiding learners with hands-on, high-yield digital execution.",
+          coursesCount: 1,
+        });
+      } else {
+        mentorMap.get(name).coursesCount += 1;
+      }
+    });
+    return Array.from(mentorMap.values());
+  }, [coursesList]);
 
   return (
     <>
@@ -303,60 +360,59 @@ export default function PackageDetail() {
                 to="/"
                 className="mb-4 inline-flex items-center gap-1.5 rounded-full border border-[#E5E9FA] bg-white px-3.5 py-1.5 text-xs font-semibold text-[#285FFA] shadow-2xs hover:bg-[#F0F4FF] transition"
               >
-                <span>↑</span>
+                <span>←</span>
                 <span>Home / Packages</span>
               </Link>
 
               {/* Title */}
               <h1 className="text-[44px] font-black leading-[1.08] tracking-[-0.04em] sm:text-[58px] xl:text-[68px] text-[#141A29]">
-                Pro<span className="text-[#155DFC]">.</span>
+                {packageData.name}<span className="text-[#155DFC]">.</span>
               </h1>
 
               {/* Tagline / Subtitle */}
               <p className="mt-4 max-w-2xl text-[15px] sm:text-[16px] leading-relaxed text-slate-600 font-medium">
-                Our step-by-step, skill-focused, and practical growth package. Specially designed for people who want to learn high-income digital skills and start their freelancing journey.
+                {packageData.tagline || fallback.tagline}
               </p>
 
-              {/* All inclusions of this course are */}
+              {/* All inclusions of this package are */}
               <div className="mt-6">
                 <p className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-3">
-                  All inclusions of this course are
+                  All inclusions of this package are
                 </p>
 
                 <div className="flex flex-wrap items-center gap-3">
                   <div className="flex items-center gap-2.5 rounded-full border border-[#DFE6F1] bg-white px-4 py-2.5 shadow-2xs">
                     <BookOpen size={16} className="text-[#155DFC]" />
                     <span className="text-xs sm:text-sm font-bold text-[#141A29]">
-                      9 Courses
+                      {coursesList.length} Courses
                     </span>
                   </div>
 
                   <div className="flex items-center gap-2.5 rounded-full border border-[#DFE6F1] bg-white px-4 py-2.5 shadow-2xs">
                     <Clock size={16} className="text-amber-500" />
                     <span className="text-xs sm:text-sm font-bold text-[#141A29]">
-                      25+ Hours
+                      {packageData.total_hours || "25+ Hours"}
                     </span>
                   </div>
 
                   <div className="flex items-center gap-2.5 rounded-full border border-[#DFE6F1] bg-white px-4 py-2.5 shadow-2xs">
                     <Users size={16} className="text-emerald-500" />
                     <span className="text-xs sm:text-sm font-bold text-[#141A29]">
-                      45K+ Students Enrolled
+                      {packageData.enrolled_students || "45K+ Students Enrolled"}
                     </span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Right Column: Hero Image (Height increased slightly, clean image) */}
+            {/* Right Column: Hero Image */}
             <div className="w-full flex items-center justify-center lg:justify-end">
               <img
-                src="/images/packages/pro.png"
-                alt="Pro Learning Package"
-                className="w-full max-w-[440px] max-h-[380px] object-contain drop-shadow-lg"
+                src={packageData.image_url || fallback.image_url}
+                alt={`${packageData.name} Learning Package`}
+                className="w-full max-w-[440px] max-h-[380px] object-contain drop-shadow-lg transition-transform hover:scale-105 duration-300"
                 onError={(e) => {
-                  e.currentTarget.src =
-                    "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=600&auto=format&fit=crop";
+                  e.currentTarget.src = fallback.image_url;
                 }}
               />
             </div>
@@ -364,7 +420,7 @@ export default function PackageDetail() {
         </section>
 
         {/* ======================================================== */}
-        {/* DEDICATED NEW ROW: DUAL PRICING WITH CENTER BUY NOW CTA */}
+        {/* DEDICATED ROW: DUAL PRICING WITH CENTER BUY NOW CTA */}
         {/* ======================================================== */}
         <section className="border-b border-[#EDF0F6] bg-white py-10">
           <div className="mx-auto max-w-[1540px] px-6 md:px-10 lg:px-16 2xl:max-w-[1700px]">
@@ -377,11 +433,11 @@ export default function PackageDetail() {
                     MRP Price
                   </span>
                   <span className="text-xl sm:text-2xl font-black text-[#141A29]">
-                    ₹ 11,800
+                    ₹ {Number(packageData.mrp_price || 11800).toLocaleString("en-IN")}
                   </span>
                 </div>
                 <p className="text-xs text-slate-500 leading-relaxed font-medium">
-                  Full access to 9 value-packed courses, ideal for beginners, freelancers, content creators
+                  {packageData.mrp_note || fallback.mrp_note}
                 </p>
               </div>
 
@@ -412,11 +468,11 @@ export default function PackageDetail() {
                     With Promocode
                   </span>
                   <span className="text-2xl font-black text-[#141A29]">
-                    ₹ 7999
+                    ₹ {Number(packageData.promo_price || 7999).toLocaleString("en-IN")}
                   </span>
                 </div>
                 <p className="text-xs text-slate-700 leading-relaxed font-medium">
-                  Launch your Freelance career with 9+ High Value courses + lifetime access, tools, and community.
+                  {packageData.promo_note || fallback.promo_note}
                 </p>
               </div>
             </div>
@@ -430,27 +486,27 @@ export default function PackageDetail() {
           <div className="mx-auto max-w-[1540px] px-6 md:px-10 lg:px-16 2xl:max-w-[1700px]">
             <div>
               <span className="text-xs font-bold uppercase tracking-[0.13em] text-[#285FFA]">
-                Course Overview
+                Package Overview
               </span>
 
               <h2 className="mt-3 text-[28px] sm:text-[36px] font-extrabold leading-tight tracking-tight text-[#141A29] max-w-3xl">
-                Unlock lifetime access, certification, and community support to grow, earn, and thrive confidently.
+                {packageData.overview_heading || fallback.overview_heading}
               </h2>
 
               <p className="mt-4 max-w-2xl text-[15px] leading-relaxed text-slate-500 font-medium">
-                A complete ecosystem designed for individuals who are serious about building their freelance career that leads to real results.
+                {packageData.overview_desc || fallback.overview_desc}
               </p>
             </div>
 
-            {/* What you'll learn in this course: */}
+            {/* What you'll learn in this package: */}
             <div className="mt-10 rounded-[28px] border border-[#E5E9F4] bg-white p-6 sm:p-10 shadow-xs">
               <h3 className="text-lg sm:text-xl font-bold text-[#141A29] mb-6 flex items-center gap-2">
                 <Sparkles size={18} className="text-[#155DFC]" />
-                <span>What you'll learn in this course:</span>
+                <span>What you'll learn in this package:</span>
               </h3>
 
               <div className="grid gap-4 sm:grid-cols-2">
-                {learnings.map((item, idx) => (
+                {learningsList.map((item, idx) => (
                   <div
                     key={idx}
                     className="flex items-start gap-3 rounded-2xl bg-[#F8FAFF] border border-[#EBEFF8] p-4"
@@ -469,7 +525,7 @@ export default function PackageDetail() {
         </section>
 
         {/* ======================================================== */}
-        {/* COURSES OFFERINGS (24 COURSES) */}
+        {/* COURSES OFFERINGS GRID */}
         {/* ======================================================== */}
         <section id="courses" className="py-16 lg:py-24 border-b border-[#EDF0F6]">
           <div className="mx-auto w-full max-w-[1540px] px-6 md:px-10 lg:px-16 2xl:max-w-[1700px]">
@@ -489,21 +545,89 @@ export default function PackageDetail() {
               </div>
 
               <div className="rounded-full border border-[#E4E9F4] bg-[#F8FAFF] px-4 py-2 text-xs font-semibold text-slate-500">
-                {courses.length} Total Courses Included
+                {coursesList.length} Total Courses Included
               </div>
             </div>
 
             {/* Course Cards Grid */}
             <div className="grid grid-cols-1 gap-x-6 gap-y-10 sm:grid-cols-2 lg:grid-cols-4">
-              {courses.map((course) => (
-                <CourseCard key={course.title} course={course} />
+              {coursesList.map((course, idx) => (
+                <CourseCard key={course.id || idx} course={course} />
               ))}
             </div>
           </div>
         </section>
 
         {/* ======================================================== */}
-        {/* CERTIFICATION SECTION (RICH BLUE GRADIENT THEME) */}
+        {/* MENTORS & INSTRUCTORS SECTION */}
+        {/* ======================================================== */}
+        {packageMentors.length > 0 && (
+          <section className="py-16 lg:py-24 bg-[#FAFBFF] border-b border-[#EDF0F6]">
+            <div className="mx-auto w-full max-w-[1540px] px-6 md:px-10 lg:px-16 2xl:max-w-[1700px]">
+              <div className="mb-10 flex flex-wrap items-end justify-between gap-5">
+                <div>
+                  <span className="text-xs font-bold uppercase tracking-[0.13em] text-[#285FFA]">
+                    World-Class Mentorship
+                  </span>
+                  <h2 className="mt-2 text-[30px] font-extrabold leading-tight tracking-tight md:text-[40px] text-[#141A29]">
+                    Learn directly from industry leaders.
+                  </h2>
+                  <p className="mt-2 text-sm text-slate-500 max-w-xl">
+                    Step-by-step guidance from practitioners who have built real careers and client businesses.
+                  </p>
+                </div>
+
+                <div className="rounded-full border border-[#E4E9F4] bg-white px-4 py-2 text-xs font-semibold text-slate-600 shadow-2xs">
+                  {packageMentors.length} Expert Mentors Assigned
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                {packageMentors.map((mentor, mIdx) => (
+                  <div
+                    key={mIdx}
+                    className="rounded-[24px] border border-[#E8EDF6] bg-white p-6 shadow-xs flex flex-col justify-between hover:shadow-md transition-shadow"
+                  >
+                    <div>
+                      <div className="flex items-center gap-3.5 mb-4">
+                        <img
+                          src={mentor.photo}
+                          alt={mentor.name}
+                          className="w-14 h-14 rounded-full object-cover border border-[#DFE6F1] shrink-0"
+                          onError={(e) => {
+                            e.currentTarget.src =
+                              "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=200&auto=format&fit=crop";
+                          }}
+                        />
+                        <div className="min-w-0">
+                          <h3 className="text-sm font-bold text-[#141A29] truncate">{mentor.name}</h3>
+                          <p className="text-xs text-[#155DFC] font-semibold truncate">{mentor.role}</p>
+                          <span className="inline-block mt-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-600">
+                            {mentor.experience_badge}
+                          </span>
+                        </div>
+                      </div>
+
+                      <p className="text-xs text-slate-500 line-clamp-2 leading-relaxed">
+                        {mentor.bio}
+                      </p>
+                    </div>
+
+                    <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-400">
+                      <span className="font-semibold text-slate-700">
+                        {mentor.coursesCount} {mentor.coursesCount === 1 ? "Course" : "Courses"} in Bundle
+                      </span>
+                      <span className="text-[#155DFC] font-bold">100% Practical</span>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* ======================================================== */}
+        {/* CERTIFICATION SECTION */}
         {/* ======================================================== */}
         <section className="py-16 bg-gradient-to-br from-[#0B256B] via-[#0F3FA6] to-[#0A2254] text-white relative overflow-hidden shadow-xl">
           <div className="pointer-events-none absolute -right-12 -top-28 h-80 w-80 rounded-full border-[48px] border-white/10" />
@@ -551,7 +675,7 @@ export default function PackageDetail() {
                       This is to certify that student has completed
                     </p>
                     <h5 className="text-sm font-extrabold text-[#155DFC] my-1">
-                      Pro Skill Package Program
+                      {packageData.name} Skill Package Program
                     </h5>
                     <div className="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between text-[9px] font-semibold text-slate-400">
                       <span>Verified QR Code</span>
@@ -586,18 +710,18 @@ export default function PackageDetail() {
               <p className="mt-4 max-w-sm text-sm leading-7 text-slate-500 font-medium">
                 Still you have any questions? Contact our Team via{" "}
                 <a
-                  href="mailto:support@idigitalpreneur.com"
+                  href="mailto:support@knowway.com"
                   className="text-[#155DFC] font-bold underline"
                 >
-                  support@idigitalpreneur.com
+                  support@knowway.com
                 </a>
               </p>
             </div>
 
             <div className="space-y-3">
-              {faqs.map((faq, index) => (
+              {faqsList.map((faq, index) => (
                 <div
-                  key={faq.question}
+                  key={index}
                   className={`overflow-hidden rounded-2xl border transition ${
                     activeFaq === index
                       ? "border-[#DBE4FD] bg-[#F7F9FF]"
@@ -635,7 +759,7 @@ export default function PackageDetail() {
         </section>
       </main>
 
-      {/* 7. Universal Footer */}
+      {/* Universal Footer */}
       <Footer />
     </>
   );

@@ -49,10 +49,26 @@ export default function CreateCoursePage() {
   const isEditMode = Boolean(id);
 
   // Layout & Theme State
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    try {
+      const saved = localStorage.getItem("admin_dark_mode");
+      if (saved !== null) return saved === "true";
+      return false;
+    } catch {
+      return false;
+    }
+  });
   const [sidebarHovered, setSidebarHovered] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [adminUser] = useState(getAdminUser());
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+  }, [darkMode]);
 
   // Wizard Step State (1 to 4)
   const [currentStep, setCurrentStep] = useState(1);

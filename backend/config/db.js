@@ -216,7 +216,46 @@ export const initDB = async () => {
     `;
     await connection.query(createCertificatesTableQuery);
 
-    console.log("✅ MySQL Schema Ready: [users, admins, system_settings, mentors, courses, course_lectures, course_quizzes, student_certificates]");
+    // Packages table
+    const createPackagesTableQuery = `
+      CREATE TABLE IF NOT EXISTS packages (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(255) NOT NULL,
+        slug VARCHAR(255) NOT NULL UNIQUE,
+        tagline TEXT DEFAULT NULL,
+        image_url VARCHAR(500) DEFAULT NULL,
+        mrp_price DECIMAL(10,2) NOT NULL DEFAULT 11800.00,
+        promo_price DECIMAL(10,2) NOT NULL DEFAULT 7999.00,
+        mrp_note TEXT DEFAULT NULL,
+        promo_note TEXT DEFAULT NULL,
+        total_hours VARCHAR(100) DEFAULT '25+ Hours',
+        enrolled_students VARCHAR(100) DEFAULT '45K+ Students Enrolled',
+        overview_heading TEXT DEFAULT NULL,
+        overview_desc TEXT DEFAULT NULL,
+        what_you_will_learn JSON DEFAULT NULL,
+        faqs JSON DEFAULT NULL,
+        status VARCHAR(50) DEFAULT 'active',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `;
+    await connection.query(createPackagesTableQuery);
+
+    // Package-Courses mapping table
+    const createPackageCoursesTableQuery = `
+      CREATE TABLE IF NOT EXISTS package_courses (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        package_id INT NOT NULL,
+        course_id INT NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE KEY unique_pkg_course (package_id, course_id),
+        FOREIGN KEY (package_id) REFERENCES packages(id) ON DELETE CASCADE,
+        FOREIGN KEY (course_id) REFERENCES courses(id) ON DELETE CASCADE
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `;
+    await connection.query(createPackageCoursesTableQuery);
+
+    console.log("✅ MySQL Schema Ready: [users, admins, system_settings, mentors, courses, course_lectures, course_quizzes, student_certificates, packages, package_courses]");
 
     // Seed default Super Admin account if not present
     const [existingAdmins] = await connection.query("SELECT id FROM admins WHERE email = ? LIMIT 1", [
@@ -635,6 +674,172 @@ export const initDB = async () => {
       ('smtp_is_active', 'false');
     `);
     console.log("✉️ SMTP / Mailer system settings initialized.");
+
+    // Seed default Packages if empty
+    const [existingPackages] = await connection.query("SELECT id FROM packages LIMIT 1");
+    if (!existingPackages || existingPackages.length === 0) {
+      const defaultPackages = [
+        {
+          name: "Pro",
+          slug: "pro",
+          tagline: "Our step-by-step, skill-focused, and practical growth package. Specially designed for people who want to learn high-income digital skills and start their freelancing journey.",
+          image_url: "/images/packages/pro.png",
+          mrp_price: 11800.00,
+          promo_price: 7999.00,
+          mrp_note: "Full access to 9 value-packed courses, ideal for beginners, freelancers, content creators",
+          promo_note: "Launch your Freelance career with 9+ High Value courses + lifetime access, tools, and community.",
+          total_hours: "25+ Hours",
+          enrolled_students: "45K+ Students Enrolled",
+          overview_heading: "Unlock lifetime access, certification, and community support to grow, earn, and thrive confidently.",
+          overview_desc: "A complete ecosystem designed for individuals who are serious about building their freelance career that leads to real results.",
+          what_you_will_learn: [
+            "Learn Artificial Intelligence tools to improve productivity and work smarter.",
+            "Master Video Editing with Premiere Pro, Filmora, and create engaging content.",
+            "Learn freelancing skills to find clients and start earning online.",
+            "Design professional graphics using Canva for personal and business needs.",
+            "Grow your Instagram presence with effective growth strategies.",
+            "Understand Content Marketing and create content that attracts audiences.",
+            "Create short-form videos that engage viewers and build digital presence."
+          ],
+          faqs: [
+            {
+              question: "What’s included in this package?",
+              answer: "The Pro package includes full lifetime access to in-demand courses covering Freelancing, Video Editing, AI Tools, Graphic Design, Canva, and Social Media Marketing. You also get accredited completion certificates, downloadable project files, and access to our private community."
+            },
+            {
+              question: "Who is this package ideal for?",
+              answer: "Perfect for students and beginners who are exploring online earning or freelancing for the first time."
+            },
+            {
+              question: "Will I get lifetime access to the content?",
+              answer: "Yes! You receive 100% lifetime access to all included courses, future video lessons, assignments, and downloadable resources."
+            },
+            {
+              question: "Can I upgrade to a higher package later?",
+              answer: "Yes, you can easily upgrade to Supreme, Premium, or Premium Plus packages from your student dashboard at any time by paying only the upgrade difference."
+            },
+            {
+              question: "What kind of certificate or recognition will I receive?",
+              answer: "Upon scoring 60% or higher in the module quiz assessment, you will receive an official ISO-certified, verifiable digital certificate with unique QR code verification to add directly to your LinkedIn, resume, or client proposals."
+            }
+          ]
+        },
+        {
+          name: "Supreme",
+          slug: "supreme",
+          tagline: "Go deeper with advanced learning paths designed for digital growth and business skills. Master high-converting digital marketing, client scaling, and business workflows.",
+          image_url: "/images/packages/supreme.png",
+          mrp_price: 14800.00,
+          promo_price: 9999.00,
+          mrp_note: "Complete access to performance marketing, sales funnels, and growth strategies",
+          promo_note: "Grow your client pipeline with Meta Ads, Google Ads, and high-ticket client acquisition.",
+          total_hours: "40+ Hours",
+          enrolled_students: "28K+ Students Enrolled",
+          overview_heading: "Scale your revenue with advanced paid media, sales funnel architecture, and outreach strategies.",
+          overview_desc: "Designed for intermediate to advanced freelancers and entrepreneurs wanting to close 4-5 figure retainers.",
+          what_you_will_learn: [
+            "Meta Ads Manager from beginner to advanced scaling workflows.",
+            "Google Ads search and display campaign architectures.",
+            "High-converting landing page creation and lead generation funnels.",
+            "Client outreach templates for cold email, LinkedIn, and Instagram.",
+            "Closing sales calls and managing client retainer objections effortlessly."
+          ],
+          faqs: [
+            {
+              question: "Is Pro package included in Supreme?",
+              answer: "Yes! Supreme package includes everything inside Pro, plus all advanced marketing and growth tracks."
+            },
+            {
+              question: "Are there practical ad campaigns included?",
+              answer: "Yes, you will build live ad campaigns, pixel tracking, and custom conversion events step-by-step."
+            }
+          ]
+        },
+        {
+          name: "Premium",
+          slug: "premium",
+          tagline: "Learn how digital commerce works and explore the skills behind building an online business. End-to-end frontend development, digital product selling, and practical monetization.",
+          image_url: "/images/packages/premium.png",
+          mrp_price: 18800.00,
+          promo_price: 12999.00,
+          mrp_note: "Full tech & digital commerce suite with 1-on-1 mentorship sessions",
+          promo_note: "Build custom web portals, design brand identities, and launch digital storefronts.",
+          total_hours: "60+ Hours",
+          enrolled_students: "18K+ Students Enrolled",
+          overview_heading: "End-to-end fullstack web development, design systems, and digital product monetization.",
+          overview_desc: "For developers, creators, and agency owners who want comprehensive tech mastery.",
+          what_you_will_learn: [
+            "Complete frontend and web application foundations.",
+            "Digital storefront setup and automated payment gateway integrations.",
+            "Full stack architecture, database models, and API integrations.",
+            "Brand identity design and responsive user interface creation."
+          ],
+          faqs: [
+            {
+              question: "Do I need coding background for Premium?",
+              answer: "No, the modules start from foundational web concepts and guide you to production development."
+            }
+          ]
+        },
+        {
+          name: "Premium Plus",
+          slug: "premium-plus",
+          tagline: "Explore content creation, personal branding, AI automation, and VIP founder community access.",
+          image_url: "/images/packages/premium-plus.png",
+          mrp_price: 24800.00,
+          promo_price: 16999.00,
+          mrp_note: "VIP all-access lifetime pass to every course, live workshop, and mentorship",
+          promo_note: "Direct founder community access with weekly live coaching calls and deal review.",
+          total_hours: "100+ Hours",
+          enrolled_students: "9.5K+ Students Enrolled",
+          overview_heading: "The ultimate VIP all-inclusive learning track for visionary builders and high-income consultants.",
+          overview_desc: "Master everything from AI pipelines to premium client closing and personal branding.",
+          what_you_will_learn: [
+            "Complete access to every course and future releases on KnowWay.",
+            "Weekly live Q&A webinars and masterclasses with industry practitioners.",
+            "Direct founder mastermind network and private deal flow community.",
+            "Personal branding playbooks for multi-channel audience growth."
+          ],
+          faqs: [
+            {
+              question: "Does Premium Plus include all future courses?",
+              answer: "Yes, you receive permanent VIP access to all present and upcoming courses without extra charge."
+            }
+          ]
+        }
+      ];
+
+      const [allCourses] = await connection.query("SELECT id FROM courses");
+      for (const pkg of defaultPackages) {
+        const [pkgRes] = await connection.query(`
+          INSERT INTO packages (name, slug, tagline, image_url, mrp_price, promo_price, mrp_note, promo_note, total_hours, enrolled_students, overview_heading, overview_desc, what_you_will_learn, faqs)
+          VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        `, [
+          pkg.name,
+          pkg.slug,
+          pkg.tagline,
+          pkg.image_url,
+          pkg.mrp_price,
+          pkg.promo_price,
+          pkg.mrp_note,
+          pkg.promo_note,
+          pkg.total_hours,
+          pkg.enrolled_students,
+          pkg.overview_heading,
+          pkg.overview_desc,
+          JSON.stringify(pkg.what_you_will_learn),
+          JSON.stringify(pkg.faqs)
+        ]);
+
+        const pkgId = pkgRes.insertId;
+        if (allCourses && allCourses.length > 0) {
+          for (const c of allCourses) {
+            await connection.query("INSERT IGNORE INTO package_courses (package_id, course_id) VALUES (?, ?)", [pkgId, c.id]);
+          }
+        }
+      }
+      console.log("📦 Default 4 Packages seeded and linked with courses.");
+    }
 
     connection.release();
   } catch (err) {

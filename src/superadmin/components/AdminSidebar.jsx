@@ -5,6 +5,7 @@ import {
   Users,
   GraduationCap,
   BookOpen,
+  Layers3,
   Settings,
   LogOut,
   ExternalLink,
@@ -34,6 +35,12 @@ export default function AdminSidebar({
       label: "Overview",
       icon: LayoutDashboard,
       badge: "Live",
+    },
+    {
+      id: "packages",
+      label: "Package Studio",
+      icon: Layers3,
+      badge: "Dynamic",
     },
     {
       id: "mentors",

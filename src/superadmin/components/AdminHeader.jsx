@@ -33,6 +33,8 @@ export default function AdminHeader({
 
   const getTabTitle = () => {
     switch (activeTab) {
+      case "packages":
+        return "Package Studio & Bundles";
       case "mentors":
         return "Mentors & Instructors";
       case "courses":
@@ -90,7 +92,20 @@ export default function AdminHeader({
         {/* Dark / Light Theme Sliding Switcher Toggle */}
         <button
           type="button"
-          onClick={() => setDarkMode(!darkMode)}
+          onClick={() => {
+            const nextMode = !darkMode;
+            setDarkMode(nextMode);
+            try {
+              localStorage.setItem("admin_dark_mode", String(nextMode));
+              if (nextMode) {
+                document.documentElement.classList.add("dark");
+              } else {
+                document.documentElement.classList.remove("dark");
+              }
+            } catch {
+              // Ignore storage errors
+            }
+          }}
           title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
           className={`h-12 w-22 sm:w-24 rounded-full border p-1.5 flex items-center justify-between relative transition-all cursor-pointer select-none ${
             darkMode
