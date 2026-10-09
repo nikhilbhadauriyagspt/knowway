@@ -458,14 +458,23 @@ export const verifyPayment = async (req, res) => {
     // (Level 1: Direct Referrer + Level 2: Leadership Upline Sponsor)
     // ============================================================
     try {
-      const activeReferralCode = referralCode || null;
+      let activeReferralCode = referralCode ? referralCode.trim() : null;
+
+      // If no referralCode passed in body, check if the student has referred_by stored
+      if (!activeReferralCode && userId) {
+        const [uRows] = await pool.query("SELECT referred_by FROM users WHERE id = ? LIMIT 1", [userId]);
+        if (uRows.length > 0 && uRows[0].referred_by) {
+          activeReferralCode = uRows[0].referred_by;
+        }
+      }
+
       if (activeReferralCode && activeReferralCode.trim()) {
         const cleanRef = activeReferralCode.trim().toUpperCase();
 
         // 1. Find Level-1 Direct Referrer User (exclude buyer)
         const [refUsers] = await pool.query(
-          "SELECT id, name, email, referred_by FROM users WHERE (UPPER(referral_code) = ? OR UPPER(student_id) = ? OR CONCAT('KW', id) = ?) AND id != ? LIMIT 1",
-          [cleanRef, cleanRef, cleanRef, userId || 0]
+          "SELECT id, name, email, referred_by FROM users WHERE (UPPER(referral_code) = ? OR UPPER(student_id) = ? OR CONCAT('KW', id) = ? OR CAST(id AS CHAR) = ?) AND id != ? LIMIT 1",
+          [cleanRef, cleanRef, cleanRef, cleanRef.replace(/^KW/i, ''), userId || 0]
         );
 
         if (refUsers.length > 0) {
@@ -476,7 +485,7 @@ export const verifyPayment = async (req, res) => {
 
           // Level 1: Direct Commission
           const directCommType = purchasedItem?.referral_commission_type || "percentage";
-          const directCommVal = Number(purchasedItem?.referral_commission_value !== undefined ? purchasedItem.referral_commission_value : 20.00);
+          const directCommVal = Number(purchasedItem?.referral_commission_value !== undefined && purchasedItem?.referral_commission_value !== null ? purchasedItem.referral_commission_value : 20.00);
           let directCalculated = directCommType === "flat" ? directCommVal : (itemPrice * directCommVal) / 100;
           directCalculated = Math.round(directCalculated * 100) / 100;
 
@@ -513,6 +522,22 @@ export const verifyPayment = async (req, res) => {
 
           console.log(`💸 Level-1 Direct Commission: ₹${directCalculated} credited to User ID ${directReferrer.id} (${directReferrer.name})`);
 
+          // Super Admin Notification for Commission
+          createAdminNotification({
+            type: "commission_earned",
+            title: "Affiliate Commission Credited 💸",
+            message: `₹${directCalculated} commission credited to ${directReferrer.name} for ${name || userPayload?.name || 'Student'}'s purchase of '${itemTitle}'.`,
+            data: { referrerId: directReferrer.id, buyerId: userId, commission: directCalculated, itemTitle },
+          }).catch(() => {});
+
+          logAdminActivity({
+            adminName: "System Billing",
+            action: "COMMISSION_CREDITED",
+            category: "affiliate",
+            details: `₹${directCalculated} commission credited to referrer ${directReferrer.name} (${directReferrer.email}) for purchase of ${itemTitle}.`,
+            metadata: { referrerId: directReferrer.id, buyerId: userId, amount: directCalculated },
+          }).catch(() => {});
+
           // ============================================================
           // 2. Level-2 Leadership / Sponsor Commission (Direct Referrer's Upline)
           // ============================================================
@@ -521,14 +546,14 @@ export const verifyPayment = async (req, res) => {
 
             // Look up Level-2 Sponsor (must not be the buyer or Level-1 referrer)
             const [uplineUsers] = await pool.query(
-              "SELECT id, name, email FROM users WHERE (UPPER(referral_code) = ? OR UPPER(student_id) = ? OR CONCAT('KW', id) = ? OR id = ?) AND id != ? AND id != ? LIMIT 1",
-              [cleanUplineRef, cleanUplineRef, cleanUplineRef, cleanUplineRef, userId || 0, directReferrer.id]
+              "SELECT id, name, email FROM users WHERE (UPPER(referral_code) = ? OR UPPER(student_id) = ? OR CONCAT('KW', id) = ? OR CAST(id AS CHAR) = ?) AND id != ? AND id != ? LIMIT 1",
+              [cleanUplineRef, cleanUplineRef, cleanUplineRef, cleanUplineRef.replace(/^KW/i, ''), userId || 0, directReferrer.id]
             );
 
             if (uplineUsers.length > 0) {
               const leadershipSponsor = uplineUsers[0];
               const leadCommType = purchasedItem?.leadership_commission_type || "percentage";
-              const leadCommVal = Number(purchasedItem?.leadership_commission_value !== undefined ? purchasedItem.leadership_commission_value : 5.00);
+              const leadCommVal = Number(purchasedItem?.leadership_commission_value !== undefined && purchasedItem?.leadership_commission_value !== null ? purchasedItem.leadership_commission_value : 5.00);
               let leadCalculated = leadCommType === "flat" ? leadCommVal : (itemPrice * leadCommVal) / 100;
               leadCalculated = Math.round(leadCalculated * 100) / 100;
 

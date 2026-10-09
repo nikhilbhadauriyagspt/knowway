@@ -176,10 +176,14 @@ export const register = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Insert user into MySQL
+    // Generate unique referral code for this new student (e.g. KW{random})
+    const myReferralCode = "KW" + Math.floor(1000 + Math.random() * 9000);
+    const sponsorRefCode = referralCode ? referralCode.trim().toUpperCase() : null;
+
+    // Insert user into MySQL with own referral_code and sponsor referred_by
     const [result] = await pool.query(
-      `INSERT INTO users (student_id, name, phone, email, address, password, referral_code, is_verified) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, TRUE)`,
+      `INSERT INTO users (student_id, name, phone, email, address, password, referral_code, referred_by, is_verified) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, TRUE)`,
       [
         studentId,
         name.trim(),
@@ -187,7 +191,8 @@ export const register = async (req, res) => {
         cleanEmail,
         address ? address.trim() : "",
         hashedPassword,
-        referralCode ? referralCode.trim().toUpperCase() : null,
+        myReferralCode,
+        sponsorRefCode,
       ]
     );
 
@@ -240,7 +245,9 @@ export const register = async (req, res) => {
       email: cleanEmail,
       phone: phone || "",
       address: address || "",
-      referralCode: referralCode || null,
+      referral_code: myReferralCode,
+      referralCode: myReferralCode,
+      referred_by: sponsorRefCode,
       avatar_url: null,
     };
 

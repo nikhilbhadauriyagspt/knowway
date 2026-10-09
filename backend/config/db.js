@@ -71,15 +71,18 @@ export const initDB = async () => {
     try { await connection.query("ALTER TABLE users ADD COLUMN active_session_token VARCHAR(255) DEFAULT NULL;"); } catch (_) {}
     try { await connection.query("ALTER TABLE users ADD COLUMN last_device_info VARCHAR(255) DEFAULT NULL;"); } catch (_) {}
     try { await connection.query("ALTER TABLE users ADD COLUMN last_login_at TIMESTAMP DEFAULT NULL;"); } catch (_) {}
+    try { await connection.query("ALTER TABLE users ADD COLUMN referred_by VARCHAR(50) DEFAULT NULL;"); } catch (_) {}
+    try { await connection.query("ALTER TABLE users ADD COLUMN referral_code VARCHAR(50) DEFAULT NULL;"); } catch (_) {}
 
-    // Backfill any existing users who do not have a student_id yet
+    // Backfill any existing users who do not have a student_id or referral_code yet
     try {
       const [existingUsersWithoutId] = await connection.query(
-        "SELECT id FROM users WHERE student_id IS NULL OR student_id = ''"
+        "SELECT id, student_id, referral_code FROM users WHERE student_id IS NULL OR student_id = '' OR referral_code IS NULL OR referral_code = ''"
       );
       for (const u of existingUsersWithoutId) {
-        const generatedId = `KW-${new Date().getFullYear()}-${String(u.id).padStart(4, "0")}${Math.floor(100 + Math.random() * 900)}`;
-        await connection.query("UPDATE users SET student_id = ? WHERE id = ?", [generatedId, u.id]);
+        const generatedId = u.student_id || `KW-${new Date().getFullYear()}-${String(u.id).padStart(4, "0")}${Math.floor(100 + Math.random() * 900)}`;
+        const generatedRefCode = u.referral_code || `KW${u.id}`;
+        await connection.query("UPDATE users SET student_id = ?, referral_code = ? WHERE id = ?", [generatedId, generatedRefCode, u.id]);
       }
     } catch (_) {}
 
