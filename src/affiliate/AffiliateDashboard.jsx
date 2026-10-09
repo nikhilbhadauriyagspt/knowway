@@ -840,6 +840,28 @@ export default function AffiliateDashboard() {
                     ) : (
                       filteredReferrals.map((r) => {
                         const isLeadership = r.commission_tier === "leadership" || Number(r.tier_level) === 2;
+                        const studentName = r.referred_user_name || r.name || "Student";
+                        const studentEmail = r.referred_user_email || r.email || "—";
+                        const studentPhone = r.referred_user_phone || r.phone || "";
+                        const itemTitle = r.item_title || r.package || "Course / Package";
+                        const itemPrice = Number(r.item_price || r.packagePrice || 0);
+                        const commissionAmount = Number(r.commission_amount || r.commission || 0);
+                        const rateLabel =
+                          r.commission_type === "flat"
+                            ? `₹${r.commission_value} Flat`
+                            : r.commission_value
+                            ? `${r.commission_value}%`
+                            : r.commissionRate || "20%";
+                        const dateFormatted = r.created_at
+                          ? new Date(r.created_at).toLocaleDateString("en-IN", {
+                              day: "numeric",
+                              month: "short",
+                              year: "numeric",
+                            })
+                          : r.date || "—";
+                        const statusStr = r.status || "credited";
+                        const isCredited = statusStr.toLowerCase() === "credited";
+
                         return (
                           <tr
                             key={r.id}
@@ -862,8 +884,10 @@ export default function AffiliateDashboard() {
                               )}
                             </td>
                             <td className="py-3.5 px-5">
-                              <p className="font-bold text-xs">{r.name}</p>
-                              <p className="text-[10px] text-[#8A99AD]">{r.email} • {r.phone}</p>
+                              <p className="font-bold text-xs">{studentName}</p>
+                              <p className="text-[10px] text-[#8A99AD]">
+                                {studentEmail}{studentPhone ? ` • ${studentPhone}` : ""}
+                              </p>
                               {isLeadership && r.direct_referrer_name && (
                                 <p className="text-[9.5px] text-[#8A99AD] mt-0.5">
                                   ↳ Via Team Member: <span className="font-semibold text-amber-500">{r.direct_referrer_name}</span>
@@ -872,29 +896,29 @@ export default function AffiliateDashboard() {
                             </td>
                             <td className="py-3.5 px-5 font-semibold text-xs">
                               <span className="px-2 py-0.5 rounded-md bg-blue-500/10 text-blue-500 text-[11px] font-bold">
-                                {r.package}
+                                {itemTitle}
                               </span>
                             </td>
                             <td className="py-3.5 px-5 font-medium">
-                              ₹{Number(r.packagePrice || 0).toLocaleString()}
+                              ₹{itemPrice.toLocaleString("en-IN")}
                             </td>
                             <td className="py-3.5 px-5">
                               <span className="font-black text-emerald-500 text-xs">
-                                ₹{Number(r.commission || 0).toLocaleString()}
+                                ₹{commissionAmount.toLocaleString("en-IN")}
                               </span>
-                              <span className="text-[10px] text-[#8A99AD] ml-1">({r.commissionRate})</span>
+                              <span className="text-[10px] text-[#8A99AD] ml-1">({rateLabel})</span>
                             </td>
-                            <td className="py-3.5 px-5 text-[#8A99AD]">{r.date}</td>
+                            <td className="py-3.5 px-5 text-[#8A99AD]">{dateFormatted}</td>
                             <td className="py-3.5 px-5">
                               <span
-                                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
-                                  r.status === "Credited"
+                                className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold capitalize ${
+                                  isCredited
                                     ? "bg-emerald-500/10 text-emerald-500"
                                     : "bg-amber-500/10 text-amber-500"
                                 }`}
                               >
                                 <span className="w-1.5 h-1.5 rounded-full bg-current" />
-                                {r.status}
+                                {statusStr}
                               </span>
                             </td>
                           </tr>
