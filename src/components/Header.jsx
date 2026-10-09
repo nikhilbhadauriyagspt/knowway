@@ -21,6 +21,7 @@ import {
   isUserAuthenticated,
   clearUserSession,
 } from "../services/api";
+import UserAvatarDropdown from "./UserAvatarDropdown";
 
 export default function Header() {
   const navigate = useNavigate();
@@ -349,68 +350,12 @@ export default function Header() {
               </Link>
 
               {/* User Avatar + Dropdown */}
-              <div className="relative" ref={userDropdownRef}>
-                <button
-                  onClick={() => setUserDropdownOpen(!userDropdownOpen)}
-                  className="flex items-center gap-2 rounded-full border border-[#E2E8F0] bg-white p-1.5 pr-3 hover:bg-[#F8FAFD] transition cursor-pointer shadow-2xs"
-                >
-                  <div className="w-8 h-8 rounded-full bg-[#EEF4FF] border border-[#035BE3]/20 text-[#035BE3] font-bold text-xs flex items-center justify-center shrink-0">
-                    {currentUser.avatar_url ? (
-                      <img src={currentUser.avatar_url} alt={currentUser.name} className="w-full h-full rounded-full object-cover" />
-                    ) : (
-                      userInitial
-                    )}
-                  </div>
-                  <span className="text-xs font-bold text-[#161B29] max-w-[100px] truncate">
-                    {currentUser.name ? currentUser.name.split(" ")[0] : "Learner"}
-                  </span>
-                  <ChevronDown size={13} className={`text-[#8C97A8] transition-transform ${userDropdownOpen ? "rotate-180" : ""}`} />
-                </button>
-
-                {/* Profile Popup Menu */}
-                {userDropdownOpen && (
-                  <div className="absolute right-0 top-full mt-2 w-56 rounded-[24px] border border-[#E2E8F0] bg-white p-2 shadow-xl animate-in fade-in zoom-in-95 duration-150 z-50">
-                    <div className="p-3 border-b border-gray-100">
-                      <p className="text-xs font-bold text-[#161B29] truncate">{currentUser.name}</p>
-                      <p className="text-[11px] text-[#64748B] truncate mt-0.5">{currentUser.email}</p>
-                      <span className="inline-block mt-1 text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-50 text-emerald-600 border border-emerald-200">
-                        Verified Learner
-                      </span>
-                    </div>
-
-                    <div className="py-1">
-                      <Link
-                        to="/dashboard"
-                        onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[#4A5568] hover:text-[#035BE3] hover:bg-[#F3F6FD] rounded-xl transition no-underline"
-                      >
-                        <LayoutDashboard size={14} />
-                        <span>My Dashboard</span>
-                      </Link>
-
-                      <Link
-                        to="/courses"
-                        onClick={() => setUserDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-3 py-2 text-xs font-semibold text-[#4A5568] hover:text-[#035BE3] hover:bg-[#F3F6FD] rounded-xl transition no-underline"
-                      >
-                        <BookOpen size={14} />
-                        <span>Browse Courses</span>
-                      </Link>
-                    </div>
-
-                    <div className="pt-1 border-t border-gray-100">
-                      <button
-                        onClick={handleLogout}
-                        className="w-full flex items-center gap-2.5 px-3 py-2 text-xs font-bold text-red-600 hover:bg-red-50 rounded-xl transition cursor-pointer"
-                      >
-                        <LogOut size={14} />
-                        <span>Sign Out</span>
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </div>
-
+              <UserAvatarDropdown
+                user={currentUser}
+                darkMode={false}
+                align="right"
+                showDashboardLink={true}
+              />
             </div>
           ) : (
             <>

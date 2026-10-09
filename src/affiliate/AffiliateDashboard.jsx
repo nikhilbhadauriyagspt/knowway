@@ -407,16 +407,8 @@ export default function AffiliateDashboard() {
     },
   ];
 
-  // Leaderboard mock fallback
-  const defaultLeaderboard = [
-    { rank: 1, name: "Suresh Mehra", earnings: "₹84,500", sales: 48, badge: "🏆 Gold" },
-    { rank: 2, name: "Priya Nair", earnings: "₹62,200", sales: 36, badge: "🥈 Silver" },
-    { rank: 3, name: "Harshil Vora", earnings: "₹49,800", sales: 29, badge: "🥉 Bronze" },
-    { rank: 4, name: user?.name || "You (Rank 4)", earnings: `₹${lifetimeEarned.toLocaleString()}`, sales: referrals.length, badge: "⭐ Star" },
-    { rank: 5, name: "Deepak Choudhary", earnings: "₹24,100", sales: 13, badge: "Pro" },
-    { rank: 6, name: "Kavita S.", earnings: "₹19,750", sales: 11, badge: "Pro" },
-  ];
-  const displayLeaderboard = leaderboard.length > 0 ? leaderboard : defaultLeaderboard;
+  // Real Leaderboard from live database
+  const displayLeaderboard = leaderboard;
 
   return (
     <div
@@ -1428,15 +1420,18 @@ export default function AffiliateDashboard() {
 
                           {/* Avatar */}
                           <div className="relative mt-2 mb-3">
-                            <img
-                              src={rank2.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=300&auto=format&fit=crop"}
-                              alt=""
-                              aria-hidden="true"
-                              className="w-20 h-20 sm:w-22 sm:h-22 rounded-full object-cover border-4 border-slate-300 dark:border-slate-600 shadow-md"
-                              onError={(e) => {
-                                e.currentTarget.src = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=300&auto=format&fit=crop";
-                              }}
-                            />
+                            {rank2.avatar ? (
+                              <img
+                                src={rank2.avatar}
+                                alt=""
+                                aria-hidden="true"
+                                className="w-20 h-20 sm:w-22 sm:h-22 rounded-full object-cover border-4 border-slate-300 dark:border-slate-600 shadow-md"
+                              />
+                            ) : (
+                              <div className="w-20 h-20 sm:w-22 sm:h-22 rounded-full bg-linear-to-br from-slate-400 to-slate-600 text-white font-black text-2xl flex items-center justify-center border-4 border-slate-300 dark:border-slate-600 shadow-md">
+                                {rank2.name ? rank2.name.charAt(0).toUpperCase() : "U"}
+                              </div>
+                            )}
                             <span className="absolute -bottom-2 -right-1 w-7 h-7 rounded-full bg-slate-300 dark:bg-slate-700 text-slate-800 dark:text-white font-black text-xs flex items-center justify-center border-2 border-white dark:border-[#131926] shadow-xs">
                               2
                             </span>
@@ -1479,15 +1474,18 @@ export default function AffiliateDashboard() {
                           {/* Avatar with Golden Ring */}
                           <div className="relative mt-3 mb-3">
                             <div className="absolute -inset-1 rounded-full bg-linear-to-r from-amber-400 to-yellow-500 opacity-75 blur-xs animate-tilt" />
-                            <img
-                              src={rank1.avatar || "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=300&auto=format&fit=crop"}
-                              alt=""
-                              aria-hidden="true"
-                              className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover border-4 border-amber-400 shadow-xl"
-                              onError={(e) => {
-                                e.currentTarget.src = "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=300&auto=format&fit=crop";
-                              }}
-                            />
+                            {rank1.avatar ? (
+                              <img
+                                src={rank1.avatar}
+                                alt=""
+                                aria-hidden="true"
+                                className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full object-cover border-4 border-amber-400 shadow-xl"
+                              />
+                            ) : (
+                              <div className="relative w-24 h-24 sm:w-28 sm:h-28 rounded-full bg-linear-to-br from-amber-500 to-yellow-500 text-black font-black text-3xl flex items-center justify-center border-4 border-amber-400 shadow-xl">
+                                {rank1.name ? rank1.name.charAt(0).toUpperCase() : "U"}
+                              </div>
+                            )}
                             <span className="absolute -bottom-2 -right-1 w-8 h-8 rounded-full bg-linear-to-tr from-amber-500 to-yellow-300 text-black font-black text-sm flex items-center justify-center border-2 border-white dark:border-[#131926] shadow-md">
                               👑
                             </span>
@@ -1529,15 +1527,18 @@ export default function AffiliateDashboard() {
 
                           {/* Avatar */}
                           <div className="relative mt-2 mb-3">
-                            <img
-                              src={rank3.avatar || "https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=300&auto=format&fit=crop"}
-                              alt=""
-                              aria-hidden="true"
-                              className="w-20 h-20 sm:w-22 sm:h-22 rounded-full object-cover border-4 border-amber-700 dark:border-amber-800 shadow-md"
-                              onError={(e) => {
-                                e.currentTarget.src = "https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=300&auto=format&fit=crop";
-                              }}
-                            />
+                            {rank3.avatar ? (
+                              <img
+                                src={rank3.avatar}
+                                alt=""
+                                aria-hidden="true"
+                                className="w-20 h-20 sm:w-22 sm:h-22 rounded-full object-cover border-4 border-amber-700 dark:border-amber-800 shadow-md"
+                              />
+                            ) : (
+                              <div className="w-20 h-20 sm:w-22 sm:h-22 rounded-full bg-linear-to-br from-amber-700 to-amber-900 text-white font-black text-2xl flex items-center justify-center border-4 border-amber-700 dark:border-amber-800 shadow-md">
+                                {rank3.name ? rank3.name.charAt(0).toUpperCase() : "U"}
+                              </div>
+                            )}
                             <span className="absolute -bottom-2 -right-1 w-7 h-7 rounded-full bg-amber-800 text-white font-black text-xs flex items-center justify-center border-2 border-white dark:border-[#131926] shadow-xs">
                               3
                             </span>
@@ -1695,23 +1696,36 @@ export default function AffiliateDashboard() {
 
                               <td className="py-3.5 px-5">
                                 <div className="flex items-center gap-3">
-                                  <img
-                                    src={row.avatar || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=300&auto=format&fit=crop"}
-                                    alt=""
-                                    aria-hidden="true"
-                                    className={`w-9 h-9 rounded-full object-cover border ${
-                                      isTop1
-                                        ? "border-amber-400 ring-2 ring-amber-400/40"
-                                        : isTop2
-                                        ? "border-slate-400"
-                                        : isTop3
-                                        ? "border-amber-700"
-                                        : "border-inherit"
-                                    }`}
-                                    onError={(e) => {
-                                      e.currentTarget.src = "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=300&auto=format&fit=crop";
-                                    }}
-                                  />
+                                  {row.avatar ? (
+                                    <img
+                                      src={row.avatar}
+                                      alt=""
+                                      aria-hidden="true"
+                                      className={`w-9 h-9 rounded-full object-cover border ${
+                                        isTop1
+                                          ? "border-amber-400 ring-2 ring-amber-400/40"
+                                          : isTop2
+                                          ? "border-slate-400"
+                                          : isTop3
+                                          ? "border-amber-700"
+                                          : "border-inherit"
+                                      }`}
+                                    />
+                                  ) : (
+                                    <div
+                                      className={`w-9 h-9 rounded-full text-white font-bold text-xs flex items-center justify-center shrink-0 ${
+                                        isTop1
+                                          ? "bg-amber-500 text-black"
+                                          : isTop2
+                                          ? "bg-slate-400 text-white"
+                                          : isTop3
+                                          ? "bg-amber-700 text-white"
+                                          : "bg-[#035BE3]"
+                                      }`}
+                                    >
+                                      {row.name ? row.name.charAt(0).toUpperCase() : "U"}
+                                    </div>
+                                  )}
                                   <div>
                                     <div className="flex items-center gap-1.5">
                                       <span className="font-bold text-xs">{row.name}</span>

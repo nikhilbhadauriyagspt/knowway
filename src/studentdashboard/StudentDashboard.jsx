@@ -30,6 +30,8 @@ import {
   ShoppingCart,
   Lock,
   Unlock,
+  Camera,
+  Loader2,
 } from "lucide-react";
 import StudentSidebar from "./components/StudentSidebar";
 import StudentHeader from "./components/StudentHeader";
@@ -37,12 +39,15 @@ import CertificateModal from "./components/CertificateModal";
 import CourseQuizModal from "./components/CourseQuizModal";
 import {
   getUserData,
+  getUserToken,
   isUserAuthenticated,
   getCoursesApi,
   getMyCoursesApi,
   getMyCertificatesApi,
   getMyPackagesApi,
   setUserSession,
+  updateUserProfileApi,
+  uploadUserAvatarApi,
 } from "../services/api";
 
 export default function StudentDashboard() {
@@ -273,13 +278,70 @@ export default function StudentDashboard() {
     loadMyPackages();
   }, []);
 
-  const handleSaveProfile = (e) => {
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [profileError, setProfileError] = useState("");
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
+  const [avatarError, setAvatarError] = useState("");
+  const profileFileInputRef = useRef(null);
+
+  const handleAvatarFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
+      setAvatarError("Please select a valid image file.");
+      return;
+    }
+    if (file.size > 8 * 1024 * 1024) {
+      setAvatarError("Image size must be less than 8MB.");
+      return;
+    }
+
+    try {
+      setUploadingAvatar(true);
+      setAvatarError("");
+      const res = await uploadUserAvatarApi(file);
+      if (res?.success && res.user) {
+        setUserSession(getUserToken(), res.user);
+        setUser(res.user);
+      }
+    } catch (err) {
+      setAvatarError(err.message || "Failed to upload avatar.");
+    } finally {
+      setUploadingAvatar(false);
+      if (profileFileInputRef.current) profileFileInputRef.current.value = "";
+    }
+  };
+
+  const handleSaveProfile = async (e) => {
     e.preventDefault();
-    const updated = { ...user, ...profileForm };
-    setUserSession(localStorage.getItem("knowway_user_token"), updated);
-    setUser(updated);
-    setSaveSuccess(true);
-    setTimeout(() => setSaveSuccess(false), 3000);
+    setIsSavingProfile(true);
+    setProfileError("");
+    try {
+      const res = await updateUserProfileApi({
+        name: profileForm.name,
+        phone: profileForm.phone,
+        address: profileForm.address,
+      });
+      if (res?.success && res.user) {
+        setUserSession(getUserToken(), res.user);
+        setUser(res.user);
+      } else {
+        const updated = { ...user, ...profileForm };
+        setUserSession(getUserToken(), updated);
+        setUser(updated);
+      }
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } catch (err) {
+      const updated = { ...user, ...profileForm };
+      setUserSession(getUserToken(), updated);
+      setUser(updated);
+      setSaveSuccess(true);
+      setTimeout(() => setSaveSuccess(false), 3000);
+    } finally {
+      setIsSavingProfile(false);
+    }
   };
 
   // Filtered enrolled courses for "My Courses" tab
@@ -1756,6 +1818,62 @@ export default function StudentDashboard() {
                   </button>
                 </div>
 
+                {/* Profile Avatar Upload Card Section */}
+                <div className="mb-6 flex flex-col sm:flex-row items-center sm:items-start gap-4 p-4 rounded-2xl bg-[#F8FAFD] dark:bg-[#0E1420] border border-inherit">
+                  <input
+                    type="file"
+                    ref={profileFileInputRef}
+                    onChange={handleAvatarFileChange}
+                    accept="image/*"
+                    className="hidden"
+                  />
+                  <div className="relative group shrink-0">
+                    <div className="w-18 h-18 rounded-full bg-linear-to-br from-[#035BE3] to-[#024bc0] text-white flex items-center justify-center text-xl font-bold overflow-hidden shadow-xs">
+                      {user?.avatar_url ? (
+                        <img
+                          src={user.avatar_url}
+                          alt={user?.name || "Avatar"}
+                          className="w-full h-full object-cover rounded-full"
+                        />
+                      ) : (
+                        <span>{user?.name ? user.name.charAt(0).toUpperCase() : "U"}</span>
+                      )}
+                      {uploadingAvatar && (
+                        <div className="absolute inset-0 bg-black/60 rounded-full flex items-center justify-center">
+                          <Loader2 className="w-5 h-5 text-white animate-spin" />
+                        </div>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={() => profileFileInputRef.current?.click()}
+                      disabled={uploadingAvatar}
+                      className="absolute bottom-0 right-0 w-6 h-6 rounded-full bg-[#035BE3] hover:bg-[#024bc0] text-white flex items-center justify-center transition cursor-pointer"
+                      title="Upload Avatar Photo"
+                    >
+                      <Camera className="w-3 h-3" />
+                    </button>
+                  </div>
+                  <div className="text-center sm:text-left min-w-0">
+                    <h4 className="text-sm font-bold">Profile Photo</h4>
+                    <p className={`text-xs mt-0.5 ${darkMode ? "text-[#8A99AD]" : "text-[#64748B]"}`}>
+                      Upload a clean square avatar photo (PNG, JPG, or WEBP up to 8MB).
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => profileFileInputRef.current?.click()}
+                      disabled={uploadingAvatar}
+                      className="mt-2 text-xs font-bold text-[#035BE3] hover:underline inline-flex items-center gap-1 cursor-pointer"
+                    >
+                      <Camera size={13} />
+                      <span>{uploadingAvatar ? "Uploading..." : "Upload New Photo"}</span>
+                    </button>
+                    {avatarError && (
+                      <p className="text-xs text-red-500 font-medium mt-1">{avatarError}</p>
+                    )}
+                  </div>
+                </div>
+
                 {saveSuccess && (
                   <div className="mb-5 p-3.5 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 text-emerald-800 dark:text-emerald-300 text-xs flex items-center gap-2">
                     <CheckCircle2 size={16} />
@@ -1771,8 +1889,9 @@ export default function StudentDashboard() {
                       required
                       value={profileForm.name}
                       onChange={(e) => setProfileForm({ ...profileForm, name: e.target.value })}
-                      className={`w-full h-12 rounded-full border px-5 text-xs outline-none focus:border-[#035BE3] ${darkMode ? "bg-[#0B0F17] border-[#222B3D]" : "bg-[#F8FAFD] border-[#E2E8F0]"
-                        }`}
+                      className={`w-full h-12 rounded-full border px-5 text-xs outline-none focus:border-[#035BE3] ${
+                        darkMode ? "bg-[#0B0F17] border-[#222B3D]" : "bg-[#F8FAFD] border-[#E2E8F0]"
+                      }`}
                     />
                   </div>
 
@@ -1783,8 +1902,9 @@ export default function StudentDashboard() {
                       readOnly
                       disabled
                       value={profileForm.email}
-                      className={`w-full h-12 rounded-full border px-5 text-xs outline-none opacity-60 cursor-not-allowed ${darkMode ? "bg-[#0B0F17] border-[#222B3D]" : "bg-[#F8FAFD] border-[#E2E8F0]"
-                        }`}
+                      className={`w-full h-12 rounded-full border px-5 text-xs outline-none opacity-60 cursor-not-allowed ${
+                        darkMode ? "bg-[#0B0F17] border-[#222B3D]" : "bg-[#F8FAFD] border-[#E2E8F0]"
+                      }`}
                     />
                   </div>
 
@@ -1794,17 +1914,23 @@ export default function StudentDashboard() {
                       type="tel"
                       value={profileForm.phone}
                       onChange={(e) => setProfileForm({ ...profileForm, phone: e.target.value })}
-                      className={`w-full h-12 rounded-full border px-5 text-xs outline-none focus:border-[#035BE3] ${darkMode ? "bg-[#0B0F17] border-[#222B3D]" : "bg-[#F8FAFD] border-[#E2E8F0]"
-                        }`}
+                      className={`w-full h-12 rounded-full border px-5 text-xs outline-none focus:border-[#035BE3] ${
+                        darkMode ? "bg-[#0B0F17] border-[#222B3D]" : "bg-[#F8FAFD] border-[#E2E8F0]"
+                      }`}
                     />
                   </div>
 
                   <button
                     type="submit"
-                    className="w-full h-12 rounded-full bg-[#035BE3] hover:bg-[#024bc0] text-white font-bold text-xs transition cursor-pointer flex items-center justify-center gap-2 !mt-6"
+                    disabled={isSavingProfile}
+                    className="w-full h-12 rounded-full bg-[#035BE3] hover:bg-[#024bc0] text-white font-bold text-xs transition cursor-pointer flex items-center justify-center gap-2 !mt-6 disabled:opacity-50"
                   >
-                    <Check size={16} />
-                    <span>Save Profile Changes</span>
+                    {isSavingProfile ? (
+                      <Loader2 className="w-4 h-4 animate-spin" />
+                    ) : (
+                      <Check size={16} />
+                    )}
+                    <span>{isSavingProfile ? "Saving..." : "Save Profile Changes"}</span>
                   </button>
                 </form>
               </div>

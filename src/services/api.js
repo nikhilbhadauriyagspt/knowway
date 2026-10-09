@@ -180,6 +180,36 @@ export const getUserProfileApi = () => {
   return apiRequest("/auth/me");
 };
 
+export const updateUserProfileApi = (profileData) => {
+  return apiRequest("/auth/profile", {
+    method: "PUT",
+    body: JSON.stringify(profileData),
+  });
+};
+
+export const uploadUserAvatarApi = async (file) => {
+  const formData = new FormData();
+  formData.append("avatar", file);
+
+  const token = getUserToken();
+  const headers = {};
+  if (token) {
+    headers["Authorization"] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${API_BASE_URL}/auth/upload-avatar`, {
+    method: "POST",
+    headers,
+    body: formData,
+  });
+
+  const data = await response.json();
+  if (!response.ok) {
+    throw new Error(data.message || "Failed to upload avatar");
+  }
+  return data;
+};
+
 // ============================================================
 // SUPER ADMIN AUTH & DASHBOARD APIS
 // ============================================================

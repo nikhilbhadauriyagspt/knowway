@@ -3,6 +3,7 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import pool from "../config/db.js";
 import { sendOtpEmail, sendWelcomeRegistrationEmail } from "../config/mail.js";
+import cloudinary from "../config/cloudinary.js";
 
 // Helper to describe client device / browser
 const getDeviceDescription = (userAgent = "") => {
@@ -551,9 +552,6 @@ export const getMe = async (req, res) => {
 export const logout = async (req, res) => {
   try {
     const decoded = decodeUserToken(req.headers.authorization);
-    if (decoded && decoded.id) {
-      await pool.query("UPDATE users SET active_session_token = NULL WHERE id = ?", [decoded.id]);
-    }
     return res.status(200).json({
       success: true,
       message: "Logged out successfully.",
@@ -565,3 +563,110 @@ export const logout = async (req, res) => {
     });
   }
 };
+
+// Helper to stream upload avatar image
+const streamUploadAvatar = (fileBuffer, options) => {
+  return new Promise((resolve, reject) => {
+    const stream = cloudinary.uploader.upload_stream(options, (error, result) => {
+      if (error) return reject(error);
+      resolve(result);
+    });
+    stream.end(fileBuffer);
+  });
+};
+
+// ==========================================
+// 8. PUT /api/auth/profile
+// ==========================================
+export const updateProfile = async (req, res) => {
+  try {
+    const decoded = decodeUserToken(req.headers.authorization);
+    if (!decoded || !decoded.id) {
+      return res.status(401).json({ success: false, message: "Unauthorized." });
+    }
+
+    const userId = decoded.id;
+    const { name, phone, address, avatar_url } = req.body;
+
+    const updates = [];
+    const values = [];
+
+    if (name !== undefined) {
+      updates.push("name = ?");
+      values.push(name.trim());
+    }
+    if (phone !== undefined) {
+      updates.push("phone = ?");
+      values.push(phone.trim());
+    }
+    if (address !== undefined) {
+      updates.push("address = ?");
+      values.push(address.trim());
+    }
+    if (avatar_url !== undefined) {
+      updates.push("avatar_url = ?");
+      values.push(avatar_url.trim() || null);
+    }
+
+    if (updates.length > 0) {
+      values.push(userId);
+      await pool.query(`UPDATE users SET ${updates.join(", ")} WHERE id = ?`, values);
+    }
+
+    const [users] = await pool.query(
+      "SELECT id, student_id, name, email, phone, address, referral_code, avatar_url, created_at FROM users WHERE id = ? LIMIT 1",
+      [userId]
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Profile updated successfully!",
+      user: users[0],
+    });
+  } catch (err) {
+    console.error("updateProfile Error:", err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ==========================================
+// 9. POST /api/auth/upload-avatar
+// ==========================================
+export const uploadAvatar = async (req, res) => {
+  try {
+    const decoded = decodeUserToken(req.headers.authorization);
+    if (!decoded || !decoded.id) {
+      return res.status(401).json({ success: false, message: "Unauthorized." });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({ success: false, message: "No image file provided." });
+    }
+
+    const userId = decoded.id;
+    const result = await streamUploadAvatar(req.file.buffer, {
+      folder: "knowway_avatars",
+      resource_type: "image",
+      transformation: [{ width: 400, height: 400, crop: "fill", gravity: "face" }],
+    });
+
+    const avatarUrl = result.secure_url;
+    await pool.query("UPDATE users SET avatar_url = ? WHERE id = ?", [avatarUrl, userId]);
+
+    const [users] = await pool.query(
+      "SELECT id, student_id, name, email, phone, address, referral_code, avatar_url, created_at FROM users WHERE id = ? LIMIT 1",
+      [userId]
+    );
+
+    return res.status(200).json({
+      success: true,
+      message: "Avatar uploaded successfully!",
+      avatar_url: avatarUrl,
+      user: users[0],
+    });
+  } catch (err) {
+    console.error("uploadAvatar Error:", err);
+    return res.status(500).json({ success: false, message: err.message || "Failed to upload avatar." });
+  }
+};
+

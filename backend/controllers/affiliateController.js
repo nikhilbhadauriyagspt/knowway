@@ -473,91 +473,41 @@ export const getAffiliateLeaderboard = async (req, res) => {
       timeFilter = "AND r.created_at >= DATE_SUB(NOW(), INTERVAL 365 DAY)";
     }
 
+    // Query 100% real affiliates from the database
     const [topAffiliates] = await pool.query(`
-      SELECT u.id, u.name, u.student_id, u.avatar_url,
+      SELECT u.id, u.name, u.student_id, u.referral_code, u.avatar_url,
              COUNT(r.id) as total_sales,
              COALESCE(SUM(r.commission_amount), 0) as total_earnings
-      FROM affiliate_referrals r
-      JOIN users u ON r.referrer_id = u.id
-      WHERE 1=1 ${timeFilter}
-      GROUP BY u.id, u.name, u.student_id, u.avatar_url
-      ORDER BY total_earnings DESC
-      LIMIT 15
+      FROM users u
+      LEFT JOIN affiliate_referrals r ON r.referrer_id = u.id ${timeFilter}
+      GROUP BY u.id, u.name, u.student_id, u.referral_code, u.avatar_url
+      ORDER BY total_earnings DESC, total_sales DESC, u.id ASC
+      LIMIT 100
     `);
 
-    // Curated high quality avatars for fallback / enrichment
-    const sampleAvatars = [
-      "https://images.unsplash.com/photo-1534528741775-53994a69daeb?q=80&w=300&auto=format&fit=crop", // Woman Pro
-      "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?q=80&w=300&auto=format&fit=crop", // Man Pro
-      "https://images.unsplash.com/photo-1517841905240-472988babdf9?q=80&w=300&auto=format&fit=crop", // Woman
-      "https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?q=80&w=300&auto=format&fit=crop", // Man
-      "https://images.unsplash.com/photo-1494790108377-be9c29b29330?q=80&w=300&auto=format&fit=crop", // Woman
-      "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?q=80&w=300&auto=format&fit=crop", // Man
-      "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?q=80&w=300&auto=format&fit=crop", // Woman
-      "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?q=80&w=300&auto=format&fit=crop", // Man
-    ];
-
-    // Format DB results
-    let formatted = topAffiliates.map((item, index) => {
+    // Format 100% real DB results
+    const formatted = topAffiliates.map((item, index) => {
       let badge = "Pro";
       if (index === 0) badge = "🏆 Gold";
       else if (index === 1) badge = "🥈 Silver";
       else if (index === 2) badge = "🥉 Bronze";
       else if (index < 5) badge = "⭐ Star";
 
+      const earningsNum = Number(item.total_earnings) || 0;
+      const salesNum = Number(item.total_sales) || 0;
+
       return {
         rank: index + 1,
         id: item.id,
-        name: item.name,
-        student_id: item.student_id || `KW${item.id}`,
-        avatar: item.avatar_url || sampleAvatars[index % sampleAvatars.length],
-        sales: Number(item.total_sales) || 0,
-        raw_earnings: Number(item.total_earnings) || 0,
-        earnings: `₹${Number(item.total_earnings).toLocaleString()}`,
+        name: item.name || "Student Partner",
+        student_id: item.referral_code || item.student_id || `KW${item.id}`,
+        avatar: item.avatar_url || null,
+        sales: salesNum,
+        raw_earnings: earningsNum,
+        earnings: `₹${earningsNum.toLocaleString("en-IN")}`,
         badge,
       };
     });
-
-    // If DB has fewer than 6 real performers, supply period-scaled curated benchmarks
-    if (formatted.length < 6) {
-      const multiplier = period === "weekly" ? 0.28 : period === "yearly" ? 4.8 : 1;
-      const seedTop = [
-        { name: "Suresh Mehra", sales: Math.round(48 * multiplier), earnings: Math.round(84500 * multiplier), avatar: sampleAvatars[0], badge: "🏆 Gold" },
-        { name: "Priya Nair", sales: Math.round(36 * multiplier), earnings: Math.round(62200 * multiplier), avatar: sampleAvatars[2], badge: "🥈 Silver" },
-        { name: "Harshil Vora", sales: Math.round(29 * multiplier), earnings: Math.round(49800 * multiplier), avatar: sampleAvatars[1], badge: "🥉 Bronze" },
-        { name: "Deepak Choudhary", sales: Math.round(18 * multiplier), earnings: Math.round(28400 * multiplier), avatar: sampleAvatars[3], badge: "⭐ Star" },
-        { name: "Kavita Sharma", sales: Math.round(14 * multiplier), earnings: Math.round(21900 * multiplier), avatar: sampleAvatars[4], badge: "⭐ Star" },
-        { name: "Rohit Bansal", sales: Math.round(11 * multiplier), earnings: Math.round(17500 * multiplier), avatar: sampleAvatars[5], badge: "Pro" },
-        { name: "Ananya Deshmukh", sales: Math.round(9 * multiplier), earnings: Math.round(14200 * multiplier), avatar: sampleAvatars[6], badge: "Pro" },
-        { name: "Vikram Malhotra", sales: Math.round(7 * multiplier), earnings: Math.round(11800 * multiplier), avatar: sampleAvatars[7], badge: "Pro" },
-      ];
-
-      // Merge real users into list if any
-      const merged = [...formatted];
-      seedTop.forEach((seed, sIdx) => {
-        if (!merged.some((m) => m.name.toLowerCase() === seed.name.toLowerCase())) {
-          merged.push({
-            rank: merged.length + 1,
-            id: `seed-${sIdx}`,
-            name: seed.name,
-            student_id: `KW${2000 + sIdx}`,
-            avatar: seed.avatar,
-            sales: seed.sales,
-            raw_earnings: seed.earnings,
-            earnings: `₹${seed.earnings.toLocaleString()}`,
-            badge: seed.badge,
-          });
-        }
-      });
-
-      // Sort by raw_earnings desc & re-rank
-      merged.sort((a, b) => b.raw_earnings - a.raw_earnings);
-      formatted = merged.map((item, idx) => ({
-        ...item,
-        rank: idx + 1,
-        badge: idx === 0 ? "🏆 Gold" : idx === 1 ? "🥈 Silver" : idx === 2 ? "🥉 Bronze" : idx < 5 ? "⭐ Star" : "Pro",
-      }));
-    }
 
     return res.status(200).json({
       success: true,
