@@ -23,6 +23,7 @@ import {
   Sliders,
   CheckCircle2,
   Clock,
+  Mail,
 } from "lucide-react";
 import { clearAdminSession } from "../../services/api";
 
@@ -115,9 +116,13 @@ export default function AdminHeader({
       case "course_purchased":
       case "package_purchased":
         return <CreditCard className="w-4 h-4 text-emerald-500" />;
+      case "commission_earned":
+        return <Wallet className="w-4 h-4 text-emerald-500" />;
       case "referral_signup":
       case "user_signup":
         return <UserPlus className="w-4 h-4 text-[#035BE3]" />;
+      case "inquiry_received":
+        return <Mail className="w-4 h-4 text-purple-500" />;
       case "payout_requested":
       case "payout_approved":
         return <Wallet className="w-4 h-4 text-amber-500" />;
@@ -160,12 +165,14 @@ export default function AdminHeader({
     }
     setShowNotifications(false);
 
-    if (item.type?.includes("payment") || item.type?.includes("purchased")) {
+    if (item.type?.includes("inquiry")) {
+      setActiveTab && setActiveTab("inquiries");
+    } else if (item.type?.includes("payment") || item.type?.includes("purchased")) {
       setActiveTab && setActiveTab("payments");
+    } else if (item.type?.includes("commission") || item.type?.includes("payout")) {
+      setActiveTab && setActiveTab("affiliates");
     } else if (item.type?.includes("signup") || item.type?.includes("user")) {
       setActiveTab && setActiveTab("users");
-    } else if (item.type?.includes("payout")) {
-      setActiveTab && setActiveTab("affiliates");
     } else if (item.type?.includes("subadmin")) {
       setActiveTab && setActiveTab("subadmins");
     } else if (item.type?.includes("course")) {

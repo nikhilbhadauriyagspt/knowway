@@ -609,13 +609,64 @@ export const verifyPayment = async (req, res) => {
                 [leadershipSponsor.id, leadCalculated, leadCalculated, leadCalculated]
               );
 
-              console.log(`🌟 Level-2 Leadership Commission: ₹${leadCalculated} credited to Sponsor ID ${leadershipSponsor.id} (${leadershipSponsor.name})`);
+              // Super Admin Notification for Level 2 Sponsor Commission
+              createAdminNotification({
+                type: "commission_earned",
+                title: "Tier-2 Sponsor Bonus Credited 🌟",
+                message: `₹${leadCalculated} Tier-2 passive bonus credited to ${leadershipSponsor.name} for team purchase of '${itemTitle}'.`,
+                data: { sponsorId: leadershipSponsor.id, buyerId: userId, commission: leadCalculated, itemTitle },
+              }).catch(() => {});
+
+              logAdminActivity({
+                adminName: "System Billing",
+                action: "COMMISSION_CREDITED_TIER2",
+                category: "affiliate",
+                details: `₹${leadCalculated} Tier-2 bonus credited to upline sponsor ${leadershipSponsor.name} (${leadershipSponsor.email}).`,
+                metadata: { sponsorId: leadershipSponsor.id, buyerId: userId, amount: leadCalculated },
+              }).catch(() => {});
             }
           }
         }
       }
     } catch (affErr) {
       console.warn("⚠️ 2-Tier Affiliate commission crediting warning:", affErr.message);
+    }
+
+    // ============================================================
+    // SUPER ADMIN NOTIFICATION & AUDIT LOG FOR NEW PURCHASE
+    // ============================================================
+    try {
+      const studentName = name || userPayload?.name || "Student";
+      const studentEmail = email || userPayload?.email || "";
+      const itemTitle = isCourse ? (purchasedItem?.title || "Course") : (purchasedItem?.name || "Package");
+      const orderAmount = isCourse ? (purchasedItem?.promo_price || 499) : (purchasedItem?.promo_price || 7999);
+
+      createAdminNotification({
+        type: isCourse ? "course_purchased" : "package_purchased",
+        title: `New Purchase: ${itemTitle} 🚀`,
+        message: `${studentName} (${studentEmail}) purchased '${itemTitle}' for ₹${Number(orderAmount).toLocaleString("en-IN")}.`,
+        data: {
+          userId,
+          studentName,
+          studentEmail,
+          itemTitle,
+          itemType: isCourse ? "course" : "package",
+          amount: orderAmount,
+          orderId: razorpay_order_id,
+          paymentId: razorpay_payment_id,
+          referralCode: referralCode || null,
+        },
+      }).catch(() => {});
+
+      logAdminActivity({
+        adminName: studentName,
+        action: isCourse ? "COURSE_PURCHASED" : "PACKAGE_PURCHASED",
+        category: "payments",
+        details: `${studentName} (${studentEmail}) successfully purchased '${itemTitle}' (₹${orderAmount}). Order: ${razorpay_order_id}`,
+        metadata: { userId, itemTitle, amount: orderAmount, orderId: razorpay_order_id },
+      }).catch(() => {});
+    } catch (notifErr) {
+      console.warn("Purchase admin notification warning:", notifErr.message);
     }
 
     return res.status(200).json({

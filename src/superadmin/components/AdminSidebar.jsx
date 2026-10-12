@@ -18,6 +18,7 @@ import {
   FileText,
   Briefcase,
   Megaphone,
+  Mail,
 } from "lucide-react";
 import { clearAdminSession } from "../../services/api";
 
@@ -76,12 +77,18 @@ export default function AdminSidebar({
       badge: null,
     },
 
-    // 3. Students Directory
+    // 3. Students & Community
     {
       id: "users",
       label: "Students",
       icon: Users,
       badge: null,
+    },
+    {
+      id: "inquiries",
+      label: "Contact Inquiries",
+      icon: Mail,
+      badge: "Inbox",
     },
 
     // 4. Financials & Orders

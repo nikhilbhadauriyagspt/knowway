@@ -128,14 +128,20 @@ export default function CourseDetailPage() {
   const [isEnrolled, setIsEnrolled] = useState(false);
   const [videoSecurityConfig, setVideoSecurityConfig] = useState(null);
 
-  // Load stored completion and certificate from LocalStorage
+  // Load stored completion, bookmarks, and certificate from LocalStorage
   const courseStorageKey = useMemo(() => {
     return `knowway_progress_${user.id || "guest"}_${id}`;
+  }, [user.id, id]);
+
+  const bookmarksStorageKey = useMemo(() => {
+    return `knowway_bookmarks_${user.id || "guest"}_${id}`;
   }, [user.id, id]);
 
   const certStorageKey = useMemo(() => {
     return `knowway_cert_${user.id || "guest"}_${id}`;
   }, [user.id, id]);
+
+  const [lectureBookmarks, setLectureBookmarks] = useState({});
 
   useEffect(() => {
     try {
@@ -143,12 +149,36 @@ export default function CourseDetailPage() {
       if (savedProgress) {
         setCompletedLectures(JSON.parse(savedProgress));
       }
+      const savedBookmarks = localStorage.getItem(bookmarksStorageKey);
+      if (savedBookmarks) {
+        setLectureBookmarks(JSON.parse(savedBookmarks));
+      }
       const savedCert = localStorage.getItem(certStorageKey);
       if (savedCert) {
         setAwardedCertificate(JSON.parse(savedCert));
       }
     } catch (_) {}
-  }, [courseStorageKey, certStorageKey]);
+  }, [courseStorageKey, bookmarksStorageKey, certStorageKey]);
+
+  // Handler to persist live playback bookmark
+  const handleProgressUpdate = ({ lectureId, currentTime, duration, percent }) => {
+    if (!lectureId) return;
+    setLectureBookmarks((prev) => {
+      const updated = {
+        ...prev,
+        [lectureId]: {
+          currentTime: Math.floor(currentTime),
+          duration: Math.floor(duration),
+          percent,
+          updatedAt: Date.now(),
+        },
+      };
+      try {
+        localStorage.setItem(bookmarksStorageKey, JSON.stringify(updated));
+      } catch (_) {}
+      return updated;
+    });
+  };
 
   useEffect(() => {
     let isMounted = true;
@@ -453,6 +483,9 @@ export default function CourseDetailPage() {
                     isUnlocked={true}
                     securityConfig={videoSecurityConfig}
                     onEnded={() => handleLectureFinished(activeLecture?.id)}
+                    lectureId={activeLecture?.id}
+                    initialTime={lectureBookmarks[activeLecture?.id]?.currentTime || 0}
+                    onProgressUpdate={handleProgressUpdate}
                   />
                 ) : (
                   <div className="relative w-full h-full flex items-center justify-center bg-gray-950">
@@ -804,6 +837,7 @@ export default function CourseDetailPage() {
                           const isActive = activeLecture?.id === lec.id;
                           const isWatched = completedLectures.includes(lec.id);
                           const isPlayable = isEnrolled || lec.is_free_preview;
+                          const bookmark = lectureBookmarks[lec.id];
 
                           return (
                             <div
@@ -836,20 +870,39 @@ export default function CourseDetailPage() {
                                   )}
                                 </div>
 
-                                <div className="min-w-0">
+                                <div className="min-w-0 flex-1">
                                   <p className="truncate text-[11.5px]">{lec.title}</p>
-                                  <span className="text-[10px] text-[#8A99AD] block">⏱️ {lec.duration || "5m"}</span>
+                                  <div className="flex items-center gap-2 mt-0.5">
+                                    <span className="text-[10px] text-[#8A99AD]">⏱️ {lec.duration || "5m"}</span>
+                                    {bookmark && !isWatched && bookmark.percent > 0 && (
+                                      <span className="text-[9.5px] font-semibold text-amber-600 bg-amber-50 px-1 rounded border border-amber-200/60">
+                                        {bookmark.percent}% watched
+                                      </span>
+                                    )}
+                                  </div>
+                                  {bookmark && !isWatched && bookmark.percent > 0 && (
+                                    <div className="w-full bg-gray-200 h-1 rounded-full overflow-hidden mt-1 max-w-[120px]">
+                                      <div
+                                        className="bg-amber-500 h-full rounded-full transition-all duration-300"
+                                        style={{ width: `${Math.min(100, bookmark.percent)}%` }}
+                                      />
+                                    </div>
+                                  )}
                                 </div>
                               </div>
 
-                              <div className="shrink-0">
+                              <div className="shrink-0 flex items-center gap-1">
                                 {isWatched ? (
-                                  <span className="text-[9.5px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.2 rounded-md">
+                                  <span className="text-[9.5px] font-bold text-emerald-700 bg-emerald-100 px-1.5 py-0.5 rounded-md">
                                     Done
                                   </span>
                                 ) : isActive ? (
-                                  <span className="text-[9.5px] font-bold text-[#035BE3] bg-blue-100 px-1.5 py-0.2 rounded-md">
+                                  <span className="text-[9.5px] font-bold text-[#035BE3] bg-blue-100 px-1.5 py-0.5 rounded-md">
                                     Playing
+                                  </span>
+                                ) : bookmark && bookmark.percent > 0 ? (
+                                  <span className="text-[9px] font-medium text-amber-700 bg-amber-100/80 px-1.5 py-0.5 rounded-md">
+                                    Resume
                                   </span>
                                 ) : null}
                               </div>

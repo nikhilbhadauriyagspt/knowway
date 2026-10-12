@@ -14,6 +14,7 @@ import SuperAdminDashboard from "./superadmin/SuperAdminDashboard";
 import CreateCoursePage from "./superadmin/CreateCoursePage";
 import CreatePackagePage from "./superadmin/CreatePackagePage";
 import AffiliatePage from "./pages/AffiliatePage";
+import ContactPage from "./pages/ContactPage";
 import SessionHeartbeatMonitor from "./components/SessionHeartbeatMonitor";
 
 export default function App() {
@@ -33,6 +34,8 @@ export default function App() {
         <Route path="/packages" element={<PackageDetailPage />} />
         <Route path="/checkout/:slug" element={<CheckoutPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
+        <Route path="/contact" element={<ContactPage />} />
+        <Route path="/contact-us" element={<ContactPage />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />

@@ -7,6 +7,8 @@ import {
   Pause,
   AlertTriangle,
   EyeOff,
+  Bookmark,
+  RotateCcw,
 } from "lucide-react";
 import { getUserData } from "../services/api";
 
@@ -17,6 +19,9 @@ export default function SecureVideoPlayer({
   isUnlocked = false,
   securityConfig = {},
   onEnded,
+  lectureId,
+  initialTime = 0,
+  onProgressUpdate,
 }) {
   const videoRef = useRef(null);
   const containerRef = useRef(null);
@@ -155,13 +160,46 @@ export default function SecureVideoPlayer({
   };
 
   const hasTriggeredEndRef = useRef(false);
+  const [resumedToast, setResumedToast] = useState(null);
+  const lastSavedTimeRef = useRef(0);
+
+  // Resume playback from initialTime / saved bookmark
+  const handleLoadedMetadata = () => {
+    if (!videoRef.current) return;
+    const seekTarget = Number(initialTime) || 0;
+    if (seekTarget > 2 && videoRef.current.duration > seekTarget + 3) {
+      videoRef.current.currentTime = seekTarget;
+      const mins = Math.floor(seekTarget / 60);
+      const secs = Math.floor(seekTarget % 60);
+      const formatted = `${mins}:${secs < 10 ? "0" : ""}${secs}`;
+      setResumedToast(`Resumed from bookmark (${formatted})`);
+      setTimeout(() => setResumedToast(null), 3000);
+    }
+  };
+
   useEffect(() => {
     hasTriggeredEndRef.current = false;
   }, [src]);
 
   const handleTimeUpdate = () => {
-    if (videoRef.current && onEnded && !hasTriggeredEndRef.current) {
-      const { currentTime, duration } = videoRef.current;
+    if (!videoRef.current) return;
+    const { currentTime, duration } = videoRef.current;
+
+    // Periodically report progress / save bookmark every 3 seconds
+    if (Math.abs(currentTime - lastSavedTimeRef.current) >= 3 && duration > 0) {
+      lastSavedTimeRef.current = currentTime;
+      if (onProgressUpdate) {
+        onProgressUpdate({
+          lectureId,
+          currentTime,
+          duration,
+          percent: Math.min(100, Math.round((currentTime / duration) * 100)),
+        });
+      }
+    }
+
+    // Auto-complete at 92%
+    if (onEnded && !hasTriggeredEndRef.current) {
       if (duration > 0 && currentTime / duration >= 0.92) {
         hasTriggeredEndRef.current = true;
         onEnded();
@@ -176,6 +214,14 @@ export default function SecureVideoPlayer({
       className="relative w-full h-full bg-[#0B0F17] flex items-center justify-center overflow-hidden select-none group"
       style={{ WebkitUserSelect: "none" }}
     >
+      {/* Resumed Bookmark Toast */}
+      {resumedToast && (
+        <div className="absolute top-4 left-4 z-50 px-3.5 py-1.5 rounded-full bg-emerald-600/95 text-white text-xs font-bold flex items-center gap-1.5 shadow-xl border border-emerald-400/40 animate-in fade-in slide-in-from-top-2 duration-200">
+          <Bookmark size={13} className="shrink-0 fill-current" />
+          <span>{resumedToast}</span>
+        </div>
+      )}
+
       {/* Warning Toast */}
       {showWarningToast && (
         <div className="absolute top-4 left-1/2 -translate-x-1/2 z-50 px-4 py-2 rounded-full bg-red-600/90 text-white text-xs font-bold flex items-center gap-2 shadow-xl border border-red-400/30 animate-in fade-in slide-in-from-top-2 duration-150">
@@ -194,6 +240,7 @@ export default function SecureVideoPlayer({
           controlsList="nodownload noplaybackrate"
           disablePictureInPicture
           disableRemotePlayback
+          onLoadedMetadata={handleLoadedMetadata}
           onTimeUpdate={handleTimeUpdate}
           onEnded={() => {
             hasTriggeredEndRef.current = true;

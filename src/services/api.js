@@ -646,6 +646,35 @@ export const clearAdminNotificationsApi = () => {
 };
 
 // ============================================================
+// CONTACT US & INQUIRIES APIs
+// ============================================================
+
+export const submitContactInquiryApi = (data) => {
+  return apiRequest("/admin/contact/submit", {
+    method: "POST",
+    body: JSON.stringify(data),
+  });
+};
+
+export const getAdminContactInquiriesApi = (params = {}) => {
+  const query = new URLSearchParams(params).toString();
+  return apiRequest(`/admin/contact/inquiries${query ? `?${query}` : ""}`);
+};
+
+export const updateAdminContactInquiryStatusApi = (id, data) => {
+  return apiRequest(`/admin/contact/inquiries/${id}`, {
+    method: "PUT",
+    body: JSON.stringify(data),
+  });
+};
+
+export const deleteAdminContactInquiryApi = (id) => {
+  return apiRequest(`/admin/contact/inquiries/${id}`, {
+    method: "DELETE",
+  });
+};
+
+// ============================================================
 // ADMIN ACTIVITY LOGS & AUDIT HISTORY APIs
 // ============================================================
 

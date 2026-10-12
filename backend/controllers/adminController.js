@@ -1451,6 +1451,149 @@ export const clearAdminNotifications = async (req, res) => {
 };
 
 // ==========================================
+// CONTACT US & INQUIRIES CONTROLLERS
+// ==========================================
+export const submitContactInquiry = async (req, res) => {
+  try {
+    const { name, email, phone, subject, message } = req.body;
+    if (!name || !email || !message) {
+      return res.status(400).json({
+        success: false,
+        message: "Name, email, and message are required fields.",
+      });
+    }
+
+    const ipAddress = req.headers["x-forwarded-for"] || req.socket.remoteAddress || null;
+
+    const [result] = await pool.query(
+      `INSERT INTO contact_inquiries (name, email, phone, subject, message, ip_address, status)
+       VALUES (?, ?, ?, ?, ?, ?, 'unread')`,
+      [
+        name.trim(),
+        email.trim().toLowerCase(),
+        phone ? phone.trim() : null,
+        subject ? subject.trim() : "General Inquiry",
+        message.trim(),
+        ipAddress,
+      ]
+    );
+
+    // Trigger Super Admin Notification & Audit Log
+    createAdminNotification({
+      type: "inquiry_received",
+      title: "New Contact Inquiry Received 📩",
+      message: `${name.trim()} (${email.trim()}) sent a query: "${(subject || message).trim().slice(0, 70)}..."`,
+      data: {
+        inquiryId: result.insertId,
+        name: name.trim(),
+        email: email.trim(),
+        phone: phone ? phone.trim() : null,
+        subject: subject || null,
+        message: message.trim(),
+      },
+    }).catch(() => {});
+
+    logAdminActivity({
+      adminName: name.trim(),
+      action: "CONTACT_QUERY_SUBMITTED",
+      category: "inquiries",
+      details: `New inquiry #${result.insertId} submitted by ${name.trim()} (${email.trim()}). Subject: ${subject || "General Inquiry"}`,
+      metadata: { inquiryId: result.insertId, name: name.trim(), email: email.trim() },
+      ipAddress,
+    }).catch(() => {});
+
+    return res.status(201).json({
+      success: true,
+      message: "Thank you! Your message has been sent successfully. Our team will contact you shortly.",
+      inquiryId: result.insertId,
+    });
+  } catch (err) {
+    console.error("submitContactInquiry Error:", err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const getContactInquiries = async (req, res) => {
+  try {
+    const { status, search } = req.query;
+    let query = "SELECT * FROM contact_inquiries WHERE 1=1";
+    const params = [];
+
+    if (status && status !== "all") {
+      query += " AND status = ?";
+      params.push(status);
+    }
+
+    if (search && search.trim()) {
+      query += " AND (name LIKE ? OR email LIKE ? OR phone LIKE ? OR subject LIKE ? OR message LIKE ?)";
+      const term = `%${search.trim()}%`;
+      params.push(term, term, term, term, term);
+    }
+
+    query += " ORDER BY created_at DESC";
+
+    const [rows] = await pool.query(query, params);
+    const [unreadCountResult] = await pool.query(
+      "SELECT COUNT(*) as unread_count FROM contact_inquiries WHERE status = 'unread'"
+    );
+
+    return res.status(200).json({
+      success: true,
+      inquiries: rows,
+      unread_count: unreadCountResult[0]?.unread_count || 0,
+    });
+  } catch (err) {
+    console.error("getContactInquiries Error:", err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const updateContactInquiryStatus = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { status, admin_notes } = req.body;
+
+    const updates = [];
+    const params = [];
+
+    if (status) {
+      updates.push("status = ?");
+      params.push(status);
+    }
+    if (admin_notes !== undefined) {
+      updates.push("admin_notes = ?");
+      params.push(admin_notes);
+    }
+
+    if (updates.length === 0) {
+      return res.status(400).json({ success: false, message: "No fields provided to update." });
+    }
+
+    params.push(id);
+    await pool.query(`UPDATE contact_inquiries SET ${updates.join(", ")} WHERE id = ?`, params);
+
+    return res.status(200).json({
+      success: true,
+      message: "Inquiry status updated successfully.",
+    });
+  } catch (err) {
+    console.error("updateContactInquiryStatus Error:", err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+export const deleteContactInquiry = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query("DELETE FROM contact_inquiries WHERE id = ?", [id]);
+    return res.status(200).json({ success: true, message: "Inquiry deleted successfully." });
+  } catch (err) {
+    console.error("deleteContactInquiry Error:", err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ==========================================
 // ACTIVITY LOGS & AUDIT HISTORY CONTROLLERS
 // ==========================================
 export const getAdminActivityLogs = async (req, res) => {

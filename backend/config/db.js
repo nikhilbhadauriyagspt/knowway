@@ -1174,6 +1174,26 @@ export const initDB = async () => {
       `);
     } catch (_) {}
 
+    // Contact Inquiries / Lead Form Submissions Table
+    const createContactInquiriesTableQuery = `
+      CREATE TABLE IF NOT EXISTS contact_inquiries (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(150) NOT NULL,
+        email VARCHAR(191) NOT NULL,
+        phone VARCHAR(30) DEFAULT NULL,
+        subject VARCHAR(255) DEFAULT NULL,
+        message TEXT NOT NULL,
+        status ENUM('unread', 'in_progress', 'resolved', 'archived') DEFAULT 'unread',
+        admin_notes TEXT DEFAULT NULL,
+        ip_address VARCHAR(60) DEFAULT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX (status),
+        INDEX (created_at)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `;
+    await connection.query(createContactInquiriesTableQuery);
+
     connection.release();
   } catch (err) {
     console.warn("⚠️ MySQL Schema Notice:", err.message);

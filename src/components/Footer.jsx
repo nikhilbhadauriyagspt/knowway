@@ -113,6 +113,9 @@ export default function Footer() {
               <Link to="/affiliate" className="block text-[13px] text-[#59657A] transition hover:text-[#035BE3]">
                 Affiliate Partner Program
               </Link>
+              <Link to="/contact" className="block text-[13px] text-[#59657A] transition hover:text-[#035BE3]">
+                Contact & Support Desk
+              </Link>
               {quickLinkPages.map((page) => (
                 <Link
                   key={page.id}

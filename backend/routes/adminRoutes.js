@@ -43,6 +43,10 @@ import {
   markAllNotificationsRead,
   markNotificationRead,
   clearAdminNotifications,
+  submitContactInquiry,
+  getContactInquiries,
+  updateContactInquiryStatus,
+  deleteContactInquiry,
   getAdminActivityLogs,
   getSubAdmins,
   createSubAdmin,
@@ -147,6 +151,12 @@ router.get("/notifications", getAdminNotifications);
 router.put("/notifications/read-all", markAllNotificationsRead);
 router.put("/notifications/:id/read", markNotificationRead);
 router.delete("/notifications/clear", clearAdminNotifications);
+
+// Public Contact Form Submission & Admin Inquiries Management
+router.post("/contact/submit", submitContactInquiry);
+router.get("/contact/inquiries", getContactInquiries);
+router.put("/contact/inquiries/:id", updateContactInquiryStatus);
+router.delete("/contact/inquiries/:id", deleteContactInquiry);
 
 // Admin Activity Logs & Audit History Routes
 router.get("/activity-logs", getAdminActivityLogs);

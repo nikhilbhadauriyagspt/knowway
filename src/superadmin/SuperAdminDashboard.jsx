@@ -110,6 +110,9 @@ import {
   deleteAdminPageApi,
   updateMentorApi,
   getPublicSettingsApi,
+  getAdminContactInquiriesApi,
+  updateAdminContactInquiryStatusApi,
+  deleteAdminContactInquiryApi,
   API_BASE_URL,
 } from "../services/api";
 
@@ -217,6 +220,13 @@ export default function SuperAdminDashboard() {
   const [activityLogsList, setActivityLogsList] = useState([]);
   const [activityLogFilter, setActivityLogFilter] = useState("all");
   const [activityLogSearch, setActivityLogSearch] = useState("");
+
+  // Contact Inquiries State
+  const [inquiriesList, setInquiriesList] = useState([]);
+  const [unreadInquiriesCount, setUnreadInquiriesCount] = useState(0);
+  const [inquiryFilter, setInquiryFilter] = useState("all");
+  const [inquirySearch, setInquirySearch] = useState("");
+  const [selectedInquiry, setSelectedInquiry] = useState(null);
 
   // Sub-Admins & RBAC State
   const [subAdminsList, setSubAdminsList] = useState([]);
@@ -605,16 +615,21 @@ export default function SuperAdminDashboard() {
           }
         }).catch(() => {});
 
-        const [notifRes, logsRes, subsRes, modsRes] = await Promise.all([
+        const [notifRes, logsRes, subsRes, modsRes, inqRes] = await Promise.all([
           getAdminNotificationsApi().catch(() => null),
           getAdminActivityLogsApi().catch(() => null),
           getSubAdminsApi().catch(() => null),
           getAvailableModulesApi().catch(() => null),
+          getAdminContactInquiriesApi().catch(() => null),
         ]);
 
         if (notifRes?.success) {
           setNotificationsList(notifRes.notifications || []);
           setUnreadNotificationsCount(notifRes.unread_count || 0);
+        }
+        if (inqRes?.success) {
+          setInquiriesList(inqRes.inquiries || []);
+          setUnreadInquiriesCount(inqRes.unread_count || 0);
         }
         if (logsRes?.success) {
           setActivityLogsList(logsRes.logs || []);
@@ -830,8 +845,29 @@ export default function SuperAdminDashboard() {
     queueMicrotask(() => {
       if (isMounted) fetchDashboardData();
     });
+
+    // Background live notification & inquiry polling every 15 seconds
+    const intervalId = setInterval(() => {
+      if (!isMounted) return;
+      Promise.all([
+        getAdminNotificationsApi().catch(() => null),
+        getAdminContactInquiriesApi().catch(() => null),
+      ]).then(([notifRes, inqRes]) => {
+        if (!isMounted) return;
+        if (notifRes?.success) {
+          setNotificationsList(notifRes.notifications || []);
+          setUnreadNotificationsCount(notifRes.unread_count || 0);
+        }
+        if (inqRes?.success) {
+          setInquiriesList(inqRes.inquiries || []);
+          setUnreadInquiriesCount(inqRes.unread_count || 0);
+        }
+      }).catch(() => {});
+    }, 15000);
+
     return () => {
       isMounted = false;
+      clearInterval(intervalId);
     };
   }, [navigate, fetchDashboardData]);
 
@@ -967,6 +1003,48 @@ export default function SuperAdminDashboard() {
       }
     } catch (err) {
       showToast(err.message || "Error deleting sub-admin", "error");
+    }
+  };
+
+  // Contact Inquiries Handlers
+  const handleUpdateInquiryStatus = async (id, status, notes) => {
+    try {
+      const res = await updateAdminContactInquiryStatusApi(id, {
+        status,
+        admin_notes: notes !== undefined ? notes : undefined,
+      });
+      if (res?.success) {
+        showToast(`Inquiry marked as ${status}`);
+        setInquiriesList((prev) =>
+          prev.map((inq) => (inq.id === id ? { ...inq, status, ...(notes !== undefined ? { admin_notes: notes } : {}) } : inq))
+        );
+        if (selectedInquiry?.id === id) {
+          setSelectedInquiry((prev) => ({ ...prev, status, ...(notes !== undefined ? { admin_notes: notes } : {}) }));
+        }
+        if (status !== "unread") {
+          setUnreadInquiriesCount((prev) => Math.max(0, prev - 1));
+        }
+      } else {
+        showToast(res?.message || "Failed to update inquiry", "error");
+      }
+    } catch (err) {
+      showToast(err.message || "Error updating inquiry", "error");
+    }
+  };
+
+  const handleDeleteInquiry = async (id) => {
+    if (!window.confirm("Are you sure you want to delete this inquiry?")) return;
+    try {
+      const res = await deleteAdminContactInquiryApi(id);
+      if (res?.success) {
+        showToast("Inquiry removed successfully.");
+        setInquiriesList((prev) => prev.filter((inq) => inq.id !== id));
+        if (selectedInquiry?.id === id) setSelectedInquiry(null);
+      } else {
+        showToast(res?.message || "Failed to delete inquiry", "error");
+      }
+    } catch (err) {
+      showToast(err.message || "Error deleting inquiry", "error");
     }
   };
 
@@ -2398,6 +2476,319 @@ export default function SuperAdminDashboard() {
                   </table>
                 </div>
               </div>
+            </div>
+          )}
+
+          {/* ======================================================== */}
+          {/* TAB: CONTACT US & LEAD INQUIRIES MANAGEMENT */}
+          {/* ======================================================== */}
+          {activeTab === "inquiries" && (
+            <div className="space-y-6">
+              {/* Header Capsule */}
+              <div
+                className={`rounded-2xl sm:rounded-full px-5 sm:px-8 py-4 sm:py-5 border flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+                  darkMode ? "bg-[#131926] border-[#222B3D]" : "bg-white border-[#E2E8F0] shadow-xs"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-full bg-purple-500/10 text-purple-600 flex items-center justify-center border border-purple-500/20 shrink-0">
+                    <Mail className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <h2 className={`text-base sm:text-lg font-bold ${darkMode ? "text-white" : "text-[#0F172A]"}`}>
+                        Contact Form Inquiries & Leads
+                      </h2>
+                      {unreadInquiriesCount > 0 && (
+                        <span className="px-2 py-0.5 rounded-full bg-red-500 text-white font-bold text-[10px]">
+                          {unreadInquiriesCount} Unread
+                        </span>
+                      )}
+                    </div>
+                    <p className={`text-xs mt-0.5 ${darkMode ? "text-[#94A3B8]" : "text-[#64748B]"}`}>
+                      Messages and queries submitted through the Contact Us page on the website.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={fetchDashboardData}
+                    disabled={isRefreshing}
+                    className="px-4 py-2 bg-[#035BE3] text-white rounded-full text-xs font-semibold transition flex items-center gap-1.5 cursor-pointer hover:bg-[#024bc0] shadow-xs"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${isRefreshing ? "animate-spin" : ""}`} />
+                    <span>Refresh Inbox</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Filter Pills & Search */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+                <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0 scrollbar-none">
+                  {[
+                    { key: "all", label: "All Messages" },
+                    { key: "unread", label: "Unread" },
+                    { key: "in_progress", label: "In Progress" },
+                    { key: "resolved", label: "Resolved" },
+                  ].map((filter) => (
+                    <button
+                      key={filter.key}
+                      onClick={() => setInquiryFilter(filter.key)}
+                      className={`px-3.5 py-1.5 rounded-full text-xs font-bold transition cursor-pointer shrink-0 border ${
+                        inquiryFilter === filter.key
+                          ? "bg-[#035BE3] text-white border-[#035BE3]"
+                          : darkMode
+                          ? "bg-[#131926] border-[#222B3D] text-[#94A3B8] hover:text-white"
+                          : "bg-white border-[#E2E8F0] text-[#64748B] hover:text-[#0F172A]"
+                      }`}
+                    >
+                      {filter.label}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="relative min-w-[240px]">
+                  <Search className="w-3.5 h-3.5 text-[#94A3B8] absolute left-3 top-1/2 -translate-y-1/2" />
+                  <input
+                    type="text"
+                    value={inquirySearch}
+                    onChange={(e) => setInquirySearch(e.target.value)}
+                    placeholder="Search name, email, subject..."
+                    className={`w-full h-9 pl-9 pr-3 rounded-full text-xs border outline-none font-medium ${
+                      darkMode ? "bg-[#131926] border-[#222B3D] text-white" : "bg-white border-[#E2E8F0] text-[#0F172A]"
+                    }`}
+                  />
+                </div>
+              </div>
+
+              {/* Inquiries Table */}
+              <div
+                className={`rounded-[24px] border overflow-hidden transition-colors ${
+                  darkMode ? "bg-[#131926] border-[#222B3D]" : "bg-white border-[#E2E8F0] shadow-xs"
+                }`}
+              >
+                <div className="overflow-x-auto">
+                  <table className="w-full text-left border-collapse">
+                    <thead>
+                      <tr className={`border-b text-[11px] font-bold uppercase tracking-wider ${
+                        darkMode ? "border-[#222B3D] text-[#8A99AD] bg-[#0E1420]/50" : "border-[#E2E8F0] text-[#64748B] bg-slate-50/70"
+                      }`}>
+                        <th className="py-3 px-5">Date</th>
+                        <th className="py-3 px-5">Sender</th>
+                        <th className="py-3 px-5">Subject</th>
+                        <th className="py-3 px-5">Message Snippet</th>
+                        <th className="py-3 px-5">Status</th>
+                        <th className="py-3 px-5 text-right">Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-inherit text-xs">
+                      {inquiriesList.filter((inq) => {
+                        const matchFilter = inquiryFilter === "all" || inq.status === inquiryFilter;
+                        const matchSearch =
+                          !inquirySearch.trim() ||
+                          inq.name?.toLowerCase().includes(inquirySearch.toLowerCase()) ||
+                          inq.email?.toLowerCase().includes(inquirySearch.toLowerCase()) ||
+                          inq.phone?.includes(inquirySearch) ||
+                          inq.subject?.toLowerCase().includes(inquirySearch.toLowerCase()) ||
+                          inq.message?.toLowerCase().includes(inquirySearch.toLowerCase());
+                        return matchFilter && matchSearch;
+                      }).length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="py-12 text-center text-[#8A99AD]">
+                            <Mail className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                            No inquiries match the current filter.
+                          </td>
+                        </tr>
+                      ) : (
+                        inquiriesList
+                          .filter((inq) => {
+                            const matchFilter = inquiryFilter === "all" || inq.status === inquiryFilter;
+                            const matchSearch =
+                              !inquirySearch.trim() ||
+                              inq.name?.toLowerCase().includes(inquirySearch.toLowerCase()) ||
+                              inq.email?.toLowerCase().includes(inquirySearch.toLowerCase()) ||
+                              inq.phone?.includes(inquirySearch) ||
+                              inq.subject?.toLowerCase().includes(inquirySearch.toLowerCase()) ||
+                              inq.message?.toLowerCase().includes(inquirySearch.toLowerCase());
+                            return matchFilter && matchSearch;
+                          })
+                          .map((inq) => (
+                            <tr
+                              key={inq.id}
+                              className={`transition ${
+                                inq.status === "unread"
+                                  ? darkMode
+                                    ? "bg-purple-950/20 hover:bg-purple-950/30 font-semibold"
+                                    : "bg-purple-50/50 hover:bg-purple-50 font-semibold"
+                                  : darkMode
+                                  ? "hover:bg-[#1A2234]"
+                                  : "hover:bg-[#F8FAFC]"
+                              }`}
+                            >
+                              <td className="py-3.5 px-5 whitespace-nowrap text-[#8A99AD] text-[11px]">
+                                {new Date(inq.created_at).toLocaleDateString("en-IN", {
+                                  month: "short",
+                                  day: "numeric",
+                                  hour: "2-digit",
+                                  minute: "2-digit",
+                                })}
+                              </td>
+                              <td className="py-3.5 px-5">
+                                <div>
+                                  <p className="font-bold text-[#0F172A] dark:text-white leading-tight">{inq.name}</p>
+                                  <p className="text-[11px] text-[#8A99AD]">{inq.email}</p>
+                                  {inq.phone && <p className="text-[10px] text-emerald-600 font-medium">📞 {inq.phone}</p>}
+                                </div>
+                              </td>
+                              <td className="py-3.5 px-5 font-bold text-[#0F172A] dark:text-white max-w-[180px] truncate">
+                                {inq.subject || "General Inquiry"}
+                              </td>
+                              <td className="py-3.5 px-5 text-[#64748B] dark:text-[#94A3B8] max-w-[280px] truncate">
+                                {inq.message}
+                              </td>
+                              <td className="py-3.5 px-5 whitespace-nowrap">
+                                <span
+                                  className={`px-2 py-0.5 rounded-full text-[10px] font-bold border ${
+                                    inq.status === "unread"
+                                      ? "bg-red-500/10 text-red-500 border-red-500/20"
+                                      : inq.status === "in_progress"
+                                      ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                                      : "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                                  }`}
+                                >
+                                  {inq.status === "unread" ? "🔴 Unread" : inq.status === "in_progress" ? "🟡 In Progress" : "🟢 Resolved"}
+                                </span>
+                              </td>
+                              <td className="py-3.5 px-5 text-right whitespace-nowrap">
+                                <div className="flex items-center justify-end gap-1.5">
+                                  <button
+                                    onClick={() => setSelectedInquiry(inq)}
+                                    className="px-2.5 py-1 rounded-lg bg-[#035BE3]/10 text-[#035BE3] hover:bg-[#035BE3] hover:text-white text-[11px] font-bold transition cursor-pointer"
+                                    title="View Full Message"
+                                  >
+                                    View
+                                  </button>
+                                  {inq.status !== "resolved" && (
+                                    <button
+                                      onClick={() => handleUpdateInquiryStatus(inq.id, "resolved")}
+                                      className="px-2.5 py-1 rounded-lg bg-emerald-500/10 text-emerald-600 hover:bg-emerald-500 hover:text-white text-[11px] font-bold transition cursor-pointer"
+                                      title="Mark as Resolved"
+                                    >
+                                      Resolve
+                                    </button>
+                                  )}
+                                  <button
+                                    onClick={() => handleDeleteInquiry(inq.id)}
+                                    className="p-1 rounded-lg text-gray-400 hover:text-red-500 hover:bg-red-500/10 transition cursor-pointer"
+                                    title="Delete Inquiry"
+                                  >
+                                    <Trash2 className="w-3.5 h-3.5" />
+                                  </button>
+                                </div>
+                              </td>
+                            </tr>
+                          ))
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              {/* Inquiry Detail View Modal */}
+              {selectedInquiry && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-xs animate-in fade-in duration-150">
+                  <div
+                    className={`w-full max-w-lg rounded-[28px] border p-6 sm:p-7 shadow-2xl relative ${
+                      darkMode ? "bg-[#131926] border-[#222B3D] text-white" : "bg-white border-[#E2E8F0] text-[#0F172A]"
+                    }`}
+                  >
+                    <div className="flex items-center justify-between pb-4 border-b border-inherit">
+                      <div className="flex items-center gap-2.5">
+                        <div className="w-9 h-9 rounded-full bg-purple-500/10 text-purple-600 flex items-center justify-center">
+                          <Mail className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <h3 className="text-sm font-bold">Inquiry Details</h3>
+                          <p className="text-[11px] text-[#8A99AD]">
+                            Received on {new Date(selectedInquiry.created_at).toLocaleString("en-IN")}
+                          </p>
+                        </div>
+                      </div>
+                      <button
+                        onClick={() => setSelectedInquiry(null)}
+                        className="text-gray-400 hover:text-gray-600 dark:hover:text-white font-bold p-1 cursor-pointer"
+                      >
+                        ✕
+                      </button>
+                    </div>
+
+                    <div className="space-y-4 py-4 text-xs">
+                      <div className="grid grid-cols-2 gap-3 p-3 rounded-xl bg-gray-50 dark:bg-[#0E1420] border border-inherit">
+                        <div>
+                          <span className="text-[10px] text-[#8A99AD] font-bold block">NAME</span>
+                          <span className="font-bold text-[#0F172A] dark:text-white">{selectedInquiry.name}</span>
+                        </div>
+                        <div>
+                          <span className="text-[10px] text-[#8A99AD] font-bold block">PHONE</span>
+                          <span className="font-semibold text-emerald-600">{selectedInquiry.phone || "Not provided"}</span>
+                        </div>
+                        <div className="col-span-2">
+                          <span className="text-[10px] text-[#8A99AD] font-bold block">EMAIL ADDRESS</span>
+                          <a href={`mailto:${selectedInquiry.email}`} className="font-bold text-[#035BE3] hover:underline">
+                            {selectedInquiry.email}
+                          </a>
+                        </div>
+                      </div>
+
+                      <div>
+                        <span className="text-[10px] text-[#8A99AD] font-bold uppercase block mb-1">Subject</span>
+                        <p className="font-bold text-sm text-[#0F172A] dark:text-white">{selectedInquiry.subject || "General Inquiry"}</p>
+                      </div>
+
+                      <div>
+                        <span className="text-[10px] text-[#8A99AD] font-bold uppercase block mb-1">Message</span>
+                        <div className="p-3.5 rounded-xl bg-gray-50 dark:bg-[#0E1420] border border-inherit text-[#334155] dark:text-[#CBD5E1] whitespace-pre-wrap leading-relaxed">
+                          {selectedInquiry.message}
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 pt-2">
+                        <span className="text-[10px] text-[#8A99AD] font-bold">STATUS:</span>
+                        {["unread", "in_progress", "resolved"].map((st) => (
+                          <button
+                            key={st}
+                            onClick={() => handleUpdateInquiryStatus(selectedInquiry.id, st)}
+                            className={`px-3 py-1 rounded-full text-[10px] font-bold transition cursor-pointer border ${
+                              selectedInquiry.status === st
+                                ? "bg-[#035BE3] text-white border-[#035BE3]"
+                                : "bg-transparent border-gray-300 dark:border-gray-700 text-[#64748B]"
+                            }`}
+                          >
+                            {st === "unread" ? "Unread" : st === "in_progress" ? "In Progress" : "Resolved"}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="pt-4 border-t border-inherit flex items-center justify-between">
+                      <a
+                        href={`mailto:${selectedInquiry.email}?subject=Re: ${encodeURIComponent(selectedInquiry.subject || 'Your Inquiry on Knowway')}`}
+                        className="px-4 py-2 rounded-full bg-[#035BE3] text-white text-xs font-bold hover:bg-[#024bc0] transition flex items-center gap-1.5 cursor-pointer"
+                      >
+                        <Mail className="w-3.5 h-3.5" />
+                        Reply via Email
+                      </a>
+                      <button
+                        onClick={() => setSelectedInquiry(null)}
+                        className="px-4 py-2 rounded-full border border-gray-300 dark:border-gray-700 text-xs font-bold hover:bg-gray-100 dark:hover:bg-gray-800 transition cursor-pointer"
+                      >
+                        Close
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
             </div>
           )}
 

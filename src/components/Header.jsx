@@ -311,7 +311,21 @@ export default function Header() {
             Courses
           </Link>
 
-          {/* 4. Help */}
+          {/* 4. Contact */}
+          <Link
+            to="/contact"
+            className="
+              rounded-full px-4 py-2
+              text-[14px] font-medium text-[#4A5568]
+              transition-colors
+              hover:bg-[#F3F6FD]
+              hover:text-[#161B29]
+            "
+          >
+            Contact
+          </Link>
+
+          {/* 5. Help */}
           <a
             href="/#faq"
             className="
@@ -476,6 +490,14 @@ export default function Header() {
             >
               Packages
             </a>
+
+            <Link
+              to="/contact"
+              onClick={() => setMobileOpen(false)}
+              className="px-3 py-2.5 text-[15px] font-medium text-[#4F596B] hover:text-[#035BE3]"
+            >
+              Contact Us
+            </Link>
 
             <a
               href="/#faq"
