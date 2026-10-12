@@ -101,9 +101,11 @@ export default function CheckoutPage() {
   const [isCourse, setIsCourse] = useState(isCourseCheckout);
   const [loadingPkg, setLoadingPkg] = useState(true);
 
-  // Authenticated user check
+  // Authenticated user check & sponsor referral code
   const loggedInUser = getUserData();
   const urlRefCode = searchParams.get("ref") || searchParams.get("referral") || "";
+  // Never use buyer's own referral_code as discount! Use sponsor referred_by or URL parameter
+  const sponsorRefCode = urlRefCode || loggedInUser?.referred_by || "";
 
   // Billing Form State
   const [formData, setFormData] = useState({
@@ -111,14 +113,14 @@ export default function CheckoutPage() {
     email: loggedInUser?.email || "",
     phone: loggedInUser?.phone || "",
     password: "",
-    referralCode: loggedInUser?.referral_code || urlRefCode || "",
+    referralCode: sponsorRefCode,
   });
 
-  const [appliedReferral, setAppliedReferral] = useState(loggedInUser?.referral_code || urlRefCode || "");
-  const [referralInput, setReferralInput] = useState(loggedInUser?.referral_code || urlRefCode || "");
-  const [isReferralApplied, setIsReferralApplied] = useState(Boolean(loggedInUser?.referral_code || urlRefCode));
+  const [appliedReferral, setAppliedReferral] = useState(sponsorRefCode);
+  const [referralInput, setReferralInput] = useState(sponsorRefCode);
+  const [isReferralApplied, setIsReferralApplied] = useState(Boolean(sponsorRefCode));
   const [referralMessage, setReferralMessage] = useState(
-    loggedInUser?.referral_code || urlRefCode ? "✓ Referral discount active" : ""
+    sponsorRefCode ? `✓ Referral discount active (${sponsorRefCode})` : ""
   );
 
   const [isProcessing, setIsProcessing] = useState(false);
@@ -213,6 +215,10 @@ export default function CheckoutPage() {
     }
 
     const cleanCode = referralInput.trim().toUpperCase();
+    if (loggedInUser?.referral_code && cleanCode === loggedInUser.referral_code.toUpperCase()) {
+      setErrorMsg("You cannot use your own referral code for discount.");
+      return;
+    }
     setIsReferralApplied(true);
     setAppliedReferral(cleanCode);
     setFormData((prev) => ({ ...prev, referralCode: cleanCode }));

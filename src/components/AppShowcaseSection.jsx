@@ -33,40 +33,40 @@ export default function CreatorProgramSection() {
           <div className="pointer-events-none absolute right-0 top-0 h-64 w-64 rounded-full bg-blue-300/15 blur-3xl" />
           <div className="pointer-events-none absolute bottom-0 right-10 h-52 w-52 rounded-full bg-white/10 blur-3xl" />
 
-          <div className="grid grid-cols-1 items-center gap-10 lg:grid-cols-[1.05fr_0.95fr]">
+          <div className="grid grid-cols-1 items-center gap-8 lg:gap-10 lg:grid-cols-[1.05fr_0.95fr]">
             {/* LEFT CONTENT */}
             <div className="relative z-10 max-w-[680px]">
-              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/15 px-4 py-2 backdrop-blur-md">
+              <div className="mb-4 sm:mb-5 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/15 px-3.5 sm:px-4 py-1.5 sm:py-2 backdrop-blur-md">
                 <Sparkles size={13} className="text-white" />
-                <span className="text-[12px] font-semibold tracking-[0.02em] text-white">
+                <span className="text-[11.5px] sm:text-[12px] font-semibold tracking-[0.02em] text-white">
                   Creator Program
                 </span>
               </div>
 
-              <div className="max-w-[560px] rounded-[28px] border border-white/20 bg-white/10 p-6 sm:p-7 backdrop-blur-sm">
-                <p className="text-[18px] leading-[1.5] text-blue-100 sm:text-[22px] font-medium">
+              <div className="max-w-[560px] rounded-[24px] sm:rounded-[28px] border border-white/20 bg-white/10 p-5 sm:p-7 backdrop-blur-sm">
+                <p className="text-[16px] sm:text-[22px] leading-[1.4] text-blue-100 font-medium">
                   Turn learning into
                 </p>
 
-                <h2 className="mt-2 text-[40px] font-bold leading-[1.05] tracking-[-0.04em] text-white sm:text-[52px] lg:text-[64px]">
+                <h2 className="mt-1 sm:mt-2 text-[32px] xs:text-[38px] sm:text-[52px] lg:text-[64px] font-bold leading-[1.08] tracking-[-0.04em] text-white">
                   Real Progress.
                 </h2>
 
-                <p className="mt-5 max-w-[500px] text-[14px] leading-7 text-blue-50 sm:text-[15px] font-medium">
+                <p className="mt-3 sm:mt-5 max-w-[500px] text-[13px] sm:text-[15px] leading-6 sm:leading-7 text-blue-50 font-medium">
                   Join a guided learning environment where you can build better
                   skills, stay consistent, practice with direction and move
                   closer to real digital opportunities.
                 </p>
               </div>
 
-              <ul className="mt-7 space-y-4">
+              <ul className="mt-5 sm:mt-7 space-y-3 sm:space-y-4">
                 {points.map((point) => (
                   <li
                     key={point}
-                    className="flex items-start gap-3 text-[14px] leading-7 text-white font-medium sm:text-[15px]"
+                    className="flex items-start gap-2.5 sm:gap-3 text-[13px] sm:text-[15px] leading-6 sm:leading-7 text-white font-medium"
                   >
                     <CheckCircle2
-                      size={18}
+                      size={17}
                       className="mt-1 shrink-0 text-amber-300"
                     />
                     <span>{point}</span>
@@ -74,28 +74,28 @@ export default function CreatorProgramSection() {
                 ))}
               </ul>
 
-              <div className="mt-8 flex flex-wrap items-center gap-4">
+              <div className="mt-6 sm:mt-8 flex flex-wrap items-center gap-3 sm:gap-4">
                 <a
                   href="/signup"
-                  className="inline-flex h-[54px] items-center gap-3 rounded-full bg-[#FA8C03] px-6 pr-2 text-[13px] font-bold text-white transition-all duration-200 hover:bg-[#e07b02] shadow-xl shadow-black/20 cursor-pointer transform hover:-translate-y-0.5"
+                  className="inline-flex h-[48px] sm:h-[54px] items-center gap-3 rounded-full bg-[#FA8C03] px-5 sm:px-6 pr-2 text-[12.5px] sm:text-[13px] font-bold text-white transition-all duration-200 hover:bg-[#e07b02] shadow-xl shadow-black/20 cursor-pointer transform hover:-translate-y-0.5"
                 >
-                  Join Now
-                  <span className="flex h-10 w-10 items-center justify-center rounded-full bg-white text-[#FA8C03]">
-                    <ArrowUpRight size={16} />
+                  <span>Join Now</span>
+                  <span className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-white text-[#FA8C03]">
+                    <ArrowUpRight size={15} />
                   </span>
                 </a>
 
-                <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/15 px-4 py-3 text-[12px] font-semibold text-white backdrop-blur-md">
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/15 px-3.5 sm:px-4 py-2.5 sm:py-3 text-[11.5px] sm:text-[12px] font-semibold text-white backdrop-blur-md">
                   <BriefcaseBusiness size={14} className="text-amber-300" />
-                  Practical Growth Experience
+                  <span>Practical Growth Experience</span>
                 </div>
               </div>
             </div>
 
             {/* RIGHT VISUAL */}
-            <div className="relative z-10 flex min-h-[560px] items-center justify-center lg:justify-end">
+            <div className="relative z-10 flex min-h-[380px] sm:min-h-[500px] lg:min-h-[560px] items-center justify-center lg:justify-end">
               {/* back card glow */}
-              <div className="absolute h-[420px] w-[420px] rounded-full bg-white/15 blur-3xl" />
+              <div className="absolute h-[320px] sm:h-[420px] w-[320px] sm:w-[420px] rounded-full bg-white/15 blur-3xl" />
 
               {/* back phone */}
               <PhoneMockup
@@ -114,7 +114,7 @@ export default function CreatorProgramSection() {
 
               {/* front phone */}
               <PhoneMockup
-                className="relative z-10 mt-16 lg:-left-10"
+                className="relative z-10 mt-6 sm:mt-16 lg:-left-10 w-[270px] xs:w-[290px] sm:w-[320px]"
                 title="Creator Program"
                 subtitle="Active Learners Group"
                 lines={[

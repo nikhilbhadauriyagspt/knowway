@@ -113,28 +113,28 @@ export default function FAQSection() {
               LEFT SIDE
           ====================================================== */}
           <div>
-            <div className="inline-flex items-center gap-2 rounded-full border border-[#DCE5F5] bg-white px-4 py-2">
+            <div className="inline-flex items-center gap-2 rounded-full border border-[#DCE5F5] bg-white px-3.5 sm:px-4 py-1.5 sm:py-2">
               <Sparkles size={13} className="text-[#315FD8]" />
-              <span className="text-[12px] font-semibold text-[#59667E]">
+              <span className="text-[11.5px] sm:text-[12px] font-semibold text-[#59667E]">
                 Frequently Asked Questions
               </span>
             </div>
 
-            <h2 className="mt-5 max-w-[620px] text-[40px] font-bold leading-[1.06] tracking-[-0.045em] text-[#151B29] sm:text-[48px] lg:text-[56px]">
+            <h2 className="mt-4 sm:mt-5 max-w-[620px] text-[28px] xs:text-[34px] sm:text-[48px] lg:text-[56px] font-bold leading-[1.12] sm:leading-[1.06] tracking-[-0.04em] text-[#151B29]">
               Questions before
               <br />
-              <span className="mt-2 inline-block rounded-[10px] bg-[#DDD1FF] px-3">
+              <span className="mt-1.5 sm:mt-2 inline-block rounded-[10px] bg-[#DDD1FF] px-2.5 sm:px-3">
                 you start?
               </span>
             </h2>
 
-            <p className="mt-5 max-w-[560px] text-[15px] leading-7 text-[#68748A]">
+            <p className="mt-3 sm:mt-5 max-w-[560px] text-[14px] leading-6 sm:text-[15px] sm:leading-7 text-[#68748A]">
               Find quick answers about learning paths, packages and how the
               learning experience works.
             </p>
 
             {/* VISUAL NETWORK */}
-            <div className="relative mt-12 hidden h-[370px] max-w-[620px] sm:block">
+            <div className="relative mt-8 sm:mt-12 hidden h-[370px] max-w-[620px] sm:block">
 
               {/* connecting lines */}
               <svg
@@ -245,14 +245,12 @@ export default function FAQSection() {
                     }
                     className="
                       flex w-full items-center justify-between
-                      gap-5 px-6 py-6 text-left
-                      sm:px-7 sm:py-7
+                      gap-3 sm:gap-5 px-4 sm:px-7 py-4 sm:py-7 text-left
                     "
                   >
                     <span
                       className={`
-                        text-[15px] font-bold leading-6
-                        sm:text-[16px]
+                        text-[14px] sm:text-[16px] font-bold leading-snug sm:leading-6
                         ${isOpen ? "text-[#171D2B]" : "text-[#283247]"}
                       `}
                     >
@@ -261,7 +259,7 @@ export default function FAQSection() {
 
                     <span
                       className={`
-                        flex h-9 w-9 shrink-0 items-center justify-center
+                        flex h-8 w-8 sm:h-9 sm:w-9 shrink-0 items-center justify-center
                         rounded-full transition-colors
                         ${isOpen
                           ? "bg-[#035BE3] text-white shadow-sm shadow-[#035BE3]/25"
@@ -270,9 +268,9 @@ export default function FAQSection() {
                       `}
                     >
                       {isOpen ? (
-                        <Minus size={16} />
+                        <Minus size={15} />
                       ) : (
-                        <Plus size={16} />
+                        <Plus size={15} />
                       )}
                     </span>
                   </button>

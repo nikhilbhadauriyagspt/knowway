@@ -13,7 +13,7 @@ import Footer from '../components/Footer'
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen flex flex-col bg-white text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900">
+    <div className="min-h-screen w-full overflow-x-hidden flex flex-col bg-white text-slate-900 font-sans selection:bg-blue-100 selection:text-blue-900">
       {/* 1. Header Component */}
       <Header />
 

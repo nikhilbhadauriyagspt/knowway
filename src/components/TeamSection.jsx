@@ -136,43 +136,43 @@ export default function ExpertsSection() {
 
       <div className="relative z-10 mx-auto max-w-[1540px] px-5 sm:px-8 lg:px-12">
         {/* ================= HEADER ================= */}
-        <div className="mb-8 sm:mb-9 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+        <div className="mb-7 sm:mb-9 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-[760px]">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#DCE5F5] bg-white px-4 py-2">
+            <div className="mb-3 sm:mb-4 inline-flex items-center gap-2 rounded-full border border-[#DCE5F5] bg-white px-3.5 sm:px-4 py-1.5 sm:py-2">
               <Sparkles size={13} className="text-[#315FD8]" />
 
-              <span className="text-[12px] font-semibold text-[#59667E]">
+              <span className="text-[11.5px] sm:text-[12px] font-semibold text-[#59667E]">
                 Learn From Experienced Mentors
               </span>
             </div>
 
-            <h2 className="text-[38px] font-bold leading-[1.08] tracking-[-0.045em] text-[#151B29] sm:text-[46px] lg:text-[54px]">
+            <h2 className="text-[28px] xs:text-[32px] sm:text-[46px] lg:text-[54px] font-bold leading-[1.12] sm:leading-[1.08] tracking-[-0.04em] text-[#151B29]">
               Meet the people behind
-              <span className="ml-3 inline-block rounded-[10px] bg-[#DDD1FF] px-3">
+              <span className="ml-2 sm:ml-3 inline-block rounded-[10px] bg-[#DDD1FF] px-2.5 sm:px-3">
                 better learning.
               </span>
             </h2>
 
-            <p className="mt-4 max-w-[650px] text-[15px] leading-7 text-[#69758A]">
+            <p className="mt-3 sm:mt-4 max-w-[650px] text-[14px] leading-6 sm:text-[15px] sm:leading-7 text-[#69758A]">
               Learn through guidance, practical experience and ideas shared by
               mentors across different digital skill areas.
             </p>
           </div>
 
           {/* scroll buttons */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 self-end lg:self-auto">
             <button
               onClick={() => scroll("left")}
-              className="flex h-12 w-12 items-center justify-center rounded-full border border-[#DCE4F0] bg-white text-[#171D2B] transition-colors hover:border-[#035BE3] hover:text-[#035BE3] cursor-pointer"
+              className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full border border-[#DCE4F0] bg-white text-[#171D2B] transition-colors hover:border-[#035BE3] hover:text-[#035BE3] cursor-pointer"
             >
-              <ArrowLeft size={18} />
+              <ArrowLeft size={16} />
             </button>
 
             <button
               onClick={() => scroll("right")}
-              className="flex h-12 w-12 items-center justify-center rounded-full bg-[#035BE3] text-white transition-colors hover:bg-[#FA8C03] shadow-md shadow-[#035BE3]/20 cursor-pointer"
+              className="flex h-10 w-10 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-[#035BE3] text-white transition-colors hover:bg-[#FA8C03] shadow-md shadow-[#035BE3]/20 cursor-pointer"
             >
-              <ArrowRight size={18} />
+              <ArrowRight size={16} />
             </button>
           </div>
         </div>
@@ -181,7 +181,7 @@ export default function ExpertsSection() {
         <div
           ref={scrollRef}
           className="
-            flex snap-x snap-mandatory gap-5
+            flex snap-x snap-mandatory gap-4 sm:gap-5
             overflow-x-auto pb-4
             [scrollbar-width:none]
             [&::-webkit-scrollbar]:hidden
@@ -191,8 +191,8 @@ export default function ExpertsSection() {
             <article
               key={expert.name}
               className="
-                group relative min-w-[300px] snap-start
-                overflow-hidden rounded-[28px]
+                group relative min-w-[260px] xs:min-w-[280px] snap-start
+                overflow-hidden rounded-[24px] sm:rounded-[28px]
                 border border-[#E1E7F0]
                 bg-white
                 sm:min-w-[340px]

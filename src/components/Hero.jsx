@@ -309,26 +309,25 @@ export default function Hero() {
             HEADING (Fluid Responsive Typography)
         ====================================================== */}
 
+        {/* Heading */}
         <h1
           className="
             max-w-[760px] xl:max-w-[920px] 2xl:max-w-[990px]
-            text-[38px] font-bold
-            leading-[1.08] xl:leading-[1.045]
-            tracking-[-0.045em] xl:tracking-[-0.052em]
+            text-[30px] xs:text-[34px] sm:text-[46px]
+            lg:text-[56px] xl:text-[68px] 2xl:text-[76px]
+            font-bold
+            leading-[1.12] sm:leading-[1.08] xl:leading-[1.045]
+            tracking-[-0.04em] xl:tracking-[-0.052em]
             text-[#161B29]
-            sm:text-[50px]
-            lg:text-[56px]
-            xl:text-[68px]
-            2xl:text-[76px]
           "
         >
           Learn new skills.
           <br />
 
-          <span className="mt-1.5 xl:mt-2 inline-flex flex-wrap items-center justify-center">
+          <span className="mt-1.5 xl:mt-2 inline-flex flex-wrap items-center justify-center gap-x-1.5">
             Turn knowledge into
 
-            <span className="relative ml-2.5 xl:ml-3 inline-flex px-2">
+            <span className="relative inline-flex px-2 py-0.5">
               <span className="relative z-10 text-[#25213B]">
                 progress.
               </span>
@@ -337,7 +336,7 @@ export default function Hero() {
                 className="
                   absolute bottom-[2px] left-0 -z-0
                   h-[72%] w-full
-                  rounded-[9px] xl:rounded-[11px]
+                  rounded-[8px] xl:rounded-[11px]
                   bg-[#DCCFFF]
                 "
               />
@@ -348,8 +347,8 @@ export default function Hero() {
         {/* Description */}
         <p
           className="
-            mt-5 xl:mt-7 max-w-[580px] xl:max-w-[680px]
-            text-[15px] leading-[1.75] xl:text-[17px] xl:leading-[1.85]
+            mt-4 sm:mt-5 xl:mt-7 max-w-[580px] xl:max-w-[680px]
+            text-[14px] leading-[1.65] sm:text-[15px] sm:leading-[1.75] xl:text-[17px] xl:leading-[1.85]
             text-[#626B7C]
           "
         >
@@ -358,10 +357,11 @@ export default function Hero() {
         </p>
 
         {/* CTA Buttons */}
-        <div className="mt-7 xl:mt-8 flex flex-col items-center gap-3 sm:flex-row">
-          <button
+        <div className="mt-6 sm:mt-7 xl:mt-8 flex flex-col w-full sm:w-auto items-stretch sm:items-center gap-3 sm:flex-row justify-center">
+          <a
+            href="/courses"
             className="
-              group flex h-[48px] xl:h-[52px] items-center justify-center gap-2
+              group flex h-[46px] sm:h-[48px] xl:h-[52px] items-center justify-center gap-2
               rounded-full
               bg-[#035BE3]
               px-6 xl:px-7
@@ -371,7 +371,7 @@ export default function Hero() {
               shadow-md shadow-[#035BE3]/20 cursor-pointer
             "
           >
-            Explore Learning
+            <span>Explore Learning</span>
 
             <ArrowUpRight
               size={16}
@@ -381,11 +381,12 @@ export default function Hero() {
                 group-hover:translate-x-[2px]
               "
             />
-          </button>
+          </a>
 
-          <button
+          <a
+            href="/#how-it-works"
             className="
-              group flex h-[48px] xl:h-[52px] items-center justify-center gap-2
+              group flex h-[46px] sm:h-[48px] xl:h-[52px] items-center justify-center gap-2
               rounded-full border border-[#DCE2ED]
               bg-white px-5 xl:px-6
               text-[13px] xl:text-[14px] font-semibold text-[#293246]
@@ -398,38 +399,38 @@ export default function Hero() {
               <Play size={10} fill="currentColor" />
             </span>
 
-            Discover how it works
-          </button>
+            <span>Discover how it works</span>
+          </a>
         </div>
 
         {/* =====================================================
             CATEGORY PILLS
         ====================================================== */}
 
-        <div className="mt-10 xl:mt-12 flex max-w-[760px] flex-wrap items-center justify-center gap-2 xl:gap-2.5">
-          <div className="flex items-center gap-2 rounded-full border border-[#DCE6FB] bg-[#F4F7FF] px-3.5 xl:px-4 py-2 xl:py-2.5">
-            <BrainCircuit size={14} className="text-[#3769DE]" />
+        <div className="mt-8 sm:mt-10 xl:mt-12 flex max-w-[760px] flex-wrap items-center justify-center gap-2 xl:gap-2.5">
+          <div className="flex items-center gap-2 rounded-full border border-[#DCE6FB] bg-[#F4F7FF] px-3 sm:px-3.5 xl:px-4 py-1.5 sm:py-2 xl:py-2.5">
+            <BrainCircuit size={13} className="text-[#3769DE]" />
             <span className="text-[11px] xl:text-[12px] font-semibold text-[#536078]">
               AI & Tools
             </span>
           </div>
 
-          <div className="flex items-center gap-2 rounded-full border border-[#E6DEFC] bg-[#F8F5FF] px-3.5 xl:px-4 py-2 xl:py-2.5">
-            <Palette size={14} className="text-[#7559DC]" />
+          <div className="flex items-center gap-2 rounded-full border border-[#E6DEFC] bg-[#F8F5FF] px-3 sm:px-3.5 xl:px-4 py-1.5 sm:py-2 xl:py-2.5">
+            <Palette size={13} className="text-[#7559DC]" />
             <span className="text-[11px] xl:text-[12px] font-semibold text-[#536078]">
               Creative Skills
             </span>
           </div>
 
-          <div className="flex items-center gap-2 rounded-full border border-[#FFE2D1] bg-[#FFF7F2] px-3.5 xl:px-4 py-2 xl:py-2.5">
-            <Code2 size={14} className="text-[#E2763F]" />
+          <div className="flex items-center gap-2 rounded-full border border-[#FFE2D1] bg-[#FFF7F2] px-3 sm:px-3.5 xl:px-4 py-1.5 sm:py-2 xl:py-2.5">
+            <Code2 size={13} className="text-[#E2763F]" />
             <span className="text-[11px] xl:text-[12px] font-semibold text-[#536078]">
               Development
             </span>
           </div>
 
-          <div className="flex items-center gap-2 rounded-full border border-[#F2E1AD] bg-[#FFF9E8] px-3.5 xl:px-4 py-2 xl:py-2.5">
-            <ChartNoAxesCombined size={14} className="text-[#B88415]" />
+          <div className="flex items-center gap-2 rounded-full border border-[#F2E1AD] bg-[#FFF9E8] px-3 sm:px-3.5 xl:px-4 py-1.5 sm:py-2 xl:py-2.5">
+            <ChartNoAxesCombined size={13} className="text-[#B88415]" />
             <span className="text-[11px] xl:text-[12px] font-semibold text-[#536078]">
               Business
             </span>
@@ -440,37 +441,37 @@ export default function Hero() {
             MOBILE / TABLET STATS (Hidden on Laptop & Desktop)
         ====================================================== */}
 
-        <div className="mt-10 grid w-full max-w-[610px] grid-cols-2 gap-3 lg:hidden">
-          <div className="rounded-[18px] border border-[#DCE3F0] bg-white p-5 text-left shadow-xs">
+        <div className="mt-8 sm:mt-10 grid w-full max-w-[610px] grid-cols-2 gap-2.5 sm:gap-3 lg:hidden">
+          <div className="rounded-[18px] border border-[#DCE3F0] bg-white p-4 sm:p-5 text-left shadow-xs">
             <div className="flex items-center gap-2 text-[#3A68DA]">
-              <BookOpen size={17} />
-              <span className="text-[11px] font-semibold">
+              <BookOpen size={15} />
+              <span className="text-[10px] sm:text-[11px] font-semibold">
                 Learning library
               </span>
             </div>
 
-            <p className="mt-4 text-[27px] font-bold tracking-[-0.04em] text-[#171D2B]">
+            <p className="mt-3 sm:mt-4 text-[24px] sm:text-[27px] font-bold tracking-[-0.04em] text-[#171D2B]">
               80+
             </p>
 
-            <p className="text-[11px] text-[#7A8393]">
+            <p className="text-[10px] sm:text-[11px] text-[#7A8393]">
               Guided topics
             </p>
           </div>
 
-          <div className="rounded-[18px] border border-[#E2DCF5] bg-[#FAF8FF] p-5 text-left shadow-xs">
+          <div className="rounded-[18px] border border-[#E2DCF5] bg-[#FAF8FF] p-4 sm:p-5 text-left shadow-xs">
             <div className="flex items-center gap-2 text-[#735AD5]">
-              <Users size={17} />
-              <span className="text-[11px] font-semibold">
+              <Users size={15} />
+              <span className="text-[10px] sm:text-[11px] font-semibold">
                 Learning community
               </span>
             </div>
 
-            <p className="mt-4 text-[27px] font-bold tracking-[-0.04em] text-[#171D2B]">
+            <p className="mt-3 sm:mt-4 text-[24px] sm:text-[27px] font-bold tracking-[-0.04em] text-[#171D2B]">
               25k+
             </p>
 
-            <p className="text-[11px] text-[#7A8393]">
+            <p className="text-[10px] sm:text-[11px] text-[#7A8393]">
               Active learners
             </p>
           </div>

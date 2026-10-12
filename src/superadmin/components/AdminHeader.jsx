@@ -37,6 +37,12 @@ export default function AdminHeader({
   setSearchQuery,
   darkMode,
   setDarkMode,
+  coursesList = [],
+  packagesList = [],
+  usersList = [],
+  mentorsList = [],
+  paymentsList = [],
+  subAdminsList = [],
   notificationsList = [],
   unreadNotificationsCount = 0,
   onMarkAllNotificationsRead,
@@ -46,12 +52,17 @@ export default function AdminHeader({
   const navigate = useNavigate();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
+  const [isSearchFocused, setIsSearchFocused] = useState(false);
+  const searchBoxRef = useRef(null);
   const notificationRef = useRef(null);
   const profileRef = useRef(null);
 
   // Close dropdowns when clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
+      if (searchBoxRef.current && !searchBoxRef.current.contains(event.target)) {
+        setIsSearchFocused(false);
+      }
       if (notificationRef.current && !notificationRef.current.contains(event.target)) {
         setShowNotifications(false);
       }
@@ -166,6 +177,100 @@ export default function AdminHeader({
     }
   };
 
+  // Real-time Global Search Suggestions across courses, users, packages, and mentors
+  const adminSuggestions = React.useMemo(() => {
+    if (!searchQuery || !searchQuery.trim()) return [];
+    const q = searchQuery.toLowerCase().trim();
+    const list = [];
+
+    // 1. Search Courses
+    (coursesList || []).forEach((c) => {
+      if (c.title?.toLowerCase().includes(q) || c.category?.toLowerCase().includes(q) || c.mentor_name?.toLowerCase().includes(q)) {
+        list.push({
+          type: "course",
+          title: c.title,
+          subtitle: `${c.category || 'Curriculum'} • ${c.mentor_name || 'Assigned Mentor'}`,
+          category: "Course",
+          action: () => {
+            setActiveTab && setActiveTab("courses");
+            setIsSearchFocused(false);
+          },
+        });
+      }
+    });
+
+    // 2. Search Students / Users
+    (usersList || []).forEach((u) => {
+      const idVal = u.student_id || `KW${u.id}`;
+      if (u.name?.toLowerCase().includes(q) || u.email?.toLowerCase().includes(q) || idVal.toLowerCase().includes(q) || u.phone?.includes(q)) {
+        list.push({
+          type: "user",
+          title: u.name,
+          subtitle: `${idVal} • ${u.email}`,
+          category: "Student",
+          action: () => {
+            setActiveTab && setActiveTab("users");
+            setIsSearchFocused(false);
+          },
+        });
+      }
+    });
+
+    // 3. Search Packages
+    (packagesList || []).forEach((p) => {
+      if (p.name?.toLowerCase().includes(q) || p.slug?.toLowerCase().includes(q)) {
+        list.push({
+          type: "package",
+          title: p.name,
+          subtitle: `₹${Number(p.promo_price || 0).toLocaleString()} • /${p.slug}`,
+          category: "Package",
+          action: () => {
+            setActiveTab && setActiveTab("packages");
+            setIsSearchFocused(false);
+          },
+        });
+      }
+    });
+
+    // 4. Search Mentors
+    (mentorsList || []).forEach((m) => {
+      if (m.name?.toLowerCase().includes(q) || m.role_title?.toLowerCase().includes(q)) {
+        list.push({
+          type: "mentor",
+          title: m.name,
+          subtitle: m.role_title || "Industry Mentor",
+          category: "Mentor",
+          action: () => {
+            setActiveTab && setActiveTab("mentors");
+            setIsSearchFocused(false);
+          },
+        });
+      }
+    });
+
+    // 5. Search Payments
+    (paymentsList || []).forEach((p) => {
+      if (
+        p.user_name?.toLowerCase().includes(q) ||
+        p.razorpay_order_id?.toLowerCase().includes(q) ||
+        p.razorpay_payment_id?.toLowerCase().includes(q)
+      ) {
+        list.push({
+          type: "payment",
+          title: `Order: ${p.package_name || p.course_name || 'Purchase'} - ₹${Number(p.amount || 0).toLocaleString()}`,
+          subtitle: `${p.user_name || 'Buyer'} • ${p.razorpay_order_id || p.status}`,
+          category: "Payment",
+          action: () => {
+            setActiveTab && setActiveTab("payments");
+            setIsSearchFocused(false);
+          },
+        });
+      }
+    });
+
+    return list.slice(0, 7);
+  }, [searchQuery, coursesList, usersList, packagesList, mentorsList, paymentsList, setActiveTab]);
+
   return (
     <header className="sticky top-0 z-30 pt-4 px-4 sm:px-6 lg:px-8 pb-2 flex items-center justify-between gap-3 sm:gap-4 pointer-events-none">
       {/* Mobile Hamburger */}
@@ -183,8 +288,8 @@ export default function AdminHeader({
         </button>
       </div>
 
-      {/* Center/Left Search Pill */}
-      <div className="flex-1 max-w-lg pointer-events-auto">
+      {/* Center/Left Search Pill with Dropdown */}
+      <div className="flex-1 max-w-lg pointer-events-auto relative" ref={searchBoxRef}>
         <div
           className={`h-12 rounded-full border flex items-center px-4 transition-all focus-within:border-[#035BE3] ${
             darkMode
@@ -196,13 +301,102 @@ export default function AdminHeader({
           <input
             type="text"
             value={searchQuery || ""}
-            onChange={(e) => setSearchQuery && setSearchQuery(e.target.value)}
+            onFocus={() => setIsSearchFocused(true)}
+            onChange={(e) => {
+              setSearchQuery && setSearchQuery(e.target.value);
+              setIsSearchFocused(true);
+            }}
             placeholder={`Search ${getTabTitle().toLowerCase()}...`}
             className={`w-full bg-transparent text-xs outline-none placeholder-[#94A3B8] ${
               darkMode ? "text-white" : "text-[#0F172A]"
             }`}
           />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchQuery && setSearchQuery("");
+                setIsSearchFocused(false);
+              }}
+              className="text-[#94A3B8] hover:text-[#035BE3] transition ml-1.5 p-0.5 text-xs font-bold shrink-0 cursor-pointer"
+              title="Clear search"
+            >
+              ✕
+            </button>
+          )}
         </div>
+
+        {/* Live Admin Results Dropdown */}
+        {isSearchFocused && searchQuery?.trim() && (
+          <div
+            className={`absolute left-0 right-0 top-14 rounded-2xl border shadow-xl overflow-hidden z-50 backdrop-blur-md animate-in fade-in slide-in-from-top-2 duration-150 ${
+              darkMode
+                ? "bg-[#131926]/95 border-[#222B3D] text-[#E2E8F0]"
+                : "bg-white/95 border-[#E2E8F0] text-[#0F172A]"
+            }`}
+          >
+            <div className="p-2.5 max-h-84 overflow-y-auto divide-y divide-inherit">
+              {adminSuggestions.length === 0 ? (
+                <div className="py-6 px-4 text-center">
+                  <Search className="w-6 h-6 mx-auto text-[#94A3B8] mb-1.5 opacity-60" />
+                  <p className="text-xs font-semibold">Active module filtering for "{searchQuery}"</p>
+                  <p className={`text-[10.5px] mt-1 ${darkMode ? "text-[#94A3B8]" : "text-[#64748B]"}`}>
+                    Matching records will update live in the current table view.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="px-3 py-1.5 text-[10px] uppercase font-bold tracking-wider text-[#94A3B8] flex items-center justify-between">
+                    <span>Control Center Matches ({adminSuggestions.length})</span>
+                    <span>Click to jump</span>
+                  </div>
+                  <div className="pt-1 space-y-1">
+                    {adminSuggestions.map((item, idx) => (
+                      <div
+                        key={idx}
+                        onClick={() => item.action && item.action()}
+                        className={`p-2.5 rounded-xl flex items-center gap-3 transition-colors cursor-pointer ${
+                          darkMode ? "hover:bg-[#1E2638]" : "hover:bg-blue-50/70"
+                        }`}
+                      >
+                        <div className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 ${
+                          item.category === "Course"
+                            ? "bg-blue-500/10 text-blue-500"
+                            : item.category === "Student"
+                            ? "bg-emerald-500/10 text-emerald-500"
+                            : item.category === "Package"
+                            ? "bg-purple-500/10 text-purple-500"
+                            : item.category === "Mentor"
+                            ? "bg-amber-500/10 text-amber-500"
+                            : "bg-indigo-500/10 text-indigo-500"
+                        }`}>
+                          {item.category === "Course" ? <BookOpen size={16} /> : item.category === "Student" ? <UserPlus size={16} /> : item.category === "Package" ? <Layers3 size={16} /> : item.category === "Mentor" ? <Sparkles size={16} /> : <CreditCard size={16} />}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold truncate leading-snug">{item.title}</p>
+                          <p className={`text-[10.5px] truncate mt-0.5 ${darkMode ? "text-[#94A3B8]" : "text-[#64748B]"}`}>
+                            {item.subtitle}
+                          </p>
+                        </div>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 border ${
+                          item.category === "Course"
+                            ? "bg-blue-500/10 text-blue-500 border-blue-500/20"
+                            : item.category === "Student"
+                            ? "bg-emerald-500/10 text-emerald-500 border-emerald-500/20"
+                            : item.category === "Package"
+                            ? "bg-purple-500/10 text-purple-500 border-purple-500/20"
+                            : "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                        }`}>
+                          {item.category}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Right Controls: Theme Toggle, Notifications, Sync DB, Admin Profile Pill */}

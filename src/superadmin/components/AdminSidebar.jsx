@@ -16,6 +16,8 @@ import {
   Key,
   Clock,
   FileText,
+  Briefcase,
+  Megaphone,
 } from "lucide-react";
 import { clearAdminSession } from "../../services/api";
 
@@ -62,6 +64,12 @@ export default function AdminSidebar({
       badge: "Bundles",
     },
     {
+      id: "freelancestudio",
+      label: "Freelance Studio",
+      icon: Briefcase,
+      badge: "Modules",
+    },
+    {
       id: "mentors",
       label: "Instructors & Mentors",
       icon: GraduationCap,
@@ -90,6 +98,12 @@ export default function AdminSidebar({
       label: "Affiliate & Payouts",
       icon: Sparkles,
       badge: "Payouts",
+    },
+    {
+      id: "announcements",
+      label: "Announcements",
+      icon: Megaphone,
+      badge: "Affiliate",
     },
     {
       id: "commissions",

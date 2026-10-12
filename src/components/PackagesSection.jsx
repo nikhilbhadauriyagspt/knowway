@@ -124,24 +124,24 @@ export default function PackagesSection() {
       <div className="relative z-10 mx-auto w-full max-w-[1540px] px-5 sm:px-8 lg:px-12">
 
         {/* ================= HEADER ================= */}
-        <div className="mb-8 sm:mb-9 flex flex-col gap-7 lg:flex-row lg:items-end lg:justify-between">
+        <div className="mb-7 sm:mb-9 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-[720px]">
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#DCE5F5] bg-white/90 px-4 py-2 shadow-[0_2px_5px_rgba(20,35,70,.04)]">
+            <div className="mb-3 sm:mb-4 inline-flex items-center gap-2 rounded-full border border-[#DCE5F5] bg-white/90 px-3.5 sm:px-4 py-1.5 sm:py-2 shadow-[0_2px_5px_rgba(20,35,70,.04)]">
               <Sparkles size={13} className="text-[#315FD8]" />
 
-              <span className="text-[12px] font-semibold text-[#58657D]">
+              <span className="text-[11.5px] sm:text-[12px] font-semibold text-[#58657D]">
                 Explore Learning Packages
               </span>
             </div>
 
-            <h2 className="text-[38px] font-bold leading-[1.07] tracking-[-0.045em] text-[#141A29] sm:text-[46px] lg:text-[54px]">
+            <h2 className="text-[28px] xs:text-[32px] sm:text-[44px] lg:text-[54px] font-bold leading-[1.12] sm:leading-[1.07] tracking-[-0.04em] text-[#141A29]">
               Knowledge built for
-              <span className="ml-3 inline-block rounded-[10px] bg-[#DED1FF] px-2.5 text-[#171B29]">
+              <span className="ml-2 sm:ml-3 inline-block rounded-[10px] bg-[#DED1FF] px-2.5 text-[#171B29]">
                 progress.
               </span>
             </h2>
 
-            <p className="mt-5 max-w-[650px] text-[15px] leading-7 text-[#647089] sm:text-[16px]">
+            <p className="mt-3 sm:mt-5 max-w-[650px] text-[14px] leading-6 sm:text-[15px] sm:leading-7 text-[#647089]">
               Choose a learning path that matches your goals and explore
               practical skills through clear, structured courses.
             </p>
@@ -149,14 +149,14 @@ export default function PackagesSection() {
 
           {/* COUNTER */}
           <div className="flex items-center gap-3">
-            <div className="flex h-[58px] items-center gap-5 rounded-full border border-[#DFE6F1] bg-white px-5">
-              <BookOpen size={17} className="text-[#315FD8]" />
+            <div className="flex h-[48px] sm:h-[58px] items-center gap-3 sm:gap-5 rounded-full border border-[#DFE6F1] bg-white px-4 sm:px-5">
+              <BookOpen size={16} className="text-[#315FD8]" />
 
-              <span className="text-[13px] font-semibold text-[#424E65]">
+              <span className="text-[12px] sm:text-[13px] font-semibold text-[#424E65]">
                 Digital Packages
               </span>
 
-              <span className="flex h-8 min-w-8 items-center justify-center rounded-full bg-[#315FD8] px-2 text-[12px] font-bold text-white">
+              <span className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-[#315FD8] text-[11px] sm:text-[12px] font-bold text-white">
                 4
               </span>
             </div>
@@ -224,8 +224,8 @@ function PackageHorizontal({ pkg }) {
   return (
     <article
       className={`
-        group relative min-h-[270px] overflow-hidden
-        rounded-[30px] border p-7 sm:p-8 lg:p-9
+        group relative min-h-[250px] sm:min-h-[270px] overflow-hidden
+        rounded-[24px] sm:rounded-[30px] border p-5 sm:p-8 lg:p-9
         ${pkg.cardClass}
       `}
     >
@@ -233,38 +233,33 @@ function PackageHorizontal({ pkg }) {
       <div className="pointer-events-none absolute -right-12 -top-20 h-48 w-48 rounded-full border-[28px] border-white/45" />
       <div className="pointer-events-none absolute -bottom-20 left-[30%] h-44 w-44 rounded-full border-[26px] border-white/35" />
 
-      <div className="relative z-10 grid h-full grid-cols-1 items-center gap-5 sm:grid-cols-[1.15fr_.85fr]">
+      <div className="relative z-10 grid h-full grid-cols-1 items-center gap-4 sm:gap-5 sm:grid-cols-[1.15fr_.85fr]">
         <div>
           <div
-            className="mb-5 h-[4px] w-[38px] rounded-full"
+            className="mb-3 sm:mb-5 h-[4px] w-[34px] sm:w-[38px] rounded-full"
             style={{ backgroundColor: pkg.accent }}
           />
 
-          <h3 className="text-[31px] font-bold tracking-[-0.035em] text-[#161B29]">
+          <h3 className="text-[25px] sm:text-[31px] font-bold tracking-[-0.035em] text-[#161B29]">
             {pkg.name}
           </h3>
 
-          {/* Description commented out as per user request */}
-          {/* <p className="mt-3 max-w-[380px] text-[13.5px] leading-[1.75] text-[#5E697D]">
-            {pkg.description}
-          </p> */}
-
           <Link
             to={pkg.link}
-            className="mt-6 inline-flex h-[47px] items-center gap-3 rounded-full bg-[#035BE3] pl-5 pr-2 text-[12.5px] font-semibold text-white transition-colors duration-200 hover:bg-[#FA8C03] shadow-sm shadow-[#035BE3]/20"
+            className="mt-4 sm:mt-6 inline-flex h-[44px] sm:h-[47px] items-center gap-3 rounded-full bg-[#035BE3] pl-4 sm:pl-5 pr-1.5 sm:pr-2 text-[12px] sm:text-[12.5px] font-semibold text-white transition-colors duration-200 hover:bg-[#FA8C03] shadow-sm shadow-[#035BE3]/20"
           >
-            Explore Package
+            <span>Explore Package</span>
 
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[#171D2B]">
-              <ArrowUpRight size={14} />
+            <span className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-white text-[#171D2B]">
+              <ArrowUpRight size={13} />
             </span>
           </Link>
         </div>
 
         {/* PRODUCT IMAGE */}
-        <div className="relative flex min-h-[195px] items-center justify-center">
+        <div className="relative flex min-h-[160px] sm:min-h-[195px] items-center justify-center">
           <div
-            className="absolute h-[150px] w-[150px] rounded-full opacity-20 blur-3xl"
+            className="absolute h-[130px] sm:h-[150px] w-[130px] sm:w-[150px] rounded-full opacity-20 blur-3xl"
             style={{ backgroundColor: pkg.accent }}
           />
 
@@ -272,7 +267,7 @@ function PackageHorizontal({ pkg }) {
             src={pkg.image}
             alt={`${pkg.name} learning package`}
             className="
-              relative z-10 max-h-[225px] w-auto object-contain
+              relative z-10 max-h-[180px] sm:max-h-[225px] w-auto object-contain
               drop-shadow-[0_22px_24px_rgba(28,43,75,.15)]
               transition-transform duration-500
               group-hover:-translate-y-2 group-hover:rotate-[1deg]
@@ -292,8 +287,8 @@ function PackageVertical({ pkg }) {
   return (
     <article
       className={`
-        group relative min-h-[565px] overflow-hidden
-        rounded-[30px] border p-7 lg:p-8
+        group relative min-h-[440px] sm:min-h-[565px] overflow-hidden
+        rounded-[24px] sm:rounded-[30px] border p-6 sm:p-7 lg:p-8
         ${pkg.cardClass}
         ${pkg.featured
           ? "shadow-[0_18px_60px_rgba(117,85,232,.13)]"
@@ -312,20 +307,20 @@ function PackageVertical({ pkg }) {
       <div className="relative z-10 flex h-full flex-col">
         <div>
           {pkg.featured && (
-            <span className="mb-4 inline-flex rounded-full bg-white/80 px-3 py-1.5 text-[10px] font-bold uppercase tracking-[0.12em] text-[#7555E8]">
+            <span className="mb-3 sm:mb-4 inline-flex rounded-full bg-white/80 px-3 py-1 text-[9.5px] sm:text-[10px] font-bold uppercase tracking-[0.12em] text-[#7555E8]">
               Complete Track
             </span>
           )}
 
-          <h3 className="text-[30px] font-bold tracking-[-0.035em] text-[#161B29]">
+          <h3 className="text-[25px] sm:text-[30px] font-bold tracking-[-0.035em] text-[#161B29]">
             {pkg.name}
           </h3>
         </div>
 
         {/* IMAGE AREA */}
-        <div className="relative my-4 flex min-h-[280px] flex-1 items-center justify-center">
+        <div className="relative my-3 sm:my-4 flex min-h-[210px] sm:min-h-[280px] flex-1 items-center justify-center">
           <div
-            className="absolute h-[180px] w-[180px] rounded-full opacity-[0.18] blur-3xl"
+            className="absolute h-[150px] sm:h-[180px] w-[150px] sm:w-[180px] rounded-full opacity-[0.18] blur-3xl"
             style={{ backgroundColor: pkg.accent }}
           />
 
@@ -333,7 +328,7 @@ function PackageVertical({ pkg }) {
             src={pkg.image}
             alt={`${pkg.name} learning package`}
             className="
-              relative z-10 max-h-[300px] w-auto object-contain
+              relative z-10 max-h-[230px] sm:max-h-[300px] w-auto object-contain
               drop-shadow-[0_25px_28px_rgba(23,29,43,.14)]
               transition-transform duration-500
               group-hover:-translate-y-2
@@ -342,19 +337,14 @@ function PackageVertical({ pkg }) {
         </div>
 
         <div>
-          {/* Description commented out as per user request */}
-          {/* <p className="min-h-[67px] text-[13px] leading-[1.7] text-[#566176]">
-            {pkg.description}
-          </p> */}
-
           <Link
             to={pkg.link}
-            className="mt-2 inline-flex h-[47px] items-center gap-3 rounded-full bg-[#035BE3] pl-5 pr-2 text-[12.5px] font-semibold text-white transition-colors duration-200 hover:bg-[#FA8C03] shadow-sm shadow-[#035BE3]/20"
+            className="mt-2 inline-flex h-[44px] sm:h-[47px] items-center gap-3 rounded-full bg-[#035BE3] pl-4 sm:pl-5 pr-1.5 sm:pr-2 text-[12px] sm:text-[12.5px] font-semibold text-white transition-colors duration-200 hover:bg-[#FA8C03] shadow-sm shadow-[#035BE3]/20"
           >
-            Explore Package
+            <span>Explore Package</span>
 
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-white text-[#171D2B]">
-              <ArrowUpRight size={14} />
+            <span className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full bg-white text-[#171D2B]">
+              <ArrowUpRight size={13} />
             </span>
           </Link>
         </div>

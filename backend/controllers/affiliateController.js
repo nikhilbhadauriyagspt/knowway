@@ -83,6 +83,220 @@ export const getAffiliateStats = async (req, res) => {
   }
 };
 
+// 1b. GET /api/affiliate/income-analytics
+export const getAffiliateIncomeAnalytics = async (req, res) => {
+  try {
+    const decoded = decodeUserToken(req.headers.authorization);
+    if (!decoded || !decoded.id) {
+      return res.status(401).json({ success: false, message: "Unauthorized. Please log in." });
+    }
+
+    const userId = decoded.id;
+
+    // 1. Today's Earnings (within last 24 hours or today's date)
+    const [dailyRows] = await pool.query(
+      `SELECT 
+         COALESCE(SUM(commission_amount), 0) AS total_income,
+         COUNT(*) AS total_conversions,
+         COALESCE(SUM(CASE WHEN commission_tier = 'direct' OR tier_level = 1 THEN commission_amount ELSE 0 END), 0) AS direct_income,
+         COALESCE(SUM(CASE WHEN commission_tier = 'leadership' OR tier_level = 2 THEN commission_amount ELSE 0 END), 0) AS leadership_income
+       FROM affiliate_referrals
+       WHERE referrer_id = ? AND (DATE(created_at) = CURDATE() OR created_at >= NOW() - INTERVAL 24 HOUR)`,
+      [userId]
+    );
+
+    // 2. Last 7 Days Earnings
+    const [last7DaysTotalRows] = await pool.query(
+      `SELECT 
+         COALESCE(SUM(commission_amount), 0) AS total_income,
+         COUNT(*) AS total_conversions,
+         COALESCE(SUM(CASE WHEN commission_tier = 'direct' OR tier_level = 1 THEN commission_amount ELSE 0 END), 0) AS direct_income,
+         COALESCE(SUM(CASE WHEN commission_tier = 'leadership' OR tier_level = 2 THEN commission_amount ELSE 0 END), 0) AS leadership_income
+       FROM affiliate_referrals
+       WHERE referrer_id = ? AND created_at >= NOW() - INTERVAL 7 DAY`,
+      [userId]
+    );
+
+    // 3. Last 30 Days Earnings
+    const [last30DaysTotalRows] = await pool.query(
+      `SELECT 
+         COALESCE(SUM(commission_amount), 0) AS total_income,
+         COUNT(*) AS total_conversions,
+         COALESCE(SUM(CASE WHEN commission_tier = 'direct' OR tier_level = 1 THEN commission_amount ELSE 0 END), 0) AS direct_income,
+         COALESCE(SUM(CASE WHEN commission_tier = 'leadership' OR tier_level = 2 THEN commission_amount ELSE 0 END), 0) AS leadership_income
+       FROM affiliate_referrals
+       WHERE referrer_id = ? AND created_at >= NOW() - INTERVAL 30 DAY`,
+      [userId]
+    );
+
+    // 4. All Time Earnings
+    const [allTimeTotalRows] = await pool.query(
+      `SELECT 
+         COALESCE(SUM(commission_amount), 0) AS total_income,
+         COUNT(*) AS total_conversions,
+         COALESCE(SUM(CASE WHEN commission_tier = 'direct' OR tier_level = 1 THEN commission_amount ELSE 0 END), 0) AS direct_income,
+         COALESCE(SUM(CASE WHEN commission_tier = 'leadership' OR tier_level = 2 THEN commission_amount ELSE 0 END), 0) AS leadership_income
+       FROM affiliate_referrals
+       WHERE referrer_id = ?`,
+      [userId]
+    );
+
+    // 5. Weekly (Current week starting Monday or past 7 days)
+    const [weeklyRows] = await pool.query(
+      `SELECT 
+         COALESCE(SUM(commission_amount), 0) AS total_income,
+         COUNT(*) AS total_conversions,
+         COALESCE(SUM(CASE WHEN commission_tier = 'direct' OR tier_level = 1 THEN commission_amount ELSE 0 END), 0) AS direct_income,
+         COALESCE(SUM(CASE WHEN commission_tier = 'leadership' OR tier_level = 2 THEN commission_amount ELSE 0 END), 0) AS leadership_income
+       FROM affiliate_referrals
+       WHERE referrer_id = ? AND (YEARWEEK(created_at, 1) = YEARWEEK(CURDATE(), 1) OR created_at >= NOW() - INTERVAL 7 DAY)`,
+      [userId]
+    );
+
+    // 6. Monthly (Current month or past 30 days)
+    const [monthlyRows] = await pool.query(
+      `SELECT 
+         COALESCE(SUM(commission_amount), 0) AS total_income,
+         COUNT(*) AS total_conversions,
+         COALESCE(SUM(CASE WHEN commission_tier = 'direct' OR tier_level = 1 THEN commission_amount ELSE 0 END), 0) AS direct_income,
+         COALESCE(SUM(CASE WHEN commission_tier = 'leadership' OR tier_level = 2 THEN commission_amount ELSE 0 END), 0) AS leadership_income
+       FROM affiliate_referrals
+       WHERE referrer_id = ? AND (YEAR(created_at) = YEAR(CURDATE()) AND MONTH(created_at) = MONTH(CURDATE()) OR created_at >= NOW() - INTERVAL 30 DAY)`,
+      [userId]
+    );
+
+    // 7. Yearly (Current year or past 365 days)
+    const [yearlyRows] = await pool.query(
+      `SELECT 
+         COALESCE(SUM(commission_amount), 0) AS total_income,
+         COUNT(*) AS total_conversions,
+         COALESCE(SUM(CASE WHEN commission_tier = 'direct' OR tier_level = 1 THEN commission_amount ELSE 0 END), 0) AS direct_income,
+         COALESCE(SUM(CASE WHEN commission_tier = 'leadership' OR tier_level = 2 THEN commission_amount ELSE 0 END), 0) AS leadership_income
+       FROM affiliate_referrals
+       WHERE referrer_id = ? AND (YEAR(created_at) = YEAR(CURDATE()) OR created_at >= NOW() - INTERVAL 365 DAY)`,
+      [userId]
+    );
+
+    // 5. Daily timeline for last 7 days (for Daily & Weekly chart)
+    const [last7DaysRows] = await pool.query(
+      `SELECT 
+         DATE(created_at) as log_date,
+         DATE_FORMAT(MAX(created_at), '%a (%d %b)') as label,
+         COALESCE(SUM(commission_amount), 0) as amount,
+         COUNT(*) as count
+       FROM affiliate_referrals
+       WHERE referrer_id = ? AND created_at >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)
+       GROUP BY DATE(created_at)
+       ORDER BY DATE(created_at) ASC`,
+      [userId]
+    );
+
+    // 6. Monthly timeline for 12 months (for Monthly & Yearly chart)
+    const [monthRows] = await pool.query(
+      `SELECT 
+         MONTH(created_at) as month_num,
+         DATE_FORMAT(MAX(created_at), '%b %Y') as label,
+         COALESCE(SUM(commission_amount), 0) as amount,
+         COUNT(*) as count
+       FROM affiliate_referrals
+       WHERE referrer_id = ? AND created_at >= DATE_SUB(CURDATE(), INTERVAL 11 MONTH)
+       GROUP BY YEAR(created_at), MONTH(created_at)
+       ORDER BY YEAR(created_at) ASC, MONTH(created_at) ASC`,
+      [userId]
+    );
+
+    // Recent 10 income activities
+    const [recentRows] = await pool.query(
+      `SELECT 
+         r.id, r.item_title, r.commission_amount, r.commission_tier, r.tier_level,
+         r.status, r.created_at, r.referred_user_name, r.item_price
+       FROM affiliate_referrals r
+       WHERE r.referrer_id = ?
+       ORDER BY r.created_at DESC
+       LIMIT 10`,
+      [userId]
+    );
+
+    return res.status(200).json({
+      success: true,
+      analytics: {
+        today: {
+          income: Number(dailyRows[0]?.total_income) || 0,
+          conversions: Number(dailyRows[0]?.total_conversions) || 0,
+          direct: Number(dailyRows[0]?.direct_income) || 0,
+          leadership: Number(dailyRows[0]?.leadership_income) || 0,
+        },
+        last7Days: {
+          income: Number(last7DaysTotalRows[0]?.total_income) || 0,
+          conversions: Number(last7DaysTotalRows[0]?.total_conversions) || 0,
+          direct: Number(last7DaysTotalRows[0]?.direct_income) || 0,
+          leadership: Number(last7DaysTotalRows[0]?.leadership_income) || 0,
+        },
+        last30Days: {
+          income: Number(last30DaysTotalRows[0]?.total_income) || 0,
+          conversions: Number(last30DaysTotalRows[0]?.total_conversions) || 0,
+          direct: Number(last30DaysTotalRows[0]?.direct_income) || 0,
+          leadership: Number(last30DaysTotalRows[0]?.leadership_income) || 0,
+        },
+        allTime: {
+          income: Number(allTimeTotalRows[0]?.total_income) || 0,
+          conversions: Number(allTimeTotalRows[0]?.total_conversions) || 0,
+          direct: Number(allTimeTotalRows[0]?.direct_income) || 0,
+          leadership: Number(allTimeTotalRows[0]?.leadership_income) || 0,
+        },
+        daily: {
+          income: Number(dailyRows[0]?.total_income) || 0,
+          conversions: Number(dailyRows[0]?.total_conversions) || 0,
+          direct: Number(dailyRows[0]?.direct_income) || 0,
+          leadership: Number(dailyRows[0]?.leadership_income) || 0,
+        },
+        weekly: {
+          income: Number(weeklyRows[0]?.total_income) || 0,
+          conversions: Number(weeklyRows[0]?.total_conversions) || 0,
+          direct: Number(weeklyRows[0]?.direct_income) || 0,
+          leadership: Number(weeklyRows[0]?.leadership_income) || 0,
+        },
+        monthly: {
+          income: Number(monthlyRows[0]?.total_income) || 0,
+          conversions: Number(monthlyRows[0]?.total_conversions) || 0,
+          direct: Number(monthlyRows[0]?.direct_income) || 0,
+          leadership: Number(monthlyRows[0]?.leadership_income) || 0,
+        },
+        yearly: {
+          income: Number(yearlyRows[0]?.total_income) || 0,
+          conversions: Number(yearlyRows[0]?.total_conversions) || 0,
+          direct: Number(yearlyRows[0]?.direct_income) || 0,
+          leadership: Number(yearlyRows[0]?.leadership_income) || 0,
+        },
+        chart7Days: last7DaysRows.map(r => ({
+          date: r.log_date,
+          label: r.label,
+          amount: Number(r.amount) || 0,
+          count: Number(r.count) || 0
+        })),
+        chartMonths: monthRows.map(r => ({
+          label: r.label,
+          amount: Number(r.amount) || 0,
+          count: Number(r.count) || 0
+        })),
+        recentActivity: recentRows.map(r => ({
+          id: r.id,
+          title: r.item_title,
+          amount: Number(r.commission_amount) || 0,
+          price: Number(r.item_price) || 0,
+          tier: r.commission_tier === 'leadership' || Number(r.tier_level) === 2 ? 'Tier 2 (Sponsor)' : 'Tier 1 (Direct)',
+          student: r.referred_user_name || 'Student',
+          date: r.created_at,
+          status: r.status || 'credited'
+        }))
+      }
+    });
+  } catch (err) {
+    console.error("getAffiliateIncomeAnalytics Error:", err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
 // 2. GET /api/affiliate/referrals
 export const getAffiliateReferrals = async (req, res) => {
   try {
@@ -558,6 +772,138 @@ export const getCommissionRates = async (req, res) => {
     });
   } catch (err) {
     console.error("getCommissionRates Error:", err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// ==========================================
+// AFFILIATE ANNOUNCEMENTS APIS
+// ==========================================
+
+// 11. GET /api/affiliate/announcements (Public/Student Affiliates)
+export const getAffiliateAnnouncements = async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      "SELECT * FROM affiliate_announcements WHERE is_active = TRUE ORDER BY is_pinned DESC, id DESC"
+    );
+    return res.status(200).json({ success: true, announcements: rows });
+  } catch (err) {
+    console.error("getAffiliateAnnouncements Error:", err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// 12. GET /api/admin/affiliates/announcements (Admin view all)
+export const getAdminAffiliateAnnouncements = async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      "SELECT * FROM affiliate_announcements ORDER BY is_pinned DESC, id DESC"
+    );
+    return res.status(200).json({ success: true, announcements: rows });
+  } catch (err) {
+    console.error("getAdminAffiliateAnnouncements Error:", err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// 13. POST /api/admin/affiliates/announcements (Admin create)
+export const createAdminAffiliateAnnouncement = async (req, res) => {
+  try {
+    const {
+      title,
+      content,
+      category = "general",
+      priority = "normal",
+      badge_text = null,
+      action_label = null,
+      action_url = null,
+      is_pinned = false,
+      is_active = true,
+      created_by = "Admin",
+    } = req.body;
+
+    if (!title || !content) {
+      return res.status(400).json({ success: false, message: "Title and content are required." });
+    }
+
+    const [insertRes] = await pool.query(
+      `INSERT INTO affiliate_announcements 
+       (title, content, category, priority, badge_text, action_label, action_url, is_pinned, is_active, created_by)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+      [
+        title.trim(),
+        content.trim(),
+        category,
+        priority,
+        badge_text ? badge_text.trim() : null,
+        action_label ? action_label.trim() : null,
+        action_url ? action_url.trim() : null,
+        Boolean(is_pinned),
+        Boolean(is_active),
+        created_by,
+      ]
+    );
+
+    return res.status(201).json({
+      success: true,
+      message: "Announcement created successfully.",
+      id: insertRes.insertId,
+    });
+  } catch (err) {
+    console.error("createAdminAffiliateAnnouncement Error:", err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// 14. PUT /api/admin/affiliates/announcements/:id (Admin update)
+export const updateAdminAffiliateAnnouncement = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const {
+      title,
+      content,
+      category = "general",
+      priority = "normal",
+      badge_text = null,
+      action_label = null,
+      action_url = null,
+      is_pinned = false,
+      is_active = true,
+    } = req.body;
+
+    await pool.query(
+      `UPDATE affiliate_announcements
+       SET title = ?, content = ?, category = ?, priority = ?, badge_text = ?, action_label = ?, action_url = ?, is_pinned = ?, is_active = ?
+       WHERE id = ?`,
+      [
+        title.trim(),
+        content.trim(),
+        category,
+        priority,
+        badge_text ? badge_text.trim() : null,
+        action_label ? action_label.trim() : null,
+        action_url ? action_url.trim() : null,
+        Boolean(is_pinned),
+        Boolean(is_active),
+        id,
+      ]
+    );
+
+    return res.status(200).json({ success: true, message: "Announcement updated successfully." });
+  } catch (err) {
+    console.error("updateAdminAffiliateAnnouncement Error:", err);
+    return res.status(500).json({ success: false, message: err.message });
+  }
+};
+
+// 15. DELETE /api/admin/affiliates/announcements/:id (Admin delete)
+export const deleteAdminAffiliateAnnouncement = async (req, res) => {
+  try {
+    const { id } = req.params;
+    await pool.query("DELETE FROM affiliate_announcements WHERE id = ?", [id]);
+    return res.status(200).json({ success: true, message: "Announcement deleted successfully." });
+  } catch (err) {
+    console.error("deleteAdminAffiliateAnnouncement Error:", err);
     return res.status(500).json({ success: false, message: err.message });
   }
 };

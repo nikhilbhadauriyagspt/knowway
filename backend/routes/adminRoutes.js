@@ -53,6 +53,12 @@ import {
   uploadImage,
   uploadVideo,
 } from "../controllers/uploadController.js";
+import {
+  getAdminAffiliateAnnouncements,
+  createAdminAffiliateAnnouncement,
+  updateAdminAffiliateAnnouncement,
+  deleteAdminAffiliateAnnouncement,
+} from "../controllers/affiliateController.js";
 
 const router = express.Router();
 
@@ -116,6 +122,12 @@ router.put("/affiliate/payouts/:id/status", updateAdminAffiliatePayoutStatus);
 router.post("/affiliate/payouts/:id/razorpayx", executeRazorpayxPayout);
 router.get("/affiliate/users", getAdminAffiliateUsers);
 router.get("/affiliate/referrals", getAdminAffiliateReferrals);
+
+// Admin Affiliate Announcements Routes
+router.get("/affiliate/announcements", getAdminAffiliateAnnouncements);
+router.post("/affiliate/announcements", createAdminAffiliateAnnouncement);
+router.put("/affiliate/announcements/:id", updateAdminAffiliateAnnouncement);
+router.delete("/affiliate/announcements/:id", deleteAdminAffiliateAnnouncement);
 
 // Dedicated Commission Rates Management Routes
 router.put("/commission/package/:id", updatePackageCommission);

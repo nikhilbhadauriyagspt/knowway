@@ -492,6 +492,10 @@ export const getAffiliateStatsApi = () => {
   return apiRequest("/affiliate/stats");
 };
 
+export const getAffiliateIncomeAnalyticsApi = () => {
+  return apiRequest("/affiliate/income-analytics");
+};
+
 export const getAffiliateReferralsApi = () => {
   return apiRequest("/affiliate/referrals");
 };
@@ -737,3 +741,145 @@ export const deleteAdminPageApi = (id) => {
   });
 };
 
+
+
+// ============================================================
+// FREELANCE HUB APIs
+// ============================================================
+
+export const getFreelanceModulesApi = (language = "Hindi") => {
+  return apiRequest("/freelance/modules?language=" + encodeURIComponent(language));
+};
+
+export const submitFreelanceApplicationApi = (payload) => {
+  return apiRequest("/freelance/apply", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+};
+
+export const getAdminFreelanceModulesApi = () => {
+  return apiRequest("/freelance/admin/modules");
+};
+
+export const createFreelanceModuleApi = (payload) => {
+  return apiRequest("/freelance/admin/modules", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+};
+
+export const updateFreelanceModuleApi = (id, payload) => {
+  return apiRequest("/freelance/admin/modules/" + id, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+};
+
+export const deleteFreelanceModuleApi = (id) => {
+  return apiRequest("/freelance/admin/modules/" + id, {
+    method: "DELETE",
+  });
+};
+
+export const createFreelanceLessonApi = (payload) => {
+  return apiRequest("/freelance/admin/lessons", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+};
+
+export const updateFreelanceLessonApi = (id, payload) => {
+  return apiRequest("/freelance/admin/lessons/" + id, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+};
+
+export const deleteFreelanceLessonApi = (id) => {
+  return apiRequest("/freelance/admin/lessons/" + id, {
+    method: "DELETE",
+  });
+};
+
+export const getAdminFreelanceApplicationsApi = () => {
+  return apiRequest("/freelance/admin/applications");
+};
+
+export const updateFreelanceApplicationStatusApi = (id, status) => {
+  return apiRequest("/freelance/admin/applications/" + id + "/status", {
+    method: "PUT",
+    body: JSON.stringify({ status }),
+  });
+};
+
+// ============================================================
+// FREELANCE TESTIMONIALS APIS
+// ============================================================
+
+export const getFreelanceTestimonialsApi = () => {
+  return apiRequest("/freelance/testimonials");
+};
+
+export const submitFreelanceTestimonialApi = (payload) => {
+  return apiRequest("/freelance/testimonials", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+};
+
+export const getAdminFreelanceTestimonialsApi = () => {
+  return apiRequest("/freelance/admin/testimonials");
+};
+
+export const createAdminFreelanceTestimonialApi = (payload) => {
+  return apiRequest("/freelance/admin/testimonials", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+};
+
+export const updateAdminFreelanceTestimonialApi = (id, payload) => {
+  return apiRequest("/freelance/admin/testimonials/" + id, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+};
+
+export const deleteAdminFreelanceTestimonialApi = (id) => {
+  return apiRequest("/freelance/admin/testimonials/" + id, {
+    method: "DELETE",
+  });
+};
+
+// ============================================================
+// AFFILIATE ANNOUNCEMENTS APIS
+// ============================================================
+
+export const getAffiliateAnnouncementsApi = () => {
+  return apiRequest("/affiliate/announcements");
+};
+
+export const getAdminAffiliateAnnouncementsApi = () => {
+  return apiRequest("/admin/affiliate/announcements");
+};
+
+export const createAdminAffiliateAnnouncementApi = (payload) => {
+  return apiRequest("/admin/affiliate/announcements", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+};
+
+export const updateAdminAffiliateAnnouncementApi = (id, payload) => {
+  return apiRequest("/admin/affiliate/announcements/" + id, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+};
+
+export const deleteAdminAffiliateAnnouncementApi = (id) => {
+  return apiRequest("/admin/affiliate/announcements/" + id, {
+    method: "DELETE",
+  });
+};

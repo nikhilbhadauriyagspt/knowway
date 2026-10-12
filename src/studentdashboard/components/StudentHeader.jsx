@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef, useEffect, useMemo } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import {
   Menu,
@@ -11,6 +11,10 @@ import {
   Tag,
   LogOut,
   Sparkles,
+  BookOpen,
+  ArrowRight,
+  Layers3,
+  CheckCircle2,
 } from "lucide-react";
 import { clearUserSession } from "../../services/api";
 import UserAvatarDropdown from "../../components/UserAvatarDropdown";
@@ -19,6 +23,9 @@ export default function StudentHeader({
   activeTab,
   setActiveTab,
   user,
+  courses = [],
+  allCourses = [],
+  myPackages = [],
   setMobileOpen,
   onRefresh,
   isRefreshing,
@@ -29,6 +36,19 @@ export default function StudentHeader({
 }) {
   const navigate = useNavigate();
   const [showProfileMenu, setShowProfileMenu] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+  const searchBoxRef = useRef(null);
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (searchBoxRef.current && !searchBoxRef.current.contains(event.target)) {
+        setIsFocused(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
 
   const handleLogout = () => {
     clearUserSession();
@@ -36,6 +56,54 @@ export default function StudentHeader({
   };
 
   const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : "S";
+
+  // Dropdown search suggestions (Courses + Packages + Quick Tabs)
+  const searchSuggestions = useMemo(() => {
+    if (!searchQuery || !searchQuery.trim()) return [];
+    const q = searchQuery.toLowerCase().trim();
+    const list = [];
+
+    // Search Enrolled & Catalog Courses
+    const pool = (allCourses && allCourses.length > 0) ? allCourses : courses;
+    pool.forEach((c) => {
+      const titleMatch = c.title?.toLowerCase().includes(q);
+      const mentorMatch = (c.mentor_name || c.mentor)?.toLowerCase().includes(q);
+      const catMatch = c.category?.toLowerCase().includes(q);
+      if (titleMatch || mentorMatch || catMatch) {
+        list.push({
+          type: "course",
+          id: c.id,
+          slug: c.slug || c.id,
+          title: c.title,
+          subtitle: c.mentor_name || c.mentor || c.category || "Masterclass",
+          category: c.category || "Course",
+          image: c.thumbnail_url || c.thumbnail,
+          url: `/courses/${c.slug || c.id}`,
+        });
+      }
+    });
+
+    // Search Packages
+    (myPackages || []).forEach((pkg) => {
+      if (pkg.name?.toLowerCase().includes(q) || pkg.slug?.toLowerCase().includes(q)) {
+        list.push({
+          type: "package",
+          id: pkg.id || pkg.slug,
+          slug: pkg.slug,
+          title: pkg.name,
+          subtitle: "Active Skill Package",
+          category: "Package",
+          image: pkg.image_url,
+          action: () => {
+            setActiveTab && setActiveTab("packages");
+            setIsFocused(false);
+          },
+        });
+      }
+    });
+
+    return list.slice(0, 6);
+  }, [searchQuery, allCourses, courses, myPackages, setActiveTab]);
 
   return (
     <header
@@ -61,8 +129,8 @@ export default function StudentHeader({
         </button>
       </div>
 
-      {/* Center Search Pill */}
-      <div className="flex-1 max-w-xl">
+      {/* Center Search Pill with Interactive Dropdown */}
+      <div className="flex-1 max-w-xl relative" ref={searchBoxRef}>
         <div
           className={`h-12 rounded-full border flex items-center px-5 transition-all focus-within:border-[#035BE3] ${
             darkMode ? "bg-[#131926] border-[#222B3D]" : "bg-white border-[#E2E8F0]"
@@ -72,13 +140,125 @@ export default function StudentHeader({
           <input
             type="text"
             value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={() => setIsFocused(true)}
+            onChange={(e) => {
+              setSearchQuery(e.target.value);
+              setIsFocused(true);
+            }}
             placeholder="Find courses, instructors, or digital skills..."
             className={`w-full bg-transparent text-xs font-medium outline-none placeholder-[#8A99AD] ${
               darkMode ? "text-white" : "text-[#0F172A]"
             }`}
           />
+          {searchQuery && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchQuery("");
+                setIsFocused(false);
+              }}
+              className="text-[#8A99AD] hover:text-[#035BE3] transition ml-2 p-1 text-xs font-bold shrink-0 cursor-pointer"
+              title="Clear search"
+            >
+              ✕
+            </button>
+          )}
         </div>
+
+        {/* Live Search Results Dropdown */}
+        {isFocused && searchQuery.trim() && (
+          <div
+            className={`absolute left-0 right-0 top-14 rounded-2xl border shadow-xl overflow-hidden z-50 backdrop-blur-md animate-in fade-in slide-in-from-top-2 duration-150 ${
+              darkMode
+                ? "bg-[#131926]/95 border-[#222B3D] text-[#E2E8F0]"
+                : "bg-white/95 border-[#E2E8F0] text-[#0F172A]"
+            }`}
+          >
+            <div className="p-2.5 max-h-80 overflow-y-auto divide-y divide-inherit">
+              {searchSuggestions.length === 0 ? (
+                <div className="py-6 px-4 text-center">
+                  <BookOpen className="w-6 h-6 mx-auto text-[#8A99AD] mb-1.5 opacity-60" />
+                  <p className="text-xs font-semibold">No direct matches for "{searchQuery}"</p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab && setActiveTab("all_courses");
+                      setIsFocused(false);
+                    }}
+                    className="mt-2 text-[11px] text-[#035BE3] font-bold hover:underline cursor-pointer"
+                  >
+                    Search across all catalog courses &rarr;
+                  </button>
+                </div>
+              ) : (
+                <>
+                  <div className="px-3 py-1.5 text-[10px] uppercase font-bold tracking-wider text-[#8A99AD] flex items-center justify-between">
+                    <span>Quick Results ({searchSuggestions.length})</span>
+                    <span>Click to open</span>
+                  </div>
+                  <div className="pt-1 space-y-1">
+                    {searchSuggestions.map((item, idx) => (
+                      <div
+                        key={idx}
+                        onClick={() => {
+                          if (item.url) {
+                            navigate(item.url);
+                          } else if (item.action) {
+                            item.action();
+                          }
+                          setIsFocused(false);
+                        }}
+                        className={`p-2.5 rounded-xl flex items-center gap-3 transition-colors cursor-pointer ${
+                          darkMode ? "hover:bg-[#1E2638]" : "hover:bg-blue-50/70"
+                        }`}
+                      >
+                        {item.image ? (
+                          <img
+                            src={item.image}
+                            alt=""
+                            className="w-10 h-10 rounded-lg object-cover shrink-0 border border-black/5 dark:border-white/5"
+                          />
+                        ) : (
+                          <div className="w-10 h-10 rounded-lg bg-[#035BE3]/10 text-[#035BE3] flex items-center justify-center shrink-0">
+                            {item.type === "package" ? <Layers3 size={18} /> : <BookOpen size={18} />}
+                          </div>
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-xs font-bold truncate leading-snug">{item.title}</p>
+                          <p className={`text-[10.5px] truncate mt-0.5 ${darkMode ? "text-[#8A99AD]" : "text-[#64748B]"}`}>
+                            {item.subtitle}
+                          </p>
+                        </div>
+                        <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full shrink-0 border ${
+                          item.type === "package"
+                            ? "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                            : "bg-[#035BE3]/10 text-[#035BE3] border-[#035BE3]/20"
+                        }`}>
+                          {item.category}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Footer Shortcut */}
+                  <div className="pt-2 px-2 mt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setActiveTab && setActiveTab("all_courses");
+                        setIsFocused(false);
+                      }}
+                      className="w-full py-2 px-3 rounded-xl bg-[#035BE3]/10 hover:bg-[#035BE3] text-[#035BE3] hover:text-white text-xs font-bold transition flex items-center justify-center gap-1.5 cursor-pointer"
+                    >
+                      <span>Show all matching courses in directory</span>
+                      <ArrowRight size={13} />
+                    </button>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Right Controls */}

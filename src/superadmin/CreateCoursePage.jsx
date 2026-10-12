@@ -810,7 +810,7 @@ export default function CreateCoursePage() {
         >
           {/* Top Back Action & Page Heading */}
           <div
-            className={`rounded-full px-6 sm:px-8 py-4 sm:py-5 border flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+            className={`rounded-2xl sm:rounded-full px-5 sm:px-8 py-4 sm:py-5 border flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
               darkMode ? "bg-[#131926] border-[#222B3D]" : "bg-white border-[#E2E8F0]"
             }`}
           >
@@ -2326,7 +2326,7 @@ export default function CreateCoursePage() {
           {/* STEPPER BOTTOM NAVIGATION (PREV / NEXT / PUBLISH) */}
           {/* ======================================================== */}
           <div
-            className={`rounded-full px-6 sm:px-8 py-4 sm:py-5 border flex items-center justify-between gap-4 ${
+            className={`rounded-2xl sm:rounded-full px-5 sm:px-8 py-4 sm:py-5 border flex items-center justify-between gap-4 ${
               darkMode ? "bg-[#131926] border-[#222B3D]" : "bg-white border-[#E2E8F0]"
             }`}
           >

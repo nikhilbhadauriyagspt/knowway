@@ -26,47 +26,47 @@ export default function WhyUsSection() {
 
       <div className="relative z-10 mx-auto max-w-[1540px] px-5 sm:px-8 lg:px-12">
         {/* ================= HEADER ================= */}
-        <div className="mb-8 sm:mb-9 flex flex-col gap-6 lg:flex-row lg:items-end lg:justify-between">
+        <div className="mb-7 sm:mb-9 flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
           <div>
-            <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#DCE5F5] bg-white px-4 py-2">
+            <div className="mb-3 sm:mb-4 inline-flex items-center gap-2 rounded-full border border-[#DCE5F5] bg-white px-3.5 sm:px-4 py-1.5 sm:py-2">
               <Sparkles size={13} className="text-[#315FD8]" />
 
-              <span className="text-[12px] font-semibold text-[#59667E]">
+              <span className="text-[11.5px] sm:text-[12px] font-semibold text-[#59667E]">
                 Why LearnSpace
               </span>
             </div>
 
-            <h2 className="text-[40px] font-bold leading-[1.05] tracking-[-0.045em] text-[#151B29] sm:text-[48px] lg:text-[56px]">
+            <h2 className="text-[28px] xs:text-[34px] sm:text-[48px] lg:text-[56px] font-bold leading-[1.12] sm:leading-[1.05] tracking-[-0.04em] text-[#151B29]">
               Built for people who
-              <span className="ml-3 inline-block rounded-[10px] bg-[#DDD1FF] px-3">
+              <span className="ml-2 sm:ml-3 inline-block rounded-[10px] bg-[#DDD1FF] px-2.5 sm:px-3">
                 want to grow.
               </span>
             </h2>
 
-            <p className="mt-4 max-w-[650px] text-[15px] leading-7 text-[#677289]">
+            <p className="mt-3 sm:mt-4 max-w-[650px] text-[14px] leading-6 sm:text-[15px] sm:leading-7 text-[#677289]">
               Clear learning paths, practical topics and a flexible experience
               designed to make building new skills feel simpler.
             </p>
           </div>
 
           {/* small top stat */}
-          <div className="flex items-center gap-3 rounded-full border border-[#E1E7F0] bg-white px-5 py-3">
+          <div className="flex items-center gap-3 rounded-full border border-[#E1E7F0] bg-white px-4 sm:px-5 py-2.5 sm:py-3 w-fit">
             <div className="flex -space-x-2">
-              <span className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-[#315FD8] text-white">
-                <BookOpen size={13} />
+              <span className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full border-2 border-white bg-[#315FD8] text-white">
+                <BookOpen size={12} />
               </span>
 
-              <span className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-[#7555E8] text-white">
-                <Users size={13} />
+              <span className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full border-2 border-white bg-[#7555E8] text-white">
+                <Users size={12} />
               </span>
 
-              <span className="flex h-8 w-8 items-center justify-center rounded-full border-2 border-white bg-[#EE7D42] text-white">
-                <Layers3 size={13} />
+              <span className="flex h-7 w-7 sm:h-8 sm:w-8 items-center justify-center rounded-full border-2 border-white bg-[#EE7D42] text-white">
+                <Layers3 size={12} />
               </span>
             </div>
 
             <div>
-              <p className="text-[17px] font-bold text-[#171D2B]">
+              <p className="text-[14px] sm:text-[17px] font-bold text-[#171D2B]">
                 Learn. Practice. Grow.
               </p>
             </div>
@@ -236,18 +236,18 @@ export default function WhyUsSection() {
         {/* =====================================================
             BOTTOM BIG STATEMENT
         ====================================================== */}
-        <div className="mx-auto mt-20 max-w-[1050px] text-center">
-          <p className="text-[34px] font-medium leading-[1.18] tracking-[-0.035em] text-[#303746] sm:text-[46px] lg:text-[56px]">
+        <div className="mx-auto mt-12 sm:mt-20 max-w-[1050px] text-center px-2">
+          <p className="text-[22px] xs:text-[26px] sm:text-[42px] lg:text-[56px] font-medium leading-[1.25] sm:leading-[1.18] tracking-[-0.035em] text-[#303746]">
             Made for curious learners
-            <span className="mx-2 inline-flex align-middle text-[#315FD8]">
+            <span className="mx-1 sm:mx-2 inline-flex align-middle text-[#315FD8]">
               ✦
             </span>
             who want to turn
-            <span className="mx-2 inline-flex rounded-[10px] bg-[#DDD1FF] px-2">
+            <span className="mx-1 sm:mx-2 inline-flex rounded-[8px] sm:rounded-[10px] bg-[#DDD1FF] px-2">
               knowledge
             </span>
             into useful skills and
-            <span className="mx-2 text-[#315FD8]">real progress.</span>
+            <span className="mx-1 sm:mx-2 text-[#315FD8]">real progress.</span>
           </p>
         </div>
 

@@ -460,12 +460,32 @@ export const verifyPayment = async (req, res) => {
     try {
       let activeReferralCode = referralCode ? referralCode.trim() : null;
 
-      // If no referralCode passed in body, check if the student has referred_by stored
-      if (!activeReferralCode && userId) {
-        const [uRows] = await pool.query("SELECT referred_by FROM users WHERE id = ? LIMIT 1", [userId]);
-        if (uRows.length > 0 && uRows[0].referred_by) {
-          activeReferralCode = uRows[0].referred_by;
+      // Fetch buyer record to check their own referral code and referred_by sponsor
+      let buyerRecord = null;
+      if (userId) {
+        const [uRows] = await pool.query("SELECT id, referral_code, student_id, referred_by FROM users WHERE id = ? LIMIT 1", [userId]);
+        if (uRows.length > 0) buyerRecord = uRows[0];
+      }
+
+      // Check if activeReferralCode is actually buyer's OWN code (Self-Referral).
+      // If it is, ignore it and fallback to their sponsor (referred_by).
+      if (buyerRecord && activeReferralCode) {
+        const cleanRef = activeReferralCode.toUpperCase();
+        const isSelf = 
+          cleanRef === (buyerRecord.referral_code || "").toUpperCase() ||
+          cleanRef === (buyerRecord.student_id || "").toUpperCase() ||
+          cleanRef === `KW${buyerRecord.id}` ||
+          cleanRef === String(buyerRecord.id);
+
+        if (isSelf) {
+          console.log(`⚠️ Buyer (User ID ${userId}) provided their own referral code (${activeReferralCode}). Falling back to sponsor referred_by: ${buyerRecord.referred_by}`);
+          activeReferralCode = buyerRecord.referred_by || null;
         }
+      }
+
+      // If still no referralCode, check buyer's referred_by sponsor
+      if (!activeReferralCode && buyerRecord && buyerRecord.referred_by) {
+        activeReferralCode = buyerRecord.referred_by;
       }
 
       if (activeReferralCode && activeReferralCode.trim()) {

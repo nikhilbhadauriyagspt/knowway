@@ -14,6 +14,8 @@ import {
   ShieldCheck,
   Zap,
   Percent,
+  BarChart3,
+  Megaphone,
 } from "lucide-react";
 import { clearUserSession } from "../../services/api";
 
@@ -36,6 +38,8 @@ export default function AffiliateSidebar({
 
   const menuItems = [
     { id: "overview", label: "Earnings Overview", icon: LayoutDashboard, badge: "Live" },
+    { id: "announcements", label: "Announcements", icon: Megaphone, badge: "Updates" },
+    { id: "income_reports", label: "Income Reports", icon: BarChart3, badge: "New" },
     { id: "referrals", label: "My Referrals", icon: Users, badge: referralsCount ? `${referralsCount}` : "Network" },
     { id: "wallet", label: "Wallet & Payouts", icon: Wallet, badge: pendingPayoutCount > 0 ? "Pending" : null },
     { id: "matrix", label: "Commission Rates", icon: Percent, badge: "2-Tier" },

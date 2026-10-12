@@ -274,10 +274,11 @@ export default function PackageDetail() {
   const [searchParams] = useSearchParams();
   const currentSlug = (id || "pro").toLowerCase().trim();
 
-  // Check if logged-in user has global referral code or if URL has referral parameter
+  // Check if URL has referral parameter or if logged-in user was sponsored by someone (referred_by)
   const currentUser = getUserData();
   const urlRef = searchParams.get("ref") || searchParams.get("referral");
-  const activeReferralCode = currentUser?.referralCode || currentUser?.referral_code || urlRef || null;
+  // Never use currentUser's own referral_code (that is for sharing, not self-discount)
+  const activeReferralCode = urlRef || currentUser?.referred_by || null;
   const isReferralApplied = Boolean(activeReferralCode);
 
   // Get fallback object for initial state

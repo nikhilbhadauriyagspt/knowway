@@ -52,6 +52,8 @@ import {
 import AdminSidebar from "./components/AdminSidebar";
 import AdminHeader from "./components/AdminHeader";
 import DashboardCharts from "./components/DashboardCharts";
+import FreelanceStudioTab from "./components/FreelanceStudioTab";
+import AdminAffiliateAnnouncementsManager from "./components/AdminAffiliateAnnouncementsManager";
 import {
   isAdminAuthenticated,
   getAdminUser,
@@ -79,6 +81,10 @@ import {
   uploadImageApi,
   getAdminAffiliateStatsApi,
   getAdminAffiliatePayoutsApi,
+  getAdminAffiliateAnnouncementsApi,
+  createAdminAffiliateAnnouncementApi,
+  updateAdminAffiliateAnnouncementApi,
+  deleteAdminAffiliateAnnouncementApi,
   updateAdminAffiliatePayoutStatusApi,
   getAdminAffiliateReferralsApi,
   executeAdminRazorpayxPayoutApi,
@@ -265,6 +271,42 @@ export default function SuperAdminDashboard() {
   const [editingMentor, setEditingMentor] = useState(null);
   const [isProcessingMentor, setIsProcessingMentor] = useState(false);
 
+
+  const handleSaveAffiliateAnnouncement = async (formData, id) => {
+    try {
+      if (id) {
+        const res = await updateAdminAffiliateAnnouncementApi(id, formData);
+        if (res?.success) {
+          setAffiliateAnnouncementsList((prev) =>
+            prev.map((item) => (item.id === id ? res.announcement : item))
+          );
+        }
+      } else {
+        const res = await createAdminAffiliateAnnouncementApi(formData);
+        if (res?.success) {
+          setAffiliateAnnouncementsList((prev) => [res.announcement, ...prev]);
+        }
+      }
+    } catch (err) {
+      console.error("Failed to save announcement:", err);
+      alert("Failed to save announcement: " + (err.response?.data?.message || err.message));
+      throw err;
+    }
+  };
+
+  const handleDeleteAffiliateAnnouncement = async (id) => {
+    try {
+      const res = await deleteAdminAffiliateAnnouncementApi(id);
+      if (res?.success) {
+        setAffiliateAnnouncementsList((prev) => prev.filter((item) => item.id !== id));
+      }
+    } catch (err) {
+      console.error("Failed to delete announcement:", err);
+      alert("Failed to delete announcement: " + (err.response?.data?.message || err.message));
+      throw err;
+    }
+  };
+
   // Affiliate & Commissions States
   const [affiliateStats, setAffiliateStats] = useState({
     totalCommissionGenerated: 0,
@@ -274,6 +316,8 @@ export default function SuperAdminDashboard() {
     pendingPayoutCount: 0,
   });
   const [affiliateTopList, setAffiliateTopList] = useState([]);
+  const [affiliateAnnouncementsList, setAffiliateAnnouncementsList] = useState([]);
+  const [loadingAffiliateAnnouncements, setLoadingAffiliateAnnouncements] = useState(false);
   const [affiliatePayoutsList, setAffiliatePayoutsList] = useState([]);
   const [affiliateReferralsList, setAffiliateReferralsList] = useState([]);
   const [affiliateUsersList, setAffiliateUsersList] = useState([]);
@@ -587,16 +631,18 @@ export default function SuperAdminDashboard() {
 
       // 8. Affiliate & Payouts Data
       try {
-        const [affStatsRes, affPayoutsRes, affRefsRes] = await Promise.all([
+        const [affStatsRes, affPayoutsRes, affRefsRes, affAnnRes] = await Promise.all([
           getAdminAffiliateStatsApi().catch(() => null),
           getAdminAffiliatePayoutsApi().catch(() => null),
           getAdminAffiliateReferralsApi().catch(() => null),
+          getAdminAffiliateAnnouncementsApi().catch(() => null),
         ]);
         if (affStatsRes?.stats) {
           setAffiliateStats(affStatsRes.stats);
           if (affStatsRes.topAffiliates) setAffiliateTopList(affStatsRes.topAffiliates);
         }
         if (affPayoutsRes?.payouts) setAffiliatePayoutsList(affPayoutsRes.payouts);
+        if (affAnnRes?.announcements) setAffiliateAnnouncementsList(affAnnRes.announcements);
         if (affRefsRes?.referrals) setAffiliateReferralsList(affRefsRes.referrals);
         if (affUsersRes?.users) setAffiliateUsersList(affUsersRes.users);
       } catch (e) {
@@ -1465,6 +1511,29 @@ export default function SuperAdminDashboard() {
     return packagesList.filter((p) => p.name?.toLowerCase().includes(q) || p.slug?.toLowerCase().includes(q) || p.tagline?.toLowerCase().includes(q));
   }, [packagesList, searchQuery]);
 
+  const filteredSubAdmins = useMemo(() => {
+    if (!searchQuery.trim()) return subAdminsList;
+    const q = searchQuery.toLowerCase();
+    return subAdminsList.filter(
+      (sa) =>
+        sa.name?.toLowerCase().includes(q) ||
+        sa.email?.toLowerCase().includes(q) ||
+        sa.role_title?.toLowerCase().includes(q) ||
+        sa.role?.toLowerCase().includes(q)
+    );
+  }, [subAdminsList, searchQuery]);
+
+  const filteredAdminPages = useMemo(() => {
+    if (!searchQuery.trim()) return adminPagesList;
+    const q = searchQuery.toLowerCase();
+    return adminPagesList.filter(
+      (p) =>
+        p.title?.toLowerCase().includes(q) ||
+        p.slug?.toLowerCase().includes(q) ||
+        p.footer_category?.toLowerCase().includes(q)
+    );
+  }, [adminPagesList, searchQuery]);
+
   // Filtered Payments & Orders List
   const filteredPayments = useMemo(() => {
     let list = paymentsList;
@@ -1478,22 +1547,22 @@ export default function SuperAdminDashboard() {
       list = list.filter((p) => p.status === "pending" || p.status === "failed");
     }
 
-    if (paymentsSearch.trim()) {
-      const q = paymentsSearch.toLowerCase();
+    const effectiveQuery = (paymentsSearch.trim() || searchQuery.trim()).toLowerCase();
+    if (effectiveQuery) {
       list = list.filter(
         (p) =>
-          p.user_name?.toLowerCase().includes(q) ||
-          p.user_email?.toLowerCase().includes(q) ||
-          p.student_id?.toLowerCase().includes(q) ||
-          p.package_name?.toLowerCase().includes(q) ||
-          p.course_name?.toLowerCase().includes(q) ||
-          p.razorpay_order_id?.toLowerCase().includes(q) ||
-          p.razorpay_payment_id?.toLowerCase().includes(q) ||
-          p.referral_code?.toLowerCase().includes(q)
+          p.user_name?.toLowerCase().includes(effectiveQuery) ||
+          p.user_email?.toLowerCase().includes(effectiveQuery) ||
+          p.student_id?.toLowerCase().includes(effectiveQuery) ||
+          p.package_name?.toLowerCase().includes(effectiveQuery) ||
+          p.course_name?.toLowerCase().includes(effectiveQuery) ||
+          p.razorpay_order_id?.toLowerCase().includes(effectiveQuery) ||
+          p.razorpay_payment_id?.toLowerCase().includes(effectiveQuery) ||
+          p.referral_code?.toLowerCase().includes(effectiveQuery)
       );
     }
     return list;
-  }, [paymentsList, paymentsFilter, paymentsSearch]);
+  }, [paymentsList, paymentsFilter, paymentsSearch, searchQuery]);
 
   // Filtered Affiliate Payouts & Referrals
   const filteredAffiliatePayouts = useMemo(() => {
@@ -1501,75 +1570,73 @@ export default function SuperAdminDashboard() {
     if (affiliatePayoutFilter !== "all") {
       list = list.filter((p) => p.status === affiliatePayoutFilter);
     }
-    if (affiliateSearch.trim()) {
-      const q = affiliateSearch.toLowerCase();
+    const effectiveQuery = (affiliateSearch.trim() || searchQuery.trim()).toLowerCase();
+    if (effectiveQuery) {
       list = list.filter(
         (p) =>
-          p.user_name?.toLowerCase().includes(q) ||
-          p.user_email?.toLowerCase().includes(q) ||
-          p.student_id?.toLowerCase().includes(q) ||
-          p.upi_id?.toLowerCase().includes(q) ||
-          p.account_holder_name?.toLowerCase().includes(q) ||
-          p.account_number?.toLowerCase().includes(q) ||
-          p.utr_number?.toLowerCase().includes(q)
+          p.user_name?.toLowerCase().includes(effectiveQuery) ||
+          p.user_email?.toLowerCase().includes(effectiveQuery) ||
+          p.student_id?.toLowerCase().includes(effectiveQuery) ||
+          p.upi_id?.toLowerCase().includes(effectiveQuery) ||
+          p.account_holder_name?.toLowerCase().includes(effectiveQuery) ||
+          p.account_number?.toLowerCase().includes(effectiveQuery) ||
+          p.utr_number?.toLowerCase().includes(effectiveQuery)
       );
     }
     return list;
-  }, [affiliatePayoutsList, affiliatePayoutFilter, affiliateSearch]);
-
-
+  }, [affiliatePayoutsList, affiliatePayoutFilter, affiliateSearch, searchQuery]);
 
   const filteredActivityLogs = useMemo(() => {
     let list = activityLogsList;
     if (activityLogFilter !== "all") {
       list = list.filter((log) => log.category === activityLogFilter);
     }
-    if (activityLogSearch.trim()) {
-      const q = activityLogSearch.toLowerCase();
+    const effectiveQuery = (activityLogSearch.trim() || searchQuery.trim()).toLowerCase();
+    if (effectiveQuery) {
       list = list.filter(
         (log) =>
-          log.action?.toLowerCase().includes(q) ||
-          log.details?.toLowerCase().includes(q) ||
-          log.admin_name?.toLowerCase().includes(q) ||
-          log.category?.toLowerCase().includes(q)
+          log.action?.toLowerCase().includes(effectiveQuery) ||
+          log.details?.toLowerCase().includes(effectiveQuery) ||
+          log.admin_name?.toLowerCase().includes(effectiveQuery) ||
+          log.category?.toLowerCase().includes(effectiveQuery)
       );
     }
     return list;
-  }, [activityLogsList, activityLogFilter, activityLogSearch]);
+  }, [activityLogsList, activityLogFilter, activityLogSearch, searchQuery]);
 
   const filteredAffiliateUsers = useMemo(() => {
     let list = affiliateUsersList;
-    if (affiliateSearch.trim()) {
-      const q = affiliateSearch.toLowerCase();
+    const effectiveQuery = (affiliateSearch.trim() || searchQuery.trim()).toLowerCase();
+    if (effectiveQuery) {
       list = list.filter(
         (u) =>
-          u.name?.toLowerCase().includes(q) ||
-          u.email?.toLowerCase().includes(q) ||
-          u.student_id?.toLowerCase().includes(q) ||
-          u.phone?.toLowerCase().includes(q) ||
-          u.referral_code?.toLowerCase().includes(q)
+          u.name?.toLowerCase().includes(effectiveQuery) ||
+          u.email?.toLowerCase().includes(effectiveQuery) ||
+          u.student_id?.toLowerCase().includes(effectiveQuery) ||
+          u.phone?.toLowerCase().includes(effectiveQuery) ||
+          u.referral_code?.toLowerCase().includes(effectiveQuery)
       );
     }
     return list;
-  }, [affiliateUsersList, affiliateSearch]);
+  }, [affiliateUsersList, affiliateSearch, searchQuery]);
 
   const filteredAffiliateReferrals = useMemo(() => {
     let list = affiliateReferralsList;
-    if (affiliateSearch.trim()) {
-      const q = affiliateSearch.toLowerCase();
+    const effectiveQuery = (affiliateSearch.trim() || searchQuery.trim()).toLowerCase();
+    if (effectiveQuery) {
       list = list.filter(
         (r) =>
-          r.referrer_name?.toLowerCase().includes(q) ||
-          r.referrer_email?.toLowerCase().includes(q) ||
-          r.referrer_student_id?.toLowerCase().includes(q) ||
-          r.referrer_referral_code?.toLowerCase().includes(q) ||
-          r.item_title?.toLowerCase().includes(q) ||
-          r.buyer_name?.toLowerCase().includes(q) ||
-          r.buyer_email?.toLowerCase().includes(q)
+          r.referrer_name?.toLowerCase().includes(effectiveQuery) ||
+          r.referrer_email?.toLowerCase().includes(effectiveQuery) ||
+          r.referrer_student_id?.toLowerCase().includes(effectiveQuery) ||
+          r.referrer_referral_code?.toLowerCase().includes(effectiveQuery) ||
+          r.item_title?.toLowerCase().includes(effectiveQuery) ||
+          r.buyer_name?.toLowerCase().includes(effectiveQuery) ||
+          r.buyer_email?.toLowerCase().includes(effectiveQuery)
       );
     }
     return list;
-  }, [affiliateReferralsList, affiliateSearch]);
+  }, [affiliateReferralsList, affiliateSearch, searchQuery]);
 
   return (
     <div
@@ -1611,6 +1678,7 @@ export default function SuperAdminDashboard() {
       <div className="lg:pl-[96px] flex flex-col min-w-0">
         <AdminHeader
           activeTab={activeTab}
+          setActiveTab={setActiveTab}
           adminUser={adminUser}
           setMobileOpen={setMobileOpen}
           onRefresh={fetchDashboardData}
@@ -1619,6 +1687,12 @@ export default function SuperAdminDashboard() {
           setSearchQuery={setSearchQuery}
           darkMode={darkMode}
           setDarkMode={setDarkMode}
+          coursesList={coursesList}
+          packagesList={packagesList}
+          usersList={usersList}
+          mentorsList={mentorsList}
+          paymentsList={paymentsList}
+          subAdminsList={subAdminsList}
         />
 
         <main
@@ -1776,7 +1850,7 @@ export default function SuperAdminDashboard() {
           {activeTab === "mentors" && (
             <div className="space-y-6">
               <div
-                className={`rounded-full px-6 sm:px-8 py-4 sm:py-5 border flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+                className={`rounded-2xl sm:rounded-full px-5 sm:px-8 py-4 sm:py-5 border flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
                   darkMode ? "bg-[#131926] border-[#222B3D]" : "bg-white border-[#E2E8F0]"
                 }`}
               >
@@ -1850,7 +1924,7 @@ export default function SuperAdminDashboard() {
           {activeTab === "courses" && (
             <div className="space-y-6">
               <div
-                className={`rounded-full px-6 sm:px-8 py-4 sm:py-5 border flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+                className={`rounded-2xl sm:rounded-full px-5 sm:px-8 py-4 sm:py-5 border flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
                   darkMode ? "bg-[#131926] border-[#222B3D]" : "bg-white border-[#E2E8F0]"
                 }`}
               >
@@ -2142,12 +2216,20 @@ export default function SuperAdminDashboard() {
           )}
 
           {/* ======================================================== */}
+          {/* ======================================================== */}
+          {/* TAB: FREELANCE ACCELERATOR STUDIO */}
+          {/* ======================================================== */}
+          {activeTab === "freelancestudio" && (
+            <FreelanceStudioTab darkMode={darkMode} />
+          )}
+
+          {/* ======================================================== */}
           {/* TAB 5: STUDENTS DIRECTORY */}
           {/* ======================================================== */}
           {activeTab === "users" && (
             <div className="space-y-6">
               <div
-                className={`rounded-full px-6 sm:px-8 py-4 sm:py-5 border flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+                className={`rounded-2xl sm:rounded-full px-5 sm:px-8 py-4 sm:py-5 border flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
                   darkMode ? "bg-[#131926] border-[#222B3D]" : "bg-white border-[#E2E8F0]"
                 }`}
               >
@@ -2326,7 +2408,7 @@ export default function SuperAdminDashboard() {
             <div className="space-y-6">
               {/* Header Capsule */}
               <div
-                className={`rounded-full px-6 sm:px-8 py-4 sm:py-5 border flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+                className={`rounded-2xl sm:rounded-full px-5 sm:px-8 py-4 sm:py-5 border flex flex-col md:flex-row md:items-center justify-between gap-4 ${
                   darkMode ? "bg-[#131926] border-[#222B3D]" : "bg-white border-[#E2E8F0] shadow-xs"
                 }`}
               >
@@ -2519,7 +2601,7 @@ export default function SuperAdminDashboard() {
           {activeTab === "settings" && (
             <div className="space-y-6">
               <div
-                className={`rounded-full px-6 sm:px-8 py-4 sm:py-5 border flex items-center justify-between ${
+                className={`rounded-2xl sm:rounded-full px-5 sm:px-8 py-4 sm:py-5 border flex items-center justify-between ${
                   darkMode ? "bg-[#131926] border-[#222B3D]" : "bg-white border-[#E2E8F0] shadow-xs"
                 }`}
               >
@@ -3196,7 +3278,7 @@ export default function SuperAdminDashboard() {
             <div className="space-y-6">
               {/* Header Capsule */}
               <div
-                className={`rounded-full px-6 sm:px-8 py-4 sm:py-5 border flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+                className={`rounded-2xl sm:rounded-full px-5 sm:px-8 py-4 sm:py-5 border flex flex-col md:flex-row md:items-center justify-between gap-4 ${
                   darkMode ? "bg-[#131926] border-[#222B3D]" : "bg-white border-[#E2E8F0] shadow-xs"
                 }`}
               >
@@ -3381,6 +3463,19 @@ export default function SuperAdminDashboard() {
                   </button>
 
                   <button
+                    onClick={() => setAffiliateActiveSubTab("announcements")}
+                    className={`px-4 py-2 rounded-full text-xs font-bold transition flex items-center gap-2 cursor-pointer border ${
+                      affiliateActiveSubTab === "announcements"
+                        ? "bg-[#035BE3] border-[#035BE3] text-white shadow-xs"
+                        : darkMode
+                        ? "bg-[#131926] border-[#222B3D] text-[#94A3B8] hover:text-white"
+                        : "bg-white border-[#E2E8F0] text-[#556377] hover:text-[#0F172A]"
+                    }`}
+                  >
+                    <span>📢 Affiliate Announcements</span>
+                  </button>
+
+                  <button
                     onClick={() => setAffiliateActiveSubTab("leaderboard")}
                     className={`px-4 py-2 rounded-full text-xs font-bold transition flex items-center gap-2 cursor-pointer border ${
                       affiliateActiveSubTab === "leaderboard"
@@ -3421,18 +3516,20 @@ export default function SuperAdminDashboard() {
                     </div>
                   )}
 
-                  <div className="relative w-full md:w-64">
-                    <Search className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
-                    <input
-                      type="text"
-                      placeholder="Search student, UPI, UTR..."
-                      value={affiliateSearch}
-                      onChange={(e) => setAffiliateSearch(e.target.value)}
-                      className={`w-full pl-9 pr-4 py-2 rounded-full border text-xs outline-none focus:border-[#035BE3] ${
-                        darkMode ? "bg-[#0B0F17] border-[#222B3D] text-white" : "bg-white border-[#E2E8F0] text-[#0F172A]"
-                      }`}
-                    />
-                  </div>
+                  {affiliateActiveSubTab !== "announcements" && (
+                    <div className="relative w-full md:w-64">
+                      <Search className="w-3.5 h-3.5 absolute left-3.5 top-1/2 -translate-y-1/2 text-gray-400" />
+                      <input
+                        type="text"
+                        placeholder="Search student, UPI, UTR..."
+                        value={affiliateSearch}
+                        onChange={(e) => setAffiliateSearch(e.target.value)}
+                        className={`w-full pl-9 pr-4 py-2 rounded-full border text-xs outline-none focus:border-[#035BE3] ${
+                          darkMode ? "bg-[#0B0F17] border-[#222B3D] text-white" : "bg-white border-[#E2E8F0] text-[#0F172A]"
+                        }`}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
 
@@ -3601,6 +3698,17 @@ export default function SuperAdminDashboard() {
                     </table>
                   </div>
                 </div>
+              )}
+
+              {/* SUBTAB 4: AFFILIATE ANNOUNCEMENTS MANAGER */}
+              {affiliateActiveSubTab === "announcements" && (
+                <AdminAffiliateAnnouncementsManager
+                  darkMode={darkMode}
+                  announcements={affiliateAnnouncementsList}
+                  loading={loadingAffiliateAnnouncements}
+                  onSave={handleSaveAffiliateAnnouncement}
+                  onDelete={handleDeleteAffiliateAnnouncement}
+                />
               )}
 
 
@@ -3948,6 +4056,30 @@ export default function SuperAdminDashboard() {
           {/* ======================================================== */}
 
           {/* ======================================================== */}
+          
+          {/* ======================================================== */}
+          {/* TAB: ANNOUNCEMENTS DIRECT TAB */}
+          {/* ======================================================== */}
+          {activeTab === "announcements" && (
+            <div className="space-y-6 animate-in fade-in duration-200">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h2 className="text-xl font-black">📢 Affiliate Announcements</h2>
+                  <p className="text-xs text-[#8A99AD] mt-0.5">
+                    Broadcast contests, leaderboard updates, payout notifications and marketing notices.
+                  </p>
+                </div>
+              </div>
+              <AdminAffiliateAnnouncementsManager
+                darkMode={darkMode}
+                announcements={affiliateAnnouncementsList}
+                loading={loadingAffiliateAnnouncements}
+                onSave={handleSaveAffiliateAnnouncement}
+                onDelete={handleDeleteAffiliateAnnouncement}
+              />
+            </div>
+          )}
+
           {/* TAB 8: SUB-ADMINS & ROLE-BASED ACCESS CONTROL (RBAC) */}
           {/* ======================================================== */}
                     {/* ======================================================== */}
@@ -3957,7 +4089,7 @@ export default function SuperAdminDashboard() {
             <div className="space-y-6">
               {/* Header Capsule */}
               <div
-                className={`rounded-full px-6 sm:px-8 py-4 sm:py-5 border flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+                className={`rounded-2xl sm:rounded-full px-5 sm:px-8 py-4 sm:py-5 border flex flex-col md:flex-row md:items-center justify-between gap-4 ${
                   darkMode ? "bg-[#131926] border-[#222B3D]" : "bg-white border-[#E2E8F0] shadow-xs"
                 }`}
               >
@@ -4558,7 +4690,7 @@ export default function SuperAdminDashboard() {
             <div className="space-y-6">
               {/* Header Capsule */}
               <div
-                className={`rounded-full px-6 sm:px-8 py-4 sm:py-5 border flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+                className={`rounded-2xl sm:rounded-full px-5 sm:px-8 py-4 sm:py-5 border flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
                   darkMode ? "bg-[#131926] border-[#222B3D]" : "bg-white border-[#E2E8F0] shadow-xs"
                 }`}
               >
@@ -4606,15 +4738,17 @@ export default function SuperAdminDashboard() {
                       </tr>
                     </thead>
                     <tbody className={`divide-y ${darkMode ? "divide-[#1E2638]" : "divide-[#F1F5F9]"}`}>
-                      {subAdminsList.length === 0 ? (
+                      {filteredSubAdmins.length === 0 ? (
                         <tr>
                           <td colSpan={6} className="py-12 text-center text-[#64748B]">
                             <Key className="w-8 h-8 mx-auto text-[#94A3B8] mb-2 opacity-50" />
-                            <p className="font-semibold">No Sub-Admins created yet. Click "+ Create Sub-Admin" to grant access.</p>
+                            <p className="font-semibold">
+                              {searchQuery.trim() ? `No sub-admins found matching "${searchQuery}".` : "No Sub-Admins created yet. Click \"+ Create Sub-Admin\" to grant access."}
+                            </p>
                           </td>
                         </tr>
                       ) : (
-                        subAdminsList.map((sa) => {
+                        filteredSubAdmins.map((sa) => {
                           const isSuper = sa.role === "superadmin";
                           const isActive = sa.is_active !== false && sa.is_active !== 0;
                           const perms = Array.isArray(sa.permissions) ? sa.permissions : [];
@@ -4751,7 +4885,7 @@ export default function SuperAdminDashboard() {
             <div className="space-y-6">
               {/* Header Capsule */}
               <div
-                className={`rounded-full px-6 sm:px-8 py-4 sm:py-5 border flex flex-col md:flex-row md:items-center justify-between gap-4 ${
+                className={`rounded-2xl sm:rounded-full px-5 sm:px-8 py-4 sm:py-5 border flex flex-col md:flex-row md:items-center justify-between gap-4 ${
                   darkMode ? "bg-[#131926] border-[#222B3D]" : "bg-white border-[#E2E8F0] shadow-xs"
                 }`}
               >
@@ -4901,7 +5035,7 @@ export default function SuperAdminDashboard() {
             <div className="space-y-6">
               {/* Header Capsule */}
               <div
-                className={`rounded-full px-6 sm:px-8 py-4 sm:py-5 border flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
+                className={`rounded-2xl sm:rounded-full px-5 sm:px-8 py-4 sm:py-5 border flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${
                   darkMode ? "bg-[#131926] border-[#222B3D]" : "bg-white border-[#E2E8F0] shadow-xs"
                 }`}
               >
@@ -4950,15 +5084,17 @@ export default function SuperAdminDashboard() {
                       </tr>
                     </thead>
                     <tbody className={`divide-y ${darkMode ? "divide-[#1E2638]" : "divide-[#F1F5F9]"}`}>
-                      {adminPagesList.length === 0 ? (
+                      {filteredAdminPages.length === 0 ? (
                         <tr>
                           <td colSpan={7} className="py-12 text-center text-[#64748B]">
                             <FileText className="w-8 h-8 mx-auto text-[#94A3B8] mb-2 opacity-50" />
-                            <p className="font-semibold">No custom pages found. Click "+ Create New Page" to publish one.</p>
+                            <p className="font-semibold">
+                              {searchQuery.trim() ? `No pages found matching "${searchQuery}".` : "No custom pages found. Click \"+ Create New Page\" to publish one."}
+                            </p>
                           </td>
                         </tr>
                       ) : (
-                        adminPagesList.map((p) => (
+                        filteredAdminPages.map((p) => (
                           <tr key={p.id} className={`transition-colors ${darkMode ? "hover:bg-[#1E2638]" : "hover:bg-[#F8FAFD]"}`}>
                             <td className="py-4 px-6 font-bold">
                               <span className={`${darkMode ? "text-white" : "text-[#0F172A]"}`}>{p.title}</span>

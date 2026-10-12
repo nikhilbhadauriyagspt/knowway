@@ -14,6 +14,7 @@ import {
   Compass,
   GraduationCap,
   Sparkles,
+  Briefcase,
 } from "lucide-react";
 import { clearUserSession } from "../../services/api";
 
@@ -41,6 +42,7 @@ export default function StudentSidebar({
     { id: "courses", label: "My Courses", icon: BookOpen, badge: coursesCount ? `${coursesCount}` : null },
     { id: "packages", label: "My Packages", icon: Layers3, badge: packagesCount ? `${packagesCount}` : "Active" },
     { id: "upgrade", label: "Upgrade Package", icon: Zap, badge: "Upgrade" },
+    { id: "freelance", label: "Freelancing Hub", icon: Briefcase, badge: "Pro" },
     { id: "certificates", label: "Certificates & Badges", icon: Award, badge: "Verified" },
     { id: "profile", label: "Account & Profile", icon: Settings, badge: null },
   ];

@@ -50,6 +50,8 @@ import {
 } from "../services/api";
 import AffiliateHeader from "./components/AffiliateHeader";
 import AffiliateSidebar from "./components/AffiliateSidebar";
+import AffiliateIncomeReports from "./components/AffiliateIncomeReports";
+import AffiliateAnnouncements from "./components/AffiliateAnnouncements";
 
 export default function AffiliateDashboard() {
   const navigate = useNavigate();
@@ -90,7 +92,7 @@ export default function AffiliateDashboard() {
     setUser(localUser);
   }, [navigate]);
 
-  const referralCode = user?.referral_code || (user?.id ? `KW${user.id}` : "KW1001");
+  const referralCode = user?.referral_code || user?.referralCode || (user?.id ? `KW${user.id}` : "KW1001");
   const referralLink = `${window.location.origin}/signup?ref=${referralCode}`;
 
   // Referral metrics state
@@ -224,23 +226,41 @@ export default function AffiliateDashboard() {
   const [withdrawError, setWithdrawError] = useState("");
   const [isSubmittingWithdraw, setIsSubmittingWithdraw] = useState(false);
 
-  // Referrals filter & search
+  // Global Header Search and localized filters
+  const [headerSearch, setHeaderSearch] = useState("");
   const [referralSearch, setReferralSearch] = useState("");
   const [referralFilter, setReferralFilter] = useState("all");
+
+  const effectiveReferralQuery = (headerSearch.trim() || referralSearch.trim()).toLowerCase();
 
   const filteredReferrals = referrals.filter((r) => {
     const name = r.referred_user_name || r.name || "";
     const idStr = String(r.id || "");
     const title = r.item_title || r.package || "";
     const matchesSearch =
-      name.toLowerCase().includes(referralSearch.toLowerCase()) ||
-      idStr.toLowerCase().includes(referralSearch.toLowerCase()) ||
-      title.toLowerCase().includes(referralSearch.toLowerCase());
+      !effectiveReferralQuery ||
+      name.toLowerCase().includes(effectiveReferralQuery) ||
+      idStr.toLowerCase().includes(effectiveReferralQuery) ||
+      title.toLowerCase().includes(effectiveReferralQuery);
     const status = (r.status || "").toLowerCase();
     const matchesFilter =
       referralFilter === "all" ||
       status === referralFilter.toLowerCase();
     return matchesSearch && matchesFilter;
+  });
+
+  const filteredPayouts = payouts.filter((p) => {
+    if (!headerSearch.trim()) return true;
+    const q = headerSearch.toLowerCase();
+    return (
+      String(p.id || "").toLowerCase().includes(q) ||
+      (p.payout_method || "").toLowerCase().includes(q) ||
+      (p.upi_id || "").toLowerCase().includes(q) ||
+      (p.account_number || "").toLowerCase().includes(q) ||
+      (p.status || "").toLowerCase().includes(q) ||
+      (p.utr_number || "").toLowerCase().includes(q) ||
+      String(p.amount || "").includes(q)
+    );
   });
 
   const handleCopyLink = () => {
@@ -446,9 +466,15 @@ export default function AffiliateDashboard() {
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           user={user}
+          referrals={referrals}
+          payouts={payouts}
+          leaderboard={leaderboard}
+          commissionPackages={commissionPackages}
           setMobileOpen={setMobileOpen}
           darkMode={darkMode}
           setDarkMode={setDarkMode}
+          searchQuery={headerSearch}
+          setSearchQuery={setHeaderSearch}
         />
 
         {/* Main Content Area - Full Width */}
@@ -751,6 +777,11 @@ export default function AffiliateDashboard() {
         )}
 
         {/* ======================================================== */}
+        {/* TAB: INCOME REPORTS & ANALYTICS */}
+        {activeTab === "income_reports" && (
+          <AffiliateIncomeReports darkMode={darkMode} user={user} setActiveTab={setActiveTab} />
+        )}
+
         {/* TAB 2: MY REFERRALS NETWORK */}
         {/* ======================================================== */}
         {activeTab === "referrals" && (
@@ -1141,14 +1172,14 @@ export default function AffiliateDashboard() {
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-inherit">
-                    {payouts.length === 0 ? (
+                    {filteredPayouts.length === 0 ? (
                       <tr>
                         <td colSpan={6} className="py-8 text-center text-xs text-[#8A99AD]">
-                          No withdrawal requests found.
+                          {headerSearch.trim() ? `No withdrawal requests match "${headerSearch}".` : "No withdrawal requests found."}
                         </td>
                       </tr>
                     ) : (
-                      payouts.map((p) => (
+                      filteredPayouts.map((p) => (
                         <tr key={p.id} className={darkMode ? "hover:bg-[#1A2234]/50" : "hover:bg-[#F8FAFC]"}>
                           <td className="py-3.5 px-5 font-mono font-bold text-[#8A99AD]">#{p.id}</td>
                           <td className="py-3.5 px-5 font-black text-emerald-500">₹{Number(p.amount).toLocaleString()}</td>
@@ -1652,11 +1683,15 @@ export default function AffiliateDashboard() {
                     </thead>
                     <tbody className="divide-y divide-inherit">
                       {displayLeaderboard
-                        .filter((r) =>
-                          !leaderboardSearch.trim() ||
-                          r.name?.toLowerCase().includes(leaderboardSearch.toLowerCase()) ||
-                          String(r.student_id || "").toLowerCase().includes(leaderboardSearch.toLowerCase())
-                        )
+                        .filter((r) => {
+                          const q = (headerSearch.trim() || leaderboardSearch.trim()).toLowerCase();
+                          if (!q) return true;
+                          return (
+                            r.name?.toLowerCase().includes(q) ||
+                            String(r.student_id || "").toLowerCase().includes(q) ||
+                            String(r.rank || "").includes(q)
+                          );
+                        })
                         .map((row) => {
                           const isTop1 = row.rank === 1;
                           const isTop2 = row.rank === 2;
@@ -1783,8 +1818,12 @@ export default function AffiliateDashboard() {
         )}
 
         {/* ======================================================== */}
-        {/* TAB 6: MARKETING & PROMO TEMPLATES */}
+        {/* TAB 6: ANNOUNCEMENTS */}
         {/* ======================================================== */}
+        {activeTab === "announcements" && (
+          <AffiliateAnnouncements darkMode={darkMode} user={user} externalSearchQuery={headerSearch} />
+        )}
+
         {activeTab === "promos" && (
           <div className="space-y-6 animate-in fade-in duration-200">
             <div

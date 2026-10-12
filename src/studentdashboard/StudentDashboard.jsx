@@ -37,6 +37,7 @@ import StudentSidebar from "./components/StudentSidebar";
 import StudentHeader from "./components/StudentHeader";
 import CertificateModal from "./components/CertificateModal";
 import CourseQuizModal from "./components/CourseQuizModal";
+import StudentFreelanceHub from "./components/StudentFreelanceHub";
 import {
   getUserData,
   getUserToken,
@@ -54,7 +55,23 @@ export default function StudentDashboard() {
   const navigate = useNavigate();
 
   // Theme & Layout States
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    return (
+      localStorage.getItem("knowway_theme") === "dark" ||
+      (!("knowway_theme" in localStorage) &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches)
+    );
+  });
+
+  useEffect(() => {
+    if (darkMode) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("knowway_theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("knowway_theme", "light");
+    }
+  }, [darkMode]);
   const [mobileOpen, setMobileOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("dashboard"); // 'dashboard' | 'all_courses' | 'courses' | 'packages' | 'upgrade' | 'certificates' | 'profile'
   const [searchQuery, setSearchQuery] = useState("");
@@ -113,8 +130,9 @@ export default function StudentDashboard() {
 
   // Dynamic Watching Courses (calculated from real student enrollment & lecture progress)
   const watchingCourses = useMemo(() => {
+    let list = [];
     if (courses && courses.length > 0) {
-      return courses.map((c) => ({
+      list = courses.map((c) => ({
         id: c.id,
         title: c.title,
         mentor: c.mentor_name || c.mentor || "KnowWay Mentor",
@@ -127,27 +145,50 @@ export default function StudentDashboard() {
         slug: c.slug || c.id,
         isEnrolled: true,
       }));
+    } else {
+      // Fallback if no course enrolled yet: show catalog starter courses
+      list = (allCourses.length > 0 ? allCourses.slice(0, 3) : []).map((c) => ({
+        id: c.id,
+        title: c.title,
+        mentor: c.mentor_name || c.mentor || "KnowWay Mentor",
+        mentorRole: c.category || "Masterclass",
+        progress: 0,
+        thumbnail:
+          c.thumbnail_url ||
+          c.thumbnail ||
+          "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600&auto=format&fit=crop",
+        slug: c.slug || c.id,
+        isEnrolled: false,
+      }));
     }
-    // Fallback if no course enrolled yet: show catalog starter courses
-    return (allCourses.length > 0 ? allCourses.slice(0, 3) : []).map((c) => ({
-      id: c.id,
-      title: c.title,
-      mentor: c.mentor_name || c.mentor || "KnowWay Mentor",
-      mentorRole: c.category || "Masterclass",
-      progress: 0,
-      thumbnail:
-        c.thumbnail_url ||
-        c.thumbnail ||
-        "https://images.unsplash.com/photo-1516321318423-f06f85e504b3?q=80&w=600&auto=format&fit=crop",
-      slug: c.slug || c.id,
-      isEnrolled: false,
-    }));
-  }, [courses, allCourses, getCourseProgress]);
+
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(
+        (item) =>
+          item.title?.toLowerCase().includes(q) ||
+          item.mentor?.toLowerCase().includes(q) ||
+          item.mentorRole?.toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [courses, allCourses, getCourseProgress, searchQuery]);
 
   // Dynamic Premium Flagship Courses (loaded from live database)
   const premiumCoursesList = useMemo(() => {
-    return allCourses.length > 0 ? allCourses : courses;
-  }, [allCourses, courses]);
+    let list = allCourses.length > 0 ? allCourses : courses;
+    if (searchQuery.trim()) {
+      const q = searchQuery.toLowerCase();
+      list = list.filter(
+        (c) =>
+          c.title?.toLowerCase().includes(q) ||
+          c.category?.toLowerCase().includes(q) ||
+          c.languages?.toLowerCase().includes(q) ||
+          c.mentor_name?.toLowerCase().includes(q)
+      );
+    }
+    return list;
+  }, [allCourses, courses, searchQuery]);
 
   // Overall student average learning progress
   const averageProgress = useMemo(() => {
@@ -446,6 +487,9 @@ export default function StudentDashboard() {
           activeTab={activeTab}
           setActiveTab={setActiveTab}
           user={user}
+          courses={courses}
+          allCourses={allCourses}
+          myPackages={myPackages}
           setMobileOpen={setMobileOpen}
           onRefresh={loadCourses}
           isRefreshing={isRefreshing}
@@ -609,6 +653,40 @@ export default function StudentDashboard() {
                   </div>
                 </div>
               </div>
+
+              {/* Live Search Indicator on Dashboard Tab */}
+              {searchQuery.trim() && (
+                <div
+                  className={`p-4 rounded-2xl border flex items-center justify-between gap-3 ${
+                    darkMode
+                      ? "bg-[#131926] border-[#222B3D] text-white"
+                      : "bg-blue-50/70 border-blue-200 text-blue-900"
+                  }`}
+                >
+                  <div className="flex items-center gap-2.5 text-xs font-semibold">
+                    <Search className="w-4 h-4 text-[#035BE3]" />
+                    <span>
+                      Filtering for: <strong className="underline">"{searchQuery}"</strong> ({filteredCourses.length} matches found across curriculum)
+                    </span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setActiveTab("all_courses")}
+                      className="text-xs font-bold text-[#035BE3] hover:underline cursor-pointer"
+                    >
+                      View in All Courses &rarr;
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSearchQuery("")}
+                      className="px-2.5 py-1 rounded-full text-xs font-bold bg-gray-200/60 dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-700 transition cursor-pointer"
+                    >
+                      Clear
+                    </button>
+                  </div>
+                </div>
+              )}
 
               {/* ================= SECTION 1: PREMIUM COURSES SLIDER CAROUSEL ================= */}
               <div className="space-y-4">
@@ -1036,7 +1114,7 @@ export default function StudentDashboard() {
             <div className="space-y-6 w-full">
               {/* Capsule Header Banner */}
               <div
-                className={`rounded-full px-6 sm:px-8 py-4 sm:py-5 border flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full ${
+                className={`rounded-2xl sm:rounded-full px-5 sm:px-8 py-4 sm:py-5 border flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full ${
                   darkMode ? "bg-[#131926] border-[#222B3D]" : "bg-white border-[#E2E8F0]"
                 }`}
               >
@@ -1170,7 +1248,7 @@ export default function StudentDashboard() {
             <div className="space-y-6 w-full">
               {/* Header Capsule */}
               <div
-                className={`rounded-full px-6 sm:px-8 py-4 sm:py-5 border flex flex-col lg:flex-row lg:items-center justify-between gap-4 w-full ${
+                className={`rounded-2xl sm:rounded-full px-5 sm:px-8 py-4 sm:py-5 border flex flex-col lg:flex-row lg:items-center justify-between gap-4 w-full ${
                   darkMode ? "bg-[#131926] border-[#222B3D]" : "bg-white border-[#E2E8F0]"
                 }`}
               >
@@ -1218,7 +1296,8 @@ export default function StudentDashboard() {
                   const isEnrolled =
                     course.is_enrolled ||
                     courses.some((c) => c.id === course.id || c.slug === course.slug);
-                  const hasReferral = Boolean(user?.referral_code);
+                  const sponsorRef = user?.referred_by || "";
+                  const hasReferral = Boolean(sponsorRef);
                   const mrp = Number(course.regular_price || 2999);
                   const promo = Number(course.promo_price || 499);
 
@@ -1331,7 +1410,7 @@ export default function StudentDashboard() {
                           </Link>
                         ) : (
                           <Link
-                            to={`/checkout/${course.slug || course.id}?type=course${hasReferral ? `&ref=${user.referral_code}` : ""}`}
+                            to={`/checkout/${course.slug || course.id}?type=course${hasReferral ? `&ref=${sponsorRef}` : ""}`}
                             className="w-full h-10 rounded-full bg-[#035BE3] hover:bg-[#024bc0] text-white text-xs font-bold transition flex items-center justify-center gap-1.5 no-underline shadow-sm shadow-[#035BE3]/25 cursor-pointer"
                           >
                             <Lock size={12} />
@@ -1353,7 +1432,7 @@ export default function StudentDashboard() {
           {activeTab === "courses" && (
             <div className="space-y-6 w-full">
               <div
-                className={`rounded-full px-6 sm:px-8 py-4 sm:py-5 border flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full ${
+                className={`rounded-2xl sm:rounded-full px-5 sm:px-8 py-4 sm:py-5 border flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full ${
                   darkMode ? "bg-[#131926] border-[#222B3D]" : "bg-white border-[#E2E8F0]"
                 }`}
               >
@@ -1497,7 +1576,7 @@ export default function StudentDashboard() {
             <div className="space-y-6 w-full">
               {/* Header Capsule */}
               <div
-                className={`rounded-full px-6 sm:px-8 py-4 sm:py-5 border flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full ${
+                className={`rounded-2xl sm:rounded-full px-5 sm:px-8 py-4 sm:py-5 border flex flex-col sm:flex-row sm:items-center justify-between gap-4 w-full ${
                   darkMode ? "bg-[#131926] border-[#222B3D]" : "bg-white border-[#E2E8F0]"
                 }`}
               >
@@ -1524,7 +1603,8 @@ export default function StudentDashboard() {
                 ]).map((pkg) => {
                   const slug = (pkg.package_slug || pkg.slug || "pro").toLowerCase();
                   const isAlreadyPurchased = myPackages.some((p) => p.package_slug === pkg.slug || p.package_id === pkg.id);
-                  const hasReferral = Boolean(user?.referral_code);
+                  const sponsorRef = user?.referred_by || "";
+                  const hasReferral = Boolean(sponsorRef);
                   const mrp = Number(pkg.mrp_price || 11800);
                   const promo = Number(pkg.promo_price || 7999);
                   const payablePrice = hasReferral ? promo : mrp;
@@ -1609,7 +1689,7 @@ export default function StudentDashboard() {
                           </div>
                         ) : (
                           <Link
-                            to={`/checkout/${pkg.slug || "pro"}${hasReferral ? `?ref=${user.referral_code}` : ""}`}
+                            to={`/checkout/${pkg.slug || "pro"}${hasReferral ? `?ref=${sponsorRef}` : ""}`}
                             className="w-full h-11 rounded-full bg-[#035BE3] hover:bg-[#FA8C03] text-white text-xs font-bold transition-colors duration-200 flex items-center justify-between pl-5 pr-2 shadow-sm shadow-[#035BE3]/20 no-underline cursor-pointer"
                           >
                             <span>Upgrade to {pkg.name.split(" ")[0]}</span>
@@ -1780,12 +1860,19 @@ export default function StudentDashboard() {
           )}
 
           {/* ======================================================== */}
+          {/* TAB: FREELANCING HUB */}
+          {/* ======================================================== */}
+          {activeTab === "freelance" && (
+            <StudentFreelanceHub darkMode={darkMode} user={user} />
+          )}
+
+          {/* ======================================================== */}
           {/* TAB 4: ACCOUNT & PROFILE SETTINGS */}
           {/* ======================================================== */}
           {activeTab === "profile" && (
             <div className="space-y-6 w-full">
               <div
-                className={`rounded-full px-6 sm:px-8 py-4 sm:py-5 border w-full ${darkMode ? "bg-[#131926] border-[#222B3D]" : "bg-white border-[#E2E8F0]"
+                className={`rounded-2xl sm:rounded-full px-5 sm:px-8 py-4 sm:py-5 border w-full ${darkMode ? "bg-[#131926] border-[#222B3D]" : "bg-white border-[#E2E8F0]"
                   }`}
               >
                 <h2 className="text-base sm:text-lg font-bold">Account Profile & Settings</h2>

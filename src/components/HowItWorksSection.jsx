@@ -75,25 +75,25 @@ export default function HowItWorks() {
 
       <div className="relative z-10 mx-auto max-w-[1500px] px-5 sm:px-8 lg:px-12">
         {/* ================= HEADER ================= */}
-        <div className="mb-10 sm:mb-12 max-w-[850px]">
-          <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#DCE5F5] bg-white px-4 py-2">
+        <div className="mb-8 sm:mb-12 max-w-[850px]">
+          <div className="mb-3 sm:mb-4 inline-flex items-center gap-2 rounded-full border border-[#DCE5F5] bg-white px-3.5 sm:px-4 py-1.5 sm:py-2">
             <Sparkles size={13} className="text-[#315FD8]" />
 
-            <span className="text-[12px] font-semibold text-[#59667E]">
+            <span className="text-[11.5px] sm:text-[12px] font-semibold text-[#59667E]">
               How It Works
             </span>
           </div>
 
-          <h2 className="text-[38px] font-bold leading-[1.08] tracking-[-0.045em] text-[#151B29] sm:text-[46px] lg:text-[55px]">
+          <h2 className="text-[28px] xs:text-[32px] sm:text-[46px] lg:text-[55px] font-bold leading-[1.12] sm:leading-[1.08] tracking-[-0.04em] text-[#151B29]">
             Learn step by step.
             <br />
 
-            <span className="mt-2 inline-block rounded-[10px] bg-[#DDD1FF] px-3">
+            <span className="mt-1.5 sm:mt-2 inline-block rounded-[10px] bg-[#DDD1FF] px-2.5 sm:px-3">
               Build as you progress.
             </span>
           </h2>
 
-          <p className="mt-5 max-w-[760px] text-[15px] leading-7 text-[#657188] sm:text-[16px]">
+          <p className="mt-4 sm:mt-5 max-w-[760px] text-[14px] leading-6 sm:text-[16px] sm:leading-7 text-[#657188]">
             A simple learning journey designed to help you choose the right
             path, understand useful skills, practice them and keep progressing
             with confidence.
@@ -184,8 +184,8 @@ function StepCard({ step, mobile = false }) {
         group relative overflow-hidden
         border
         ${mobile ? "w-full" : "w-[620px] xl:w-[660px]"}
-        rounded-[30px]
-        px-7 py-8 sm:px-9 sm:py-9
+        rounded-[24px] sm:rounded-[30px]
+        px-5 py-6 sm:px-9 sm:py-9
         transition-transform duration-300
         hover:-translate-y-1
       `}
@@ -198,57 +198,55 @@ function StepCard({ step, mobile = false }) {
       <div
         className="
           absolute left-0 top-0
-          flex h-full w-[72px]
+          flex h-full w-[60px] sm:w-[82px]
           items-center justify-center
-          sm:w-[82px]
         "
       >
         <div
           className="
-            flex h-[170px] w-[48px]
+            flex h-[150px] sm:h-[185px] w-[40px] sm:w-[52px]
             items-center justify-center
             rounded-full
             text-white
-            sm:h-[185px] sm:w-[52px]
           "
           style={{ backgroundColor: step.badgeBg }}
         >
-          <span className="-rotate-90 whitespace-nowrap text-[12px] font-bold tracking-[0.08em]">
+          <span className="-rotate-90 whitespace-nowrap text-[11px] sm:text-[12px] font-bold tracking-[0.08em]">
             STEP {step.number}
           </span>
         </div>
       </div>
 
       {/* CONTENT */}
-      <div className="pl-[66px] sm:pl-[82px]">
-        <div className="flex items-start gap-4">
+      <div className="pl-[52px] sm:pl-[82px]">
+        <div className="flex items-start gap-3 sm:gap-4">
           <div
             className="
-              flex h-[48px] w-[48px] shrink-0
+              flex h-[42px] sm:h-[48px] w-[42px] sm:w-[48px] shrink-0
               items-center justify-center
-              rounded-[15px]
+              rounded-[12px] sm:rounded-[15px]
               bg-white
             "
             style={{ color: step.accent }}
           >
-            <Icon size={21} strokeWidth={1.9} />
+            <Icon size={19} strokeWidth={1.9} />
           </div>
 
           <div>
             <span
-              className="text-[10px] font-bold uppercase tracking-[0.15em]"
+              className="text-[9.5px] sm:text-[10px] font-bold uppercase tracking-[0.15em]"
               style={{ color: step.accent }}
             >
               Learning Stage
             </span>
 
-            <h3 className="mt-1 text-[23px] font-bold tracking-[-0.025em] text-[#171D2B] sm:text-[26px]">
+            <h3 className="mt-0.5 sm:mt-1 text-[20px] sm:text-[26px] font-bold tracking-[-0.025em] text-[#171D2B]">
               {step.title}
             </h3>
           </div>
         </div>
 
-        <p className="mt-7 max-w-[470px] text-[13.5px] leading-[1.8] text-[#5F6B80] sm:text-[14px]">
+        <p className="mt-4 sm:mt-7 max-w-[470px] text-[13px] sm:text-[14px] leading-[1.65] sm:leading-[1.8] text-[#5F6B80]">
           {step.description}
         </p>
 

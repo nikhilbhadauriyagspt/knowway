@@ -7,6 +7,7 @@ import adminRoutes from "./routes/adminRoutes.js";
 import packageRoutes from "./routes/packageRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import affiliateRoutes from "./routes/affiliateRoutes.js";
+import freelanceRoutes from "./routes/freelanceRoutes.js";
 
 // Load environment variables
 dotenv.config();
@@ -37,6 +38,7 @@ app.use("/api/admin", adminRoutes);
 app.use("/api/packages", packageRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/affiliate", affiliateRoutes);
+app.use("/api/freelance", freelanceRoutes);
 
 // 404 Route handler
 app.use((req, res) => {

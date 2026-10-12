@@ -177,14 +177,12 @@ export const register = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Generate unique referral code for this new student (e.g. KW{random})
-    const myReferralCode = "KW" + Math.floor(1000 + Math.random() * 9000);
     const sponsorRefCode = referralCode ? referralCode.trim().toUpperCase() : null;
 
-    // Insert user into MySQL with own referral_code and sponsor referred_by
+    // Insert user into MySQL with sponsor referred_by
     const [result] = await pool.query(
-      `INSERT INTO users (student_id, name, phone, email, address, password, referral_code, referred_by, is_verified) 
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, TRUE)`,
+      `INSERT INTO users (student_id, name, phone, email, address, password, referred_by, is_verified) 
+       VALUES (?, ?, ?, ?, ?, ?, ?, TRUE)`,
       [
         studentId,
         name.trim(),
@@ -192,12 +190,15 @@ export const register = async (req, res) => {
         cleanEmail,
         address ? address.trim() : "",
         hashedPassword,
-        myReferralCode,
         sponsorRefCode,
       ]
     );
 
     const newUserId = result.insertId;
+    // Consistent Referral Code: Always KW + User ID (e.g. KW2, KW3, KW4)
+    const myReferralCode = `KW${newUserId}`;
+    await pool.query("UPDATE users SET referral_code = ? WHERE id = ?", [myReferralCode, newUserId]);
+
     const sessionToken = "sess_" + Date.now() + "_" + Math.random().toString(36).substring(2, 11);
     const userAgent = req.headers["user-agent"] || "";
     const currentDevice = getDeviceDescription(userAgent);
@@ -335,6 +336,13 @@ export const login = async (req, res) => {
       studentId = `KW-${new Date().getFullYear()}-${String(user.id).padStart(4, "0")}${Math.floor(100 + Math.random() * 900)}`;
     }
 
+    // Auto backfill referral_code if missing
+    let userReferralCode = user.referral_code;
+    if (!userReferralCode) {
+      userReferralCode = `KW${user.id}`;
+      await pool.query("UPDATE users SET referral_code = ? WHERE id = ?", [userReferralCode, user.id]);
+    }
+
     // Update active session in database
     await pool.query(
       "UPDATE users SET active_session_token = ?, last_device_info = ?, last_login_at = NOW(), student_id = ? WHERE id = ?",
@@ -354,7 +362,9 @@ export const login = async (req, res) => {
         email: user.email,
         phone: user.phone || "",
         address: user.address || "",
-        referralCode: user.referral_code || null,
+        referral_code: userReferralCode,
+        referralCode: userReferralCode,
+        referred_by: user.referred_by || null,
         avatar_url: user.avatar_url || null,
       },
     });
@@ -527,6 +537,8 @@ export const getMe = async (req, res) => {
       });
     }
 
+    const userReferralCode = user.referral_code || `KW${user.id}`;
+
     return res.status(200).json({
       success: true,
       user: {
@@ -536,7 +548,8 @@ export const getMe = async (req, res) => {
         email: user.email,
         phone: user.phone || "",
         address: user.address || "",
-        referral_code: user.referral_code,
+        referral_code: userReferralCode,
+        referralCode: userReferralCode,
         avatar_url: user.avatar_url,
         created_at: user.created_at,
       },
