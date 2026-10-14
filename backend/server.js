@@ -23,7 +23,20 @@ app.use(cors({
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Health Check Route
+// Root & Health Check Routes for GoDaddy / Cloud Load Balancers
+app.get("/", (req, res) => {
+  res.status(200).json({
+    status: "ok",
+    service: "KnowWay Backend API",
+    message: "🚀 KnowWay Node.js Express backend is live and healthy!",
+    timestamp: new Date().toISOString(),
+  });
+});
+
+app.get("/health", (req, res) => {
+  res.status(200).send("OK");
+});
+
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     status: "ok",
