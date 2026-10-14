@@ -20,6 +20,8 @@ import {
   getUserData,
   isUserAuthenticated,
   clearUserSession,
+  isUserHasPurchasedPackage,
+  openPackageRequiredModal,
 } from "../services/api";
 import UserAvatarDropdown from "./UserAvatarDropdown";
 
@@ -348,6 +350,12 @@ export default function Header() {
               {/* Sleek Dashboard Button */}
               <Link
                 to="/dashboard"
+                onClick={(e) => {
+                  if (!isUserHasPurchasedPackage()) {
+                    e.preventDefault();
+                    openPackageRequiredModal();
+                  }
+                }}
                 className="
                   group flex h-[42px] items-center gap-2
                   rounded-full
@@ -458,7 +466,13 @@ export default function Header() {
 
               <Link
                 to="/dashboard"
-                onClick={() => setMobileOpen(false)}
+                onClick={(e) => {
+                  setMobileOpen(false);
+                  if (!isUserHasPurchasedPackage()) {
+                    e.preventDefault();
+                    openPackageRequiredModal();
+                  }
+                }}
                 className="px-3 py-1.5 rounded-full bg-[#035BE3] text-white text-[11px] font-bold no-underline"
               >
                 Dashboard

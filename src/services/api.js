@@ -106,6 +106,18 @@ export const isUserAuthenticated = () => {
   return Boolean(getUserToken());
 };
 
+export const isUserHasPurchasedPackage = () => {
+  const user = getUserData();
+  return Boolean(
+    user?.has_purchased === true ||
+    (user?.active_package_count && user.active_package_count > 0)
+  );
+};
+
+export const openPackageRequiredModal = () => {
+  window.dispatchEvent(new CustomEvent("knowway_open_package_modal"));
+};
+
 // ============================================================
 // CORE FETCH HANDLER
 // ============================================================

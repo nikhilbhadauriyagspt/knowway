@@ -307,6 +307,11 @@ export default function StudentDashboard() {
         setMyPackages(res.purchased_packages || []);
         setUpgradePackages(res.upgrade_packages || []);
         setAllPackagesList(res.all_packages || []);
+
+        // Guard: User must own at least one package to access the Student Dashboard
+        if (!res.purchased_packages || res.purchased_packages.length === 0) {
+          navigate("/?package_required=true", { replace: true });
+        }
       }
     } catch (err) {
       console.warn("Could not load packages:", err.message);

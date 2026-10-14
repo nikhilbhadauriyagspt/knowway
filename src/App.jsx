@@ -16,12 +16,15 @@ import CreatePackagePage from "./superadmin/CreatePackagePage";
 import AffiliatePage from "./pages/AffiliatePage";
 import ContactPage from "./pages/ContactPage";
 import SessionHeartbeatMonitor from "./components/SessionHeartbeatMonitor";
+import PackageRequiredModal from "./components/PackageRequiredModal";
 
 export default function App() {
   return (
     <BrowserRouter>
       {/* Real-time Multi-Device / Concurrent Session Monitor */}
       <SessionHeartbeatMonitor />
+      {/* Global Package Access Lock Modal */}
+      <PackageRequiredModal />
       <Routes>
         {/* Public Student Routes */}
         <Route path="/" element={<HomePage />} />

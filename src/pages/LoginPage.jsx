@@ -76,7 +76,11 @@ export default function LoginPage() {
       if (res?.success && res.token) {
         setShowSessionModal(false);
         setUserSession(res.token, res.user);
-        navigate("/dashboard", { replace: true });
+        if (res.user?.has_purchased || res.user?.active_package_count > 0) {
+          navigate("/dashboard", { replace: true });
+        } else {
+          navigate("/?package_required=true", { replace: true });
+        }
       } else {
         setErrorMsg(res?.message || "Login failed. Please try again.");
       }

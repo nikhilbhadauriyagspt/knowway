@@ -47,6 +47,7 @@ import {
   savePayoutMethodApi,
   deletePayoutMethodApi,
   setDefaultPayoutMethodApi,
+  getMyPackagesApi,
 } from "../services/api";
 import AffiliateHeader from "./components/AffiliateHeader";
 import AffiliateSidebar from "./components/AffiliateSidebar";
@@ -82,7 +83,7 @@ export default function AffiliateDashboard() {
     }
   }, [darkMode]);
 
-  // Load user
+  // Load user & verify active package access
   useEffect(() => {
     const localUser = getUserData();
     if (!localUser) {
@@ -90,6 +91,17 @@ export default function AffiliateDashboard() {
       return;
     }
     setUser(localUser);
+
+    // Guard: User must own at least one package to access the Affiliate Dashboard
+    getMyPackagesApi()
+      .then((res) => {
+        if (res?.success) {
+          if (!res.purchased_packages || res.purchased_packages.length === 0) {
+            navigate("/?package_required=true", { replace: true });
+          }
+        }
+      })
+      .catch(() => {});
   }, [navigate]);
 
   const referralCode = user?.referral_code || user?.referralCode || (user?.id ? `KW${user.id}` : "KW1001");
@@ -1657,7 +1669,7 @@ export default function AffiliateDashboard() {
                       type="text"
                       value={leaderboardSearch}
                       onChange={(e) => setLeaderboardSearch(e.target.value)}
-                      placeholder="Search affiliate name or ID..."
+                      placeholder="Search affiliate name or rank..."
                       className="bg-transparent text-xs outline-none placeholder-[#8A99AD] w-full"
                     />
                   </div>
@@ -1675,10 +1687,7 @@ export default function AffiliateDashboard() {
                       <tr>
                         <th className="py-3.5 px-5 font-bold">Rank</th>
                         <th className="py-3.5 px-5 font-bold">Affiliate Partner</th>
-                        <th className="py-3.5 px-5 font-bold">Student ID</th>
-                        <th className="py-3.5 px-5 font-bold">Conversions (Sales)</th>
                         <th className="py-3.5 px-5 font-bold">Income Earned</th>
-                        <th className="py-3.5 px-5 font-bold">Reward Tier Badge</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-inherit">
@@ -1775,36 +1784,8 @@ export default function AffiliateDashboard() {
                                 </div>
                               </td>
 
-                              <td className="py-3.5 px-5 font-mono text-[11px] text-[#8A99AD] font-semibold">
-                                {row.student_id || `KW${1000 + row.rank}`}
-                              </td>
-
-                              <td className="py-3.5 px-5 font-bold text-xs">
-                                <span className="px-2.5 py-1 rounded-md bg-blue-500/10 text-[#035BE3]">
-                                  {row.sales} Sales
-                                </span>
-                              </td>
-
-                              <td className="py-3.5 px-5">
-                                <span className="font-black text-emerald-500 text-sm">
-                                  {row.earnings}
-                                </span>
-                              </td>
-
-                              <td className="py-3.5 px-5">
-                                <span
-                                  className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${
-                                    isTop1
-                                      ? "bg-amber-500/15 text-amber-500 border-amber-500/30"
-                                      : isTop2
-                                      ? "bg-slate-400/15 text-slate-400 border-slate-400/30"
-                                      : isTop3
-                                      ? "bg-amber-800/15 text-amber-600 border-amber-700/30"
-                                      : "bg-blue-500/10 text-[#035BE3] border-blue-500/20"
-                                  }`}
-                                >
-                                  {row.badge || "Pro"}
-                                </span>
+                              <td className="py-3.5 px-5 font-black text-emerald-500 text-sm">
+                                {row.earnings}
                               </td>
                             </tr>
                           );

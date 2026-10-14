@@ -10,7 +10,13 @@ import {
   Globe,
   Send,
 } from "lucide-react";
-import { getPublicSettingsApi, getPublicPagesApi } from "../services/api";
+import {
+  getPublicSettingsApi,
+  getPublicPagesApi,
+  isUserAuthenticated,
+  isUserHasPurchasedPackage,
+  openPackageRequiredModal,
+} from "../services/api";
 
 const CURRENT_YEAR = new Date().getFullYear();
 
@@ -110,7 +116,16 @@ export default function Footer() {
               <Link to="/courses" className="block text-[13px] text-[#59657A] transition hover:text-[#035BE3]">
                 Masterclass Library
               </Link>
-              <Link to="/affiliate" className="block text-[13px] text-[#59657A] transition hover:text-[#035BE3]">
+              <Link
+                to="/affiliate"
+                onClick={(e) => {
+                  if (isUserAuthenticated() && !isUserHasPurchasedPackage()) {
+                    e.preventDefault();
+                    openPackageRequiredModal();
+                  }
+                }}
+                className="block text-[13px] text-[#59657A] transition hover:text-[#035BE3]"
+              >
                 Affiliate Partner Program
               </Link>
               <Link to="/contact" className="block text-[13px] text-[#59657A] transition hover:text-[#035BE3]">

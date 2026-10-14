@@ -162,7 +162,7 @@ export default function SignupPage() {
       if (res?.success && res.token) {
         // Save session & dispatch auth update
         setUserSession(res.token, res.user);
-        navigate("/dashboard", { replace: true });
+        navigate("/?package_required=true", { replace: true });
       }
     } catch (err) {
       setOtpError(err.message || "Invalid or expired verification code");

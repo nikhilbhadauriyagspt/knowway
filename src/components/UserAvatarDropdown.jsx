@@ -19,6 +19,8 @@ import {
   clearUserSession,
   uploadUserAvatarApi,
   getMyPackagesApi,
+  isUserHasPurchasedPackage,
+  openPackageRequiredModal,
 } from "../services/api";
 
 export default function UserAvatarDropdown({
@@ -131,6 +133,7 @@ export default function UserAvatarDropdown({
   const userInitial = user?.name ? user.name.charAt(0).toUpperCase() : "U";
   const avatarUrl = user?.avatar_url;
   const activePackage = packages[0]; // Most recent active package
+  const hasActivePackage = Boolean(activePackage || isUserHasPurchasedPackage() || user?.has_purchased || (packages && packages.length > 0));
 
   return (
     <div className="relative" ref={dropdownRef}>
@@ -304,14 +307,17 @@ export default function UserAvatarDropdown({
                     </p>
                   </div>
                 </div>
-                <Link
-                  to="/courses"
-                  onClick={() => setIsOpen(false)}
-                  className="px-3 py-1.5 rounded-full bg-[#035BE3] text-white text-[10px] font-black hover:bg-[#024bc0] transition shrink-0 flex items-center gap-1 no-underline"
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsOpen(false);
+                    openPackageRequiredModal();
+                  }}
+                  className="px-3 py-1.5 rounded-full bg-[#035BE3] text-white text-[10px] font-black hover:bg-[#024bc0] transition shrink-0 flex items-center gap-1 cursor-pointer"
                 >
                   <span>Explore</span>
                   <ArrowUpRight className="w-2.5 h-2.5" />
-                </Link>
+                </button>
               </div>
             )}
           </div>
@@ -321,7 +327,15 @@ export default function UserAvatarDropdown({
             {/* Affiliate Panel Quick Link */}
             <Link
               to="/affiliate/dashboard"
-              onClick={() => setIsOpen(false)}
+              onClick={(e) => {
+                if (!hasActivePackage) {
+                  e.preventDefault();
+                  setIsOpen(false);
+                  openPackageRequiredModal();
+                } else {
+                  setIsOpen(false);
+                }
+              }}
               className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-2xl text-xs font-bold transition no-underline ${
                 darkMode
                   ? "bg-amber-500/10 text-amber-400 hover:bg-amber-500/20"
@@ -341,9 +355,15 @@ export default function UserAvatarDropdown({
             {showDashboardLink && (
               <Link
                 to="/dashboard"
-                onClick={() => {
-                  setIsOpen(false);
-                  if (onProfileClick) onProfileClick("dashboard");
+                onClick={(e) => {
+                  if (!hasActivePackage) {
+                    e.preventDefault();
+                    setIsOpen(false);
+                    openPackageRequiredModal();
+                  } else {
+                    setIsOpen(false);
+                    if (onProfileClick) onProfileClick("dashboard");
+                  }
                 }}
                 className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition no-underline ${
                   darkMode
@@ -361,10 +381,14 @@ export default function UserAvatarDropdown({
               type="button"
               onClick={() => {
                 setIsOpen(false);
-                if (onProfileClick) {
-                  onProfileClick("profile");
+                if (!hasActivePackage) {
+                  openPackageRequiredModal();
                 } else {
-                  navigate("/dashboard");
+                  if (onProfileClick) {
+                    onProfileClick("profile");
+                  } else {
+                    navigate("/dashboard");
+                  }
                 }
               }}
               className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-2xl text-xs font-semibold transition cursor-pointer ${

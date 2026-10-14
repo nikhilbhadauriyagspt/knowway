@@ -351,6 +351,18 @@ export const login = async (req, res) => {
 
     const token = generateToken(user.id, newSessionToken);
 
+    // Check if user has active purchased package
+    let hasPurchasedPackage = false;
+    let activePackageCount = 0;
+    try {
+      const [userPackages] = await pool.query(
+        "SELECT COUNT(*) AS count FROM user_packages WHERE user_id = ? AND status = 'active'",
+        [user.id]
+      );
+      activePackageCount = userPackages[0]?.count || 0;
+      hasPurchasedPackage = activePackageCount > 0;
+    } catch (_) {}
+
     return res.status(200).json({
       success: true,
       message: "Login successful!",
@@ -366,6 +378,8 @@ export const login = async (req, res) => {
         referralCode: userReferralCode,
         referred_by: user.referred_by || null,
         avatar_url: user.avatar_url || null,
+        has_purchased: hasPurchasedPackage,
+        active_package_count: activePackageCount,
       },
     });
   } catch (error) {
@@ -539,6 +553,18 @@ export const getMe = async (req, res) => {
 
     const userReferralCode = user.referral_code || `KW${user.id}`;
 
+    // Check if user has active purchased package
+    let hasPurchasedPackage = false;
+    let activePackageCount = 0;
+    try {
+      const [userPackages] = await pool.query(
+        "SELECT COUNT(*) AS count FROM user_packages WHERE user_id = ? AND status = 'active'",
+        [user.id]
+      );
+      activePackageCount = userPackages[0]?.count || 0;
+      hasPurchasedPackage = activePackageCount > 0;
+    } catch (_) {}
+
     return res.status(200).json({
       success: true,
       user: {
@@ -552,6 +578,8 @@ export const getMe = async (req, res) => {
         referralCode: userReferralCode,
         avatar_url: user.avatar_url,
         created_at: user.created_at,
+        has_purchased: hasPurchasedPackage,
+        active_package_count: activePackageCount,
       },
     });
   } catch (err) {

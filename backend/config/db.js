@@ -4,11 +4,26 @@ import bcrypt from "bcryptjs";
 
 dotenv.config();
 
-const DB_HOST = process.env.DB_HOST || "localhost";
-const DB_USER = process.env.DB_USER || "root";
-const DB_PASSWORD = process.env.DB_PASSWORD || "";
-const DB_NAME = process.env.DB_NAME || "knowway_db";
-const DB_PORT = Number(process.env.DB_PORT) || 3306;
+let DB_HOST = process.env.DB_HOST || "localhost";
+let DB_USER = process.env.DB_USER || "root";
+let DB_PASSWORD = process.env.DB_PASSWORD || "";
+let DB_NAME = process.env.DB_NAME || "knowway_db";
+let DB_PORT = Number(process.env.DB_PORT) || 3306;
+
+// Auto-parse DATABASE_URL / MYSQL_URL if provided
+const rawDbUrl = process.env.DATABASE_URL || process.env.MYSQL_URL;
+if (rawDbUrl) {
+  try {
+    const parsed = new URL(rawDbUrl);
+    DB_HOST = parsed.hostname;
+    DB_USER = decodeURIComponent(parsed.username);
+    DB_PASSWORD = decodeURIComponent(parsed.password);
+    DB_NAME = parsed.pathname.replace(/^\//, "") || DB_NAME;
+    DB_PORT = Number(parsed.port) || 3306;
+  } catch (urlErr) {
+    console.warn("Notice: Could not parse DATABASE_URL, using individual DB credentials:", urlErr.message);
+  }
+}
 
 // Create connection pool
 const pool = mysql.createPool({
@@ -25,19 +40,21 @@ const pool = mysql.createPool({
 // Function to automatically create DB & tables if they don't exist
 export const initDB = async () => {
   try {
-    // 1. Connect to MySQL Server (without selecting database first)
-    const serverConnection = await mysql.createConnection({
-      host: DB_HOST,
-      user: DB_USER,
-      password: DB_PASSWORD,
-      port: DB_PORT,
-    });
+    // 1. Connect to MySQL Server (attempt auto-create database if permitted)
+    try {
+      const serverConnection = await mysql.createConnection({
+        host: DB_HOST,
+        user: DB_USER,
+        password: DB_PASSWORD,
+        port: DB_PORT,
+      });
 
-    // 2. Auto-create database if not exists
-    await serverConnection.query(
-      `CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`
-    );
-    await serverConnection.end();
+      // 2. Auto-create database if not exists
+      await serverConnection.query(
+        `CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;`
+      );
+      await serverConnection.end();
+    } catch (_) {}
 
     // 3. Connect via pool and auto-create tables
     const connection = await pool.getConnection();
@@ -70,7 +87,7 @@ export const initDB = async () => {
     try { await connection.query("ALTER TABLE users ADD COLUMN is_verified BOOLEAN DEFAULT TRUE;"); } catch (_) {}
     try { await connection.query("ALTER TABLE users ADD COLUMN active_session_token VARCHAR(255) DEFAULT NULL;"); } catch (_) {}
     try { await connection.query("ALTER TABLE users ADD COLUMN last_device_info VARCHAR(255) DEFAULT NULL;"); } catch (_) {}
-    try { await connection.query("ALTER TABLE users ADD COLUMN last_login_at TIMESTAMP DEFAULT NULL;"); } catch (_) {}
+    try { await connection.query("ALTER TABLE users ADD COLUMN last_login_at DATETIME NULL DEFAULT NULL;"); } catch (_) {}
     try { await connection.query("ALTER TABLE users ADD COLUMN referred_by VARCHAR(50) DEFAULT NULL;"); } catch (_) {}
     try { await connection.query("ALTER TABLE users ADD COLUMN referral_code VARCHAR(50) DEFAULT NULL;"); } catch (_) {}
 
@@ -1193,6 +1210,110 @@ export const initDB = async () => {
       ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
     `;
     await connection.query(createContactInquiriesTableQuery);
+
+    // Affiliate Announcements Table
+    const createAffiliateAnnouncementsQuery = `
+      CREATE TABLE IF NOT EXISTS affiliate_announcements (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        title VARCHAR(255) NOT NULL,
+        content TEXT NOT NULL,
+        category VARCHAR(50) DEFAULT 'general',
+        priority VARCHAR(50) DEFAULT 'normal',
+        badge_text VARCHAR(100) DEFAULT NULL,
+        action_label VARCHAR(100) DEFAULT NULL,
+        action_url VARCHAR(500) DEFAULT NULL,
+        is_pinned BOOLEAN DEFAULT FALSE,
+        is_active BOOLEAN DEFAULT TRUE,
+        created_by VARCHAR(100) DEFAULT 'Admin',
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX (is_active),
+        INDEX (is_pinned)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `;
+    await connection.query(createAffiliateAnnouncementsQuery);
+
+    // Freelance Studio Modules Table
+    const createFreelanceModulesQuery = `
+      CREATE TABLE IF NOT EXISTS freelance_modules (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        module_number VARCHAR(20) DEFAULT '01',
+        title VARCHAR(255) NOT NULL,
+        subtitle VARCHAR(255) DEFAULT '',
+        order_index INT DEFAULT 1,
+        is_published BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `;
+    await connection.query(createFreelanceModulesQuery);
+
+    // Freelance Studio Lessons Table
+    const createFreelanceLessonsQuery = `
+      CREATE TABLE IF NOT EXISTS freelance_lessons (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        module_id INT NOT NULL,
+        lesson_number VARCHAR(20) DEFAULT '1',
+        title VARCHAR(255) NOT NULL,
+        duration VARCHAR(50) DEFAULT '15 mins',
+        video_url VARCHAR(500) NOT NULL,
+        language VARCHAR(50) DEFAULT 'Hindi',
+        order_index INT DEFAULT 1,
+        is_published BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX (module_id),
+        INDEX (is_published)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `;
+    await connection.query(createFreelanceLessonsQuery);
+
+    // Freelance Applications Table
+    const createFreelanceApplicationsQuery = `
+      CREATE TABLE IF NOT EXISTS freelance_applications (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT DEFAULT NULL,
+        type VARCHAR(50) DEFAULT 'freelancer',
+        name VARCHAR(150) NOT NULL,
+        phone VARCHAR(30) NOT NULL,
+        email VARCHAR(191) DEFAULT '',
+        skill VARCHAR(150) NOT NULL,
+        experience_level VARCHAR(50) DEFAULT 'Beginner',
+        hours_available VARCHAR(100) DEFAULT '15-20 Hours/Week',
+        portfolio_url VARCHAR(500) DEFAULT '',
+        monthly_goal VARCHAR(100) DEFAULT '',
+        notes TEXT DEFAULT NULL,
+        status ENUM('pending', 'contacted', 'approved', 'rejected') DEFAULT 'pending',
+        admin_notes TEXT DEFAULT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX (user_id),
+        INDEX (status)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `;
+    await connection.query(createFreelanceApplicationsQuery);
+
+    // Freelance Testimonials Table
+    const createFreelanceTestimonialsQuery = `
+      CREATE TABLE IF NOT EXISTS freelance_testimonials (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        user_id INT DEFAULT NULL,
+        name VARCHAR(150) NOT NULL,
+        location VARCHAR(150) DEFAULT '',
+        skill VARCHAR(150) DEFAULT 'Freelancing',
+        badge VARCHAR(100) DEFAULT '',
+        story TEXT NOT NULL,
+        earned VARCHAR(100) DEFAULT '',
+        avatar_bg VARCHAR(100) DEFAULT 'from-amber-400 to-orange-500',
+        rating INT DEFAULT 5,
+        is_approved BOOLEAN DEFAULT TRUE,
+        order_index INT DEFAULT 1,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX (is_approved)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `;
+    await connection.query(createFreelanceTestimonialsQuery);
 
     connection.release();
   } catch (err) {

@@ -49,7 +49,7 @@ app.use((req, res) => {
 });
 
 // Start Server & Connect to MySQL
-app.listen(PORT, async () => {
-  console.log(`🚀 Server is running on http://localhost:${PORT}`);
+app.listen(PORT, "0.0.0.0", async () => {
+  console.log(`🚀 Server is running on http://0.0.0.0:${PORT}`);
   await initDB();
 });
