@@ -10,9 +10,6 @@
     "lint": "oxlint",
     "preview": "vite preview"
   },
-  "workspaces": [
-    "backend"
-  ],
   "dependencies": {
     "bcryptjs": "^3.0.2",
     "canvas-confetti": "^1.9.4",
