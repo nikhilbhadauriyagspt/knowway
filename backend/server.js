@@ -9,8 +9,16 @@ import paymentRoutes from "./routes/paymentRoutes.js";
 import affiliateRoutes from "./routes/affiliateRoutes.js";
 import freelanceRoutes from "./routes/freelanceRoutes.js";
 
+import path from "path";
+import { fileURLToPath } from "url";
+import fs from "fs";
+
 // Load environment variables
 dotenv.config();
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+const distPath = path.resolve(__dirname, "../dist");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -53,7 +61,19 @@ app.use("/api/payment", paymentRoutes);
 app.use("/api/affiliate", affiliateRoutes);
 app.use("/api/freelance", freelanceRoutes);
 
-// 404 Route handler
+// Serve static frontend build if present
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+
+  app.get("*", (req, res, next) => {
+    if (req.path.startsWith("/api")) {
+      return next();
+    }
+    res.sendFile(path.join(distPath, "index.html"));
+  });
+}
+
+// 404 Route handler for API endpoints
 app.use((req, res) => {
   res.status(404).json({
     success: false,

@@ -14,7 +14,7 @@ export const API_BASE_URL =
   import.meta.env.VITE_API_URL ||
   (isLocal
     ? "http://localhost:5000/api"
-    : "https://knowway-2jzj.onrender.com/api");
+    : "/api");
 
 const ADMIN_TOKEN_KEY = "knowway_admin_token";
 const ADMIN_USER_KEY = "knowway_admin_user";
