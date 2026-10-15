@@ -3,6 +3,7 @@ import multer from "multer";
 import {
   adminLogin,
   getAdminProfile,
+  changeAdminPassword,
   getDashboardStats,
   getAllUsers,
   getUserPurchases,
@@ -80,6 +81,8 @@ router.post("/login", adminLogin);
 
 // Super Admin Protected Routes
 router.get("/me", getAdminProfile);
+router.post("/change-password", changeAdminPassword);
+router.put("/password", changeAdminPassword);
 router.get("/stats", getDashboardStats);
 router.get("/users", getAllUsers);
 router.get("/users/:id/purchases", getUserPurchases);

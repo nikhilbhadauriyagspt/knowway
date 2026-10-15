@@ -90,6 +90,84 @@ export const getAdminProfile = async (req, res) => {
   }
 };
 
+// 2.1 Change Admin Password
+export const changeAdminPassword = async (req, res) => {
+  const { currentPassword, newPassword, confirmPassword } = req.body;
+
+  if (!newPassword || newPassword.length < 6) {
+    return res.status(400).json({
+      success: false,
+      message: "New password must be at least 6 characters long.",
+    });
+  }
+
+  if (confirmPassword && newPassword !== confirmPassword) {
+    return res.status(400).json({
+      success: false,
+      message: "New password and confirm password do not match.",
+    });
+  }
+
+  try {
+    let adminId = null;
+    const authHeader = req.headers.authorization;
+    if (authHeader && authHeader.startsWith("Bearer ")) {
+      try {
+        const decoded = jwt.verify(authHeader.split(" ")[1], JWT_SECRET);
+        adminId = decoded.id;
+      } catch (_) {}
+    }
+
+    let query = "SELECT * FROM admins WHERE id = ? LIMIT 1";
+    let params = [adminId];
+    if (!adminId) {
+      query = "SELECT * FROM admins ORDER BY id ASC LIMIT 1";
+      params = [];
+    }
+
+    const [admins] = await pool.query(query, params);
+    if (!admins || admins.length === 0) {
+      return res.status(404).json({ success: false, message: "Admin account not found." });
+    }
+
+    const admin = admins[0];
+
+    // If currentPassword is provided, verify it
+    if (currentPassword) {
+      const isMatch = await bcrypt.compare(currentPassword, admin.password);
+      if (!isMatch) {
+        return res.status(400).json({
+          success: false,
+          message: "Current password does not match our records.",
+        });
+      }
+    }
+
+    const hashedNewPassword = await bcrypt.hash(newPassword, 10);
+    await pool.query("UPDATE admins SET password = ? WHERE id = ?", [hashedNewPassword, admin.id]);
+
+    try {
+      await logAdminActivity({
+        admin_id: admin.id,
+        action: "UPDATE_PASSWORD",
+        entity: "admin",
+        details: `Password changed for admin ${admin.email}`,
+      });
+    } catch (_) {}
+
+    return res.status(200).json({
+      success: true,
+      message: "Admin password changed successfully! Please use your new password next time you login.",
+    });
+  } catch (err) {
+    console.error("Change Admin Password Error:", err);
+    return res.status(500).json({
+      success: false,
+      message: "Failed to update admin password: " + err.message,
+    });
+  }
+};
+
 // 3. Get Dashboard Stats
 export const getDashboardStats = async (req, res) => {
   try {
@@ -1855,8 +1933,11 @@ export const getPublicSettings = async (req, res) => {
   try {
     const publicKeys = [
       'site_name',
+      'site_title',
+      'site_description',
       'site_tagline',
       'site_logo',
+      'site_favicon',
       'contact_email',
       'contact_phone',
       'contact_address',
@@ -1875,18 +1956,21 @@ export const getPublicSettings = async (req, res) => {
     );
 
     const settings = {
-      site_name: 'Knowway',
+      site_name: 'The Skillpreneur',
+      site_title: 'The Skillpreneur | Learn In-Demand Digital Skills & Start Earning',
+      site_description: 'Practical digital skills, freelancing, performance marketing, and digital business courses to help you earn and grow.',
       site_tagline: 'Simple learning paths, practical digital skills and useful knowledge designed to help you keep progressing.',
       site_logo: '/images/logo/logo.png',
-      contact_email: 'support@knowway.in',
+      site_favicon: '/favicon.svg',
+      contact_email: 'support@theskillpreneur.com',
       contact_phone: '+91 98765 43210',
-      contact_address: 'Knowway EdTech Tower, Tech Zone 4, Greater Noida, UP - 201306',
-      social_instagram: 'https://instagram.com/knowway',
-      social_youtube: 'https://youtube.com/@knowway',
-      social_linkedin: 'https://linkedin.com/company/knowway',
-      social_telegram: 'https://t.me/knowway_official',
-      social_twitter: 'https://twitter.com/knowway',
-      copyright_text: 'Knowway. All rights reserved.',
+      contact_address: 'The Skillpreneur Headquarters, India',
+      social_instagram: 'https://instagram.com/theskillpreneur',
+      social_youtube: 'https://youtube.com/@theskillpreneur',
+      social_linkedin: 'https://linkedin.com/company/theskillpreneur',
+      social_telegram: 'https://t.me/theskillpreneur_official',
+      social_twitter: 'https://twitter.com/theskillpreneur',
+      copyright_text: 'The Skillpreneur. All rights reserved.',
       min_affiliate_withdrawal_amount: '500',
     };
 

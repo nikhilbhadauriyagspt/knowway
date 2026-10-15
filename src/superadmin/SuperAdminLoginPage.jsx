@@ -24,8 +24,8 @@ const CURRENT_YEAR = new Date().getFullYear();
 export default function SuperAdminLoginPage() {
   const navigate = useNavigate();
 
-  const [email, setEmail] = useState("admin@knowway.com");
-  const [password, setPassword] = useState("Admin@123");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
   const [rememberMe, setRememberMe] = useState(true);
 
@@ -39,12 +39,6 @@ export default function SuperAdminLoginPage() {
       navigate("/admin/dashboard", { replace: true });
     }
   }, [navigate]);
-
-  const handleFillDemo = () => {
-    setEmail("admin@knowway.com");
-    setPassword("Admin@123");
-    setErrorMsg("");
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -169,23 +163,6 @@ export default function SuperAdminLoginPage() {
               </p>
             </div>
 
-            {/* Quick Demo Credentials Helper */}
-            <div className="mb-6 p-3.5 rounded-2xl bg-[#F8FAFC] border border-gray-200/80 flex items-center justify-between gap-3 text-xs">
-              <div className="flex items-center gap-2 text-[#475569] font-medium">
-                <KeyRound className="w-4 h-4 text-[#FA8C03] shrink-0" />
-                <span>
-                  Demo: <strong className="text-[#1E293B]">admin@knowway.com</strong>
-                </span>
-              </div>
-              <button
-                type="button"
-                onClick={handleFillDemo}
-                className="px-2.5 py-1 text-[11px] font-semibold text-[#035BE3] hover:text-white bg-[#EFF4FF] hover:bg-[#035BE3] rounded-lg transition-all border border-[#035BE3]/20"
-              >
-                Auto-fill
-              </button>
-            </div>
-
             {/* Error Message Alert */}
             {errorMsg && (
               <div className="mb-5 p-3.5 rounded-2xl bg-red-50/90 border border-red-200 text-red-700 text-xs font-medium flex items-start gap-2.5 animate-in fade-in slide-in-from-top-1 duration-200">
@@ -218,7 +195,7 @@ export default function SuperAdminLoginPage() {
                     required
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="admin@knowway.com"
+                    placeholder="admin@theskillpreneur.com"
                     className="w-full rounded-xl border border-gray-200 bg-white pl-10 pr-4 py-3 text-sm text-[#161B29] placeholder-gray-400 outline-none transition focus:border-[#035BE3] focus:ring-3 focus:ring-[#035BE3]/15"
                   />
                 </div>

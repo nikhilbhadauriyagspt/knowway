@@ -110,6 +110,7 @@ import {
   deleteAdminPageApi,
   updateMentorApi,
   getPublicSettingsApi,
+  changeAdminPasswordApi,
   getAdminContactInquiriesApi,
   updateAdminContactInquiryStatusApi,
   deleteAdminContactInquiryApi,
@@ -244,21 +245,34 @@ export default function SuperAdminDashboard() {
 
   // Website Branding & Dynamic Settings States
   const [brandingSettings, setBrandingSettings] = useState({
-    site_name: "Knowway",
+    site_name: "The Skillpreneur",
+    site_title: "The Skillpreneur | Learn In-Demand Digital Skills & Start Earning",
+    site_description: "Practical digital skills, freelancing, performance marketing, and digital business courses to help you earn and grow.",
     site_tagline: "Simple learning paths, practical digital skills and useful knowledge designed to help you keep progressing.",
     site_logo: "/images/logo/logo.png",
-    contact_email: "support@knowway.in",
+    site_favicon: "/favicon.svg",
+    contact_email: "support@theskillpreneur.com",
     contact_phone: "+91 98765 43210",
-    contact_address: "Knowway EdTech Tower, Tech Zone 4, Greater Noida, UP - 201306",
-    social_instagram: "https://instagram.com/knowway",
-    social_youtube: "https://youtube.com/@knowway",
-    social_linkedin: "https://linkedin.com/company/knowway",
-    social_telegram: "https://t.me/knowway_official",
-    social_twitter: "https://twitter.com/knowway",
-    copyright_text: "Knowway. All rights reserved.",
+    contact_address: "The Skillpreneur Headquarters, India",
+    social_instagram: "https://instagram.com/theskillpreneur",
+    social_youtube: "https://youtube.com/@theskillpreneur",
+    social_linkedin: "https://linkedin.com/company/theskillpreneur",
+    social_telegram: "https://t.me/theskillpreneur_official",
+    social_twitter: "https://twitter.com/theskillpreneur",
+    copyright_text: "The Skillpreneur. All rights reserved.",
   });
   const [isSavingBranding, setIsSavingBranding] = useState(false);
   const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingFavicon, setUploadingFavicon] = useState(false);
+
+  // Admin Change Password State
+  const [passwordForm, setPasswordForm] = useState({
+    currentPassword: "",
+    newPassword: "",
+    confirmPassword: "",
+  });
+  const [isChangingPassword, setIsChangingPassword] = useState(false);
+  const [showPasswordFields, setShowPasswordFields] = useState(false);
 
   // Custom Pages & Policies CMS States
   const [adminPagesList, setAdminPagesList] = useState([]);
@@ -1111,6 +1125,62 @@ export default function SuperAdminDashboard() {
       showToast(err.message || "Error uploading logo", "error");
     } finally {
       setUploadingLogo(false);
+    }
+  };
+
+  const handleFaviconUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingFavicon(true);
+    try {
+      const res = await uploadImageApi(file, "theskill_favicon");
+      if (res?.success && res.url) {
+        setBrandingSettings((prev) => ({ ...prev, site_favicon: res.url }));
+        showToast("Favicon uploaded! Click 'Save Branding Settings' to apply.");
+        // Dynamically update browser tab favicon for preview
+        const link = document.querySelector("link[rel*='icon']") || document.createElement("link");
+        link.type = "image/x-icon";
+        link.rel = "shortcut icon";
+        link.href = res.url;
+        document.getElementsByTagName("head")[0].appendChild(link);
+      } else {
+        showToast(res?.message || "Failed to upload favicon.", "error");
+      }
+    } catch (err) {
+      showToast(err.message || "Error uploading favicon", "error");
+    } finally {
+      setUploadingFavicon(false);
+    }
+  };
+
+  const handleChangeAdminPassword = async (e) => {
+    if (e) e.preventDefault();
+    if (!passwordForm.newPassword || passwordForm.newPassword.length < 6) {
+      showToast("New password must be at least 6 characters long.", "error");
+      return;
+    }
+    if (passwordForm.newPassword !== passwordForm.confirmPassword) {
+      showToast("New password and confirmation password do not match.", "error");
+      return;
+    }
+
+    setIsChangingPassword(true);
+    try {
+      const res = await changeAdminPasswordApi(passwordForm);
+      if (res?.success) {
+        showToast(res.message || "Admin password changed successfully!");
+        setPasswordForm({
+          currentPassword: "",
+          newPassword: "",
+          confirmPassword: "",
+        });
+      } else {
+        showToast(res?.message || "Failed to update admin password.", "error");
+      }
+    } catch (err) {
+      showToast(err.message || "Error updating password.", "error");
+    } finally {
+      setIsChangingPassword(false);
     }
   };
 
@@ -3040,14 +3110,15 @@ export default function SuperAdminDashboard() {
                 </div>
 
                 <form onSubmit={handleSaveBrandingSettings} className="space-y-6">
-                  {/* Row 1: Logo & Platform Name */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                  {/* Row 1: Logo & Favicon & Platform Name */}
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-5">
+                    {/* Platform Logo */}
                     <div>
                       <label className={`block text-xs font-bold mb-2 ${darkMode ? "text-white" : "text-[#0F172A]"}`}>
                         Platform Logo
                       </label>
                       <div className="flex items-center gap-3">
-                        <div className="w-14 h-14 rounded-2xl border p-1 bg-white shrink-0 flex items-center justify-center overflow-hidden">
+                        <div className="w-12 h-12 rounded-2xl border p-1 bg-white shrink-0 flex items-center justify-center overflow-hidden">
                           <img
                             src={brandingSettings.site_logo || "/images/logo/logo.png"}
                             alt="Site Logo"
@@ -3056,9 +3127,9 @@ export default function SuperAdminDashboard() {
                           />
                         </div>
                         <div className="flex-1 min-w-0">
-                          <label className="px-3.5 py-2 bg-[#035BE3] hover:bg-[#024bc0] text-white rounded-full text-xs font-bold cursor-pointer inline-flex items-center gap-1.5 transition">
+                          <label className="px-3 py-1.5 bg-[#035BE3] hover:bg-[#024bc0] text-white rounded-full text-[11px] font-bold cursor-pointer inline-flex items-center gap-1.5 transition">
                             <Cloud className="w-3.5 h-3.5" />
-                            <span>{uploadingLogo ? "Uploading..." : "Upload New Logo"}</span>
+                            <span>{uploadingLogo ? "Uploading..." : "Upload Logo"}</span>
                             <input
                               type="file"
                               accept="image/*"
@@ -3071,21 +3142,53 @@ export default function SuperAdminDashboard() {
                       </div>
                     </div>
 
+                    {/* Website Favicon */}
+                    <div>
+                      <label className={`block text-xs font-bold mb-2 ${darkMode ? "text-white" : "text-[#0F172A]"}`}>
+                        Browser Tab Favicon
+                      </label>
+                      <div className="flex items-center gap-3">
+                        <div className="w-12 h-12 rounded-2xl border p-1 bg-white shrink-0 flex items-center justify-center overflow-hidden shadow-xs">
+                          <img
+                            src={brandingSettings.site_favicon || "/favicon.svg"}
+                            alt="Favicon"
+                            className="w-7 h-7 object-contain"
+                            onError={(e) => { e.currentTarget.src = "/favicon.svg"; }}
+                          />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <label className="px-3 py-1.5 bg-[#FA8C03] hover:bg-[#d97706] text-white rounded-full text-[11px] font-bold cursor-pointer inline-flex items-center gap-1.5 transition">
+                            <Cloud className="w-3.5 h-3.5" />
+                            <span>{uploadingFavicon ? "Uploading..." : "Upload Favicon"}</span>
+                            <input
+                              type="file"
+                              accept="image/*,.ico,.svg"
+                              onChange={handleFaviconUpload}
+                              className="hidden"
+                              disabled={uploadingFavicon}
+                            />
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Platform Name */}
                     <div>
                       <label className={`block text-xs font-bold mb-1.5 ${darkMode ? "text-white" : "text-[#0F172A]"}`}>
-                        Platform / Website Name
+                        Platform / Brand Name
                       </label>
                       <input
                         type="text"
                         value={brandingSettings.site_name || ""}
                         onChange={(e) => setBrandingSettings({ ...brandingSettings, site_name: e.target.value })}
-                        placeholder="Knowway"
+                        placeholder="The Skillpreneur"
                         className={`w-full h-10 rounded-xl border px-3.5 text-xs font-semibold outline-none focus:border-[#035BE3] ${
                           darkMode ? "bg-[#0B0F17] border-[#222B3D] text-white" : "bg-white border-[#E2E8F0] text-[#0F172A]"
                         }`}
                       />
                     </div>
 
+                    {/* Copyright Note */}
                     <div>
                       <label className={`block text-xs font-bold mb-1.5 ${darkMode ? "text-white" : "text-[#0F172A]"}`}>
                         Copyright Footer Note
@@ -3094,7 +3197,7 @@ export default function SuperAdminDashboard() {
                         type="text"
                         value={brandingSettings.copyright_text || ""}
                         onChange={(e) => setBrandingSettings({ ...brandingSettings, copyright_text: e.target.value })}
-                        placeholder="Knowway. All rights reserved."
+                        placeholder="The Skillpreneur. All rights reserved."
                         className={`w-full h-10 rounded-xl border px-3.5 text-xs font-semibold outline-none focus:border-[#035BE3] ${
                           darkMode ? "bg-[#0B0F17] border-[#222B3D] text-white" : "bg-white border-[#E2E8F0] text-[#0F172A]"
                         }`}
@@ -3102,17 +3205,50 @@ export default function SuperAdminDashboard() {
                     </div>
                   </div>
 
-                  {/* Row 2: Tagline */}
+                  {/* Row 2: Website SEO Title & Tagline */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+                    <div>
+                      <label className={`block text-xs font-bold mb-1.5 ${darkMode ? "text-white" : "text-[#0F172A]"}`}>
+                        Website SEO Title (Browser Tab Title)
+                      </label>
+                      <input
+                        type="text"
+                        value={brandingSettings.site_title || ""}
+                        onChange={(e) => setBrandingSettings({ ...brandingSettings, site_title: e.target.value })}
+                        placeholder="The Skillpreneur | Learn In-Demand Digital Skills & Start Earning"
+                        className={`w-full h-10 rounded-xl border px-3.5 text-xs font-semibold outline-none focus:border-[#035BE3] ${
+                          darkMode ? "bg-[#0B0F17] border-[#222B3D] text-white" : "bg-white border-[#E2E8F0] text-[#0F172A]"
+                        }`}
+                      />
+                    </div>
+
+                    <div>
+                      <label className={`block text-xs font-bold mb-1.5 ${darkMode ? "text-white" : "text-[#0F172A]"}`}>
+                        Website Tagline / Mission Motto
+                      </label>
+                      <input
+                        type="text"
+                        value={brandingSettings.site_tagline || ""}
+                        onChange={(e) => setBrandingSettings({ ...brandingSettings, site_tagline: e.target.value })}
+                        placeholder="Simple learning paths, practical digital skills and useful knowledge..."
+                        className={`w-full h-10 rounded-xl border px-3.5 text-xs font-semibold outline-none focus:border-[#035BE3] ${
+                          darkMode ? "bg-[#0B0F17] border-[#222B3D] text-white" : "bg-white border-[#E2E8F0] text-[#0F172A]"
+                        }`}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Row 3: Meta Description */}
                   <div>
                     <label className={`block text-xs font-bold mb-1.5 ${darkMode ? "text-white" : "text-[#0F172A]"}`}>
-                      Website Tagline / Mission Motto
+                      SEO Meta Description (Search Engine Snippet)
                     </label>
-                    <input
-                      type="text"
-                      value={brandingSettings.site_tagline || ""}
-                      onChange={(e) => setBrandingSettings({ ...brandingSettings, site_tagline: e.target.value })}
-                      placeholder="Simple learning paths, practical digital skills and useful knowledge..."
-                      className={`w-full h-10 rounded-xl border px-3.5 text-xs font-semibold outline-none focus:border-[#035BE3] ${
+                    <textarea
+                      rows={2}
+                      value={brandingSettings.site_description || ""}
+                      onChange={(e) => setBrandingSettings({ ...brandingSettings, site_description: e.target.value })}
+                      placeholder="Practical digital skills, freelancing, performance marketing, and digital business courses to help you earn and grow."
+                      className={`w-full rounded-xl border p-3 text-xs font-medium outline-none focus:border-[#035BE3] ${
                         darkMode ? "bg-[#0B0F17] border-[#222B3D] text-white" : "bg-white border-[#E2E8F0] text-[#0F172A]"
                       }`}
                     />
@@ -3237,6 +3373,109 @@ export default function SuperAdminDashboard() {
                     >
                       <Check className="w-4 h-4" />
                       <span>{isSavingBranding ? "Saving Branding..." : "Save & Publish Branding Info"}</span>
+                    </button>
+                  </div>
+                </form>
+              </div>
+
+              {/* ================= ADMIN PASSWORD & SECURITY CARD ================= */}
+              <div
+                className={`rounded-[28px] p-6 sm:p-8 border transition-colors mb-6 ${
+                  darkMode ? "bg-[#131926] border-[#222B3D]" : "bg-white border-[#E2E8F0] shadow-xs"
+                }`}
+              >
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-5 border-b border-inherit mb-6">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-[#FA8C03]/10 text-[#FA8C03] flex items-center justify-center border border-[#FA8C03]/15 shrink-0">
+                      <Lock className="w-5 h-5" />
+                    </div>
+                    <div>
+                      <h3 className={`text-base font-bold ${darkMode ? "text-white" : "text-[#0F172A]"}`}>
+                        Admin Security & Change Password
+                      </h3>
+                      <p className={`text-xs ${darkMode ? "text-[#94A3B8]" : "text-[#64748B]"}`}>
+                        Update your master super-administrator password to secure platform access.
+                      </p>
+                    </div>
+                  </div>
+
+                  <span className={`text-[10px] font-bold px-3 py-1 rounded-full uppercase tracking-wider border shrink-0 ${
+                    darkMode ? "bg-amber-950/50 text-amber-400 border-amber-900" : "bg-amber-50 text-amber-700 border-amber-200"
+                  }`}>
+                    🔐 Master Auth Access
+                  </span>
+                </div>
+
+                <form onSubmit={handleChangeAdminPassword} className="space-y-5">
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-5">
+                    {/* Current Password */}
+                    <div>
+                      <label className={`block text-xs font-bold mb-1.5 ${darkMode ? "text-white" : "text-[#0F172A]"}`}>
+                        Current Password (Optional if forgotten)
+                      </label>
+                      <div className="relative">
+                        <input
+                          type={showPasswordFields ? "text" : "password"}
+                          value={passwordForm.currentPassword}
+                          onChange={(e) => setPasswordForm({ ...passwordForm, currentPassword: e.target.value })}
+                          placeholder="Current password"
+                          className={`w-full h-10 rounded-xl border pl-3.5 pr-10 text-xs font-medium outline-none focus:border-[#035BE3] ${
+                            darkMode ? "bg-[#0B0F17] border-[#222B3D] text-white" : "bg-white border-[#E2E8F0] text-[#0F172A]"
+                          }`}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => setShowPasswordFields(!showPasswordFields)}
+                          className="absolute inset-y-0 right-0 flex items-center pr-3 text-gray-400 hover:text-gray-600 cursor-pointer"
+                        >
+                          {showPasswordFields ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
+                        </button>
+                      </div>
+                    </div>
+
+                    {/* New Password */}
+                    <div>
+                      <label className={`block text-xs font-bold mb-1.5 ${darkMode ? "text-white" : "text-[#0F172A]"}`}>
+                        New Password (Min 6 chars)
+                      </label>
+                      <input
+                        type={showPasswordFields ? "text" : "password"}
+                        required
+                        value={passwordForm.newPassword}
+                        onChange={(e) => setPasswordForm({ ...passwordForm, newPassword: e.target.value })}
+                        placeholder="Enter strong new password"
+                        className={`w-full h-10 rounded-xl border px-3.5 text-xs font-medium outline-none focus:border-[#035BE3] ${
+                          darkMode ? "bg-[#0B0F17] border-[#222B3D] text-white" : "bg-white border-[#E2E8F0] text-[#0F172A]"
+                        }`}
+                      />
+                    </div>
+
+                    {/* Confirm New Password */}
+                    <div>
+                      <label className={`block text-xs font-bold mb-1.5 ${darkMode ? "text-white" : "text-[#0F172A]"}`}>
+                        Confirm New Password
+                      </label>
+                      <input
+                        type={showPasswordFields ? "text" : "password"}
+                        required
+                        value={passwordForm.confirmPassword}
+                        onChange={(e) => setPasswordForm({ ...passwordForm, confirmPassword: e.target.value })}
+                        placeholder="Re-type new password"
+                        className={`w-full h-10 rounded-xl border px-3.5 text-xs font-medium outline-none focus:border-[#035BE3] ${
+                          darkMode ? "bg-[#0B0F17] border-[#222B3D] text-white" : "bg-white border-[#E2E8F0] text-[#0F172A]"
+                        }`}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="flex justify-end pt-2">
+                    <button
+                      type="submit"
+                      disabled={isChangingPassword}
+                      className="px-6 py-2.5 bg-gradient-to-r from-[#FA8C03] to-[#E67E00] hover:brightness-105 text-white rounded-full text-xs font-bold transition flex items-center gap-2 cursor-pointer shadow-xs disabled:opacity-50"
+                    >
+                      <Lock className="w-4 h-4" />
+                      <span>{isChangingPassword ? "Updating Password..." : "Update Admin Password"}</span>
                     </button>
                   </div>
                 </form>

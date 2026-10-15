@@ -247,6 +247,13 @@ export const getAdminProfileApi = () => {
   return apiRequest("/admin/me");
 };
 
+export const changeAdminPasswordApi = (passwordData) => {
+  return apiRequest("/admin/change-password", {
+    method: "POST",
+    body: JSON.stringify(passwordData),
+  });
+};
+
 export const getAdminStatsApi = () => {
   return apiRequest("/admin/stats");
 };

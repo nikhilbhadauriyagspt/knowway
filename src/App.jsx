@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import HomePage from "./pages/HomePage";
 import LoginPage from "./pages/LoginPage";
@@ -17,8 +18,54 @@ import AffiliatePage from "./pages/AffiliatePage";
 import ContactPage from "./pages/ContactPage";
 import SessionHeartbeatMonitor from "./components/SessionHeartbeatMonitor";
 import PackageRequiredModal from "./components/PackageRequiredModal";
+import { getPublicSettingsApi } from "./services/api";
 
 export default function App() {
+  useEffect(() => {
+    let isMounted = true;
+    getPublicSettingsApi()
+      .then((res) => {
+        if (!isMounted || !res || !res.settings) return;
+        const s = res.settings;
+
+        // Dynamic Site Title
+        if (s.site_title) {
+          document.title = s.site_title;
+        } else if (s.site_name) {
+          document.title = s.site_name;
+        }
+
+        // Dynamic Meta Description
+        if (s.site_description) {
+          let metaDesc = document.querySelector('meta[name="description"]');
+          if (!metaDesc) {
+            metaDesc = document.createElement("meta");
+            metaDesc.name = "description";
+            document.head.appendChild(metaDesc);
+          }
+          metaDesc.content = s.site_description;
+        }
+
+        // Dynamic Favicon
+        if (s.site_favicon) {
+          let linkIcon = document.querySelector('link[rel="icon"]');
+          if (!linkIcon) {
+            linkIcon = document.createElement("link");
+            linkIcon.rel = "icon";
+            document.head.appendChild(linkIcon);
+          }
+          linkIcon.href = s.site_favicon;
+        }
+      })
+      .catch((err) => {
+        console.warn("Public settings load warning:", err.message);
+      });
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
+
   return (
     <BrowserRouter>
       {/* Real-time Multi-Device / Concurrent Session Monitor */}
