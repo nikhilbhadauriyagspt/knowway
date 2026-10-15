@@ -18,21 +18,23 @@ dotenv.config();
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-const distPath = path.resolve(__dirname, "../dist");
+const distPath = fs.existsSync(path.resolve(__dirname, "public"))
+  ? path.resolve(__dirname, "public")
+  : path.resolve(__dirname, "../dist");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 // Middlewares
 app.use(cors({
-  origin: process.env.CLIENT_URL || "http://localhost:5173",
+  origin: true,
   credentials: true,
 }));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// Root & Health Check Routes for GoDaddy / Cloud Load Balancers
-app.get("/", (req, res) => {
+// API Info Route
+app.get("/api", (req, res) => {
   res.status(200).json({
     status: "ok",
     service: "KnowWay Backend API",
