@@ -660,11 +660,12 @@ export default function SuperAdminDashboard() {
 
       // 8. Affiliate & Payouts Data
       try {
-        const [affStatsRes, affPayoutsRes, affRefsRes, affAnnRes] = await Promise.all([
+        const [affStatsRes, affPayoutsRes, affRefsRes, affAnnRes, affUsersRes] = await Promise.all([
           getAdminAffiliateStatsApi().catch(() => null),
           getAdminAffiliatePayoutsApi().catch(() => null),
           getAdminAffiliateReferralsApi().catch(() => null),
           getAdminAffiliateAnnouncementsApi().catch(() => null),
+          getAdminAffiliateUsersApi().catch(() => null),
         ]);
         if (affStatsRes?.stats) {
           setAffiliateStats(affStatsRes.stats);
@@ -1115,9 +1116,11 @@ export default function SuperAdminDashboard() {
     setUploadingLogo(true);
     try {
       const res = await uploadImageApi(file);
-      if (res?.success && res.url) {
-        setBrandingSettings((prev) => ({ ...prev, site_logo: res.url }));
-        showToast("Logo uploaded! Click 'Save Branding Settings' to publish.");
+      const uploadedUrl = res?.url || res?.data?.url;
+      if (res?.success && uploadedUrl) {
+        setBrandingSettings((prev) => ({ ...prev, site_logo: uploadedUrl }));
+        await saveSystemSettingsApi({ settings: { site_logo: uploadedUrl } }).catch(() => {});
+        showToast("Logo uploaded and updated successfully!");
       } else {
         showToast(res?.message || "Failed to upload logo.", "error");
       }
@@ -1134,15 +1137,25 @@ export default function SuperAdminDashboard() {
     setUploadingFavicon(true);
     try {
       const res = await uploadImageApi(file, "theskill_favicon");
-      if (res?.success && res.url) {
-        setBrandingSettings((prev) => ({ ...prev, site_favicon: res.url }));
-        showToast("Favicon uploaded! Click 'Save Branding Settings' to apply.");
-        // Dynamically update browser tab favicon for preview
-        const link = document.querySelector("link[rel*='icon']") || document.createElement("link");
-        link.type = "image/x-icon";
-        link.rel = "shortcut icon";
-        link.href = res.url;
-        document.getElementsByTagName("head")[0].appendChild(link);
+      const uploadedUrl = res?.url || res?.data?.url;
+      if (res?.success && uploadedUrl) {
+        setBrandingSettings((prev) => ({ ...prev, site_favicon: uploadedUrl }));
+        await saveSystemSettingsApi({ settings: { site_favicon: uploadedUrl } }).catch(() => {});
+        showToast("Favicon uploaded and updated successfully!");
+        
+        // Dynamically update browser tab favicon in real time
+        const iconLinks = document.querySelectorAll("link[rel*='icon']");
+        if (iconLinks.length > 0) {
+          iconLinks.forEach((el) => {
+            el.removeAttribute("type");
+            el.href = uploadedUrl;
+          });
+        } else {
+          const link = document.createElement("link");
+          link.rel = "icon";
+          link.href = uploadedUrl;
+          document.head.appendChild(link);
+        }
       } else {
         showToast(res?.message || "Failed to upload favicon.", "error");
       }

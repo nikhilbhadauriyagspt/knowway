@@ -48,13 +48,18 @@ export default function App() {
 
         // Dynamic Favicon
         if (s.site_favicon) {
-          let linkIcon = document.querySelector('link[rel="icon"]');
-          if (!linkIcon) {
-            linkIcon = document.createElement("link");
+          const iconLinks = document.querySelectorAll("link[rel*='icon']");
+          if (iconLinks.length > 0) {
+            iconLinks.forEach((el) => {
+              el.removeAttribute("type");
+              el.href = s.site_favicon;
+            });
+          } else {
+            const linkIcon = document.createElement("link");
             linkIcon.rel = "icon";
+            linkIcon.href = s.site_favicon;
             document.head.appendChild(linkIcon);
           }
-          linkIcon.href = s.site_favicon;
         }
       })
       .catch((err) => {

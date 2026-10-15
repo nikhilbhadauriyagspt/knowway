@@ -391,6 +391,9 @@ export const uploadImageApi = async (file, folder = "knowway_images") => {
       err.status = response.status;
       throw err;
     }
+  if (data && !data.url && data.data?.url) {
+    data.url = data.data.url;
+  }
   return data;
 };
 

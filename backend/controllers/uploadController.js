@@ -30,6 +30,7 @@ export const uploadImage = async (req, res) => {
     return res.status(200).json({
       success: true,
       message: "Image uploaded successfully to Cloudinary!",
+      url: result.secure_url,
       data: {
         url: result.secure_url,
         public_id: result.public_id,
