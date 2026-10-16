@@ -1,7 +1,7 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import { initDB } from "./config/db.js";
+import pool, { initDB } from "./config/db.js";
 import authRoutes from "./routes/authRoutes.js";
 import adminRoutes from "./routes/adminRoutes.js";
 import packageRoutes from "./routes/packageRoutes.js";
@@ -24,6 +24,14 @@ const distPath = fs.existsSync(path.resolve(__dirname, "public"))
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Helper to escape HTML entities safely
+const escapeHtml = (str = "") =>
+  String(str)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;");
 
 // Middlewares
 app.use(cors({
@@ -63,15 +71,68 @@ app.use("/api/payment", paymentRoutes);
 app.use("/api/affiliate", affiliateRoutes);
 app.use("/api/freelance", freelanceRoutes);
 
-// Serve static frontend build if present
-if (fs.existsSync(distPath)) {
-  app.use(express.static(distPath));
+// Dynamic Favicon Redirect if Admin uploaded a custom favicon in DB
+app.get(["/favicon.ico", "/favicon.svg"], async (req, res, next) => {
+  try {
+    const [rows] = await pool.query(
+      "SELECT setting_value FROM system_settings WHERE setting_key = 'site_favicon' LIMIT 1"
+    );
+    const customFavicon = rows?.[0]?.setting_value;
+    if (customFavicon && customFavicon !== "/favicon.svg" && customFavicon !== "/favicon.ico") {
+      res.setHeader("Cache-Control", "no-cache");
+      return res.redirect(302, customFavicon);
+    }
+  } catch (_) {}
+  next();
+});
 
-  app.get("*", (req, res, next) => {
+// Serve static frontend build if present (with index: false so index.html gets dynamic DB meta/favicon injection)
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath, { index: false }));
+
+  app.get("*", async (req, res, next) => {
     if (req.path.startsWith("/api")) {
       return next();
     }
-    res.sendFile(path.join(distPath, "index.html"));
+    const indexPath = path.join(distPath, "index.html");
+    if (!fs.existsSync(indexPath)) {
+      return next();
+    }
+
+    try {
+      let html = fs.readFileSync(indexPath, "utf8");
+      const [rows] = await pool.query(
+        "SELECT setting_key, setting_value FROM system_settings WHERE setting_key IN ('site_name', 'site_title', 'site_description', 'site_favicon')"
+      );
+      const dbSettings = {};
+      rows.forEach((r) => {
+        if (r.setting_value && r.setting_value.trim() !== "") {
+          dbSettings[r.setting_key] = r.setting_value.trim();
+        }
+      });
+
+      const siteTitle = dbSettings.site_title || dbSettings.site_name;
+      const siteDesc = dbSettings.site_description;
+      const siteFavicon = dbSettings.site_favicon;
+
+      if (siteFavicon) {
+        html = html.replace(/href="\/favicon\.svg"/g, `href="${escapeHtml(siteFavicon)}"`);
+      }
+      if (siteTitle) {
+        html = html.replace(/<title>.*?<\/title>/s, `<title>${escapeHtml(siteTitle)}</title>`);
+      }
+      if (siteDesc) {
+        html = html.replace(
+          /<meta name="description" content=".*?" \/>/,
+          `<meta name="description" content="${escapeHtml(siteDesc)}" />`
+        );
+      }
+
+      res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate");
+      return res.status(200).type("html").send(html);
+    } catch (err) {
+      return res.sendFile(indexPath);
+    }
   });
 }
 

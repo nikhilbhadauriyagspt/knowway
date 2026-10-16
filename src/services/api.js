@@ -337,7 +337,14 @@ export const getSystemSettingsApi = () => {
   return apiRequest("/admin/settings");
 };
 
-export const saveSystemSettingsApi = (settings) => {
+export const saveSystemSettingsApi = (settingsPayload) => {
+  const settings =
+    settingsPayload &&
+    typeof settingsPayload === "object" &&
+    settingsPayload.settings &&
+    typeof settingsPayload.settings === "object"
+      ? settingsPayload.settings
+      : settingsPayload;
   return apiRequest("/admin/settings", {
     method: "POST",
     body: JSON.stringify({ settings }),

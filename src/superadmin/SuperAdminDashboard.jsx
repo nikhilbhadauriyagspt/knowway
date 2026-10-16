@@ -1097,9 +1097,32 @@ export default function SuperAdminDashboard() {
     if (e) e.preventDefault();
     setIsSavingBranding(true);
     try {
-      const res = await saveSystemSettingsApi({ settings: brandingSettings });
+      const res = await saveSystemSettingsApi(brandingSettings);
       if (res?.success) {
-        showToast("Website branding, logo & contact info updated successfully!");
+        if (brandingSettings.site_title) {
+          document.title = brandingSettings.site_title;
+        } else if (brandingSettings.site_name) {
+          document.title = brandingSettings.site_name;
+        }
+        if (brandingSettings.site_description) {
+          let metaDesc = document.querySelector('meta[name="description"]');
+          if (!metaDesc) {
+            metaDesc = document.createElement("meta");
+            metaDesc.name = "description";
+            document.head.appendChild(metaDesc);
+          }
+          metaDesc.content = brandingSettings.site_description;
+        }
+        if (brandingSettings.site_favicon) {
+          const iconLinks = document.querySelectorAll("link[rel*='icon']");
+          if (iconLinks.length > 0) {
+            iconLinks.forEach((el) => {
+              el.removeAttribute("type");
+              el.href = brandingSettings.site_favicon;
+            });
+          }
+        }
+        showToast("Website branding, logo, favicon & SEO settings updated successfully!");
       } else {
         showToast(res?.message || "Failed to save branding settings.", "error");
       }
@@ -1119,8 +1142,8 @@ export default function SuperAdminDashboard() {
       const uploadedUrl = res?.url || res?.data?.url;
       if (res?.success && uploadedUrl) {
         setBrandingSettings((prev) => ({ ...prev, site_logo: uploadedUrl }));
-        await saveSystemSettingsApi({ settings: { site_logo: uploadedUrl } }).catch(() => {});
-        showToast("Logo uploaded and updated successfully!");
+        await saveSystemSettingsApi({ site_logo: uploadedUrl });
+        showToast("Logo uploaded and saved to database!");
       } else {
         showToast(res?.message || "Failed to upload logo.", "error");
       }
@@ -1140,9 +1163,9 @@ export default function SuperAdminDashboard() {
       const uploadedUrl = res?.url || res?.data?.url;
       if (res?.success && uploadedUrl) {
         setBrandingSettings((prev) => ({ ...prev, site_favicon: uploadedUrl }));
-        await saveSystemSettingsApi({ settings: { site_favicon: uploadedUrl } }).catch(() => {});
-        showToast("Favicon uploaded and updated successfully!");
-        
+        await saveSystemSettingsApi({ site_favicon: uploadedUrl });
+        showToast("Favicon uploaded and saved to database!");
+
         // Dynamically update browser tab favicon in real time
         const iconLinks = document.querySelectorAll("link[rel*='icon']");
         if (iconLinks.length > 0) {

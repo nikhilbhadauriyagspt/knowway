@@ -752,17 +752,27 @@ export const getSystemSettings = async (req, res) => {
 };
 
 export const saveSystemSettings = async (req, res) => {
-  const { settings = {} } = req.body;
+  let { settings = {} } = req.body;
+  if (
+    settings &&
+    typeof settings === "object" &&
+    settings.settings &&
+    typeof settings.settings === "object"
+  ) {
+    settings = settings.settings;
+  }
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
 
     for (const [key, value] of Object.entries(settings)) {
+      if (value === undefined || typeof value === "object") continue;
+      const strVal = value === null ? "" : String(value);
       await connection.query(
         `INSERT INTO system_settings (setting_key, setting_value) 
          VALUES (?, ?) 
          ON DUPLICATE KEY UPDATE setting_value = ?`,
-        [key, value, value]
+        [key, strVal, strVal]
       );
     }
 

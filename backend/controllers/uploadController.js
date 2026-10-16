@@ -1,4 +1,30 @@
 import cloudinary from "../config/cloudinary.js";
+import pool from "../config/db.js";
+
+// Dynamically sync Cloudinary credentials from Admin System Settings DB if configured
+const syncCloudinaryConfig = async () => {
+  try {
+    const [rows] = await pool.query(
+      "SELECT setting_key, setting_value FROM system_settings WHERE setting_key IN ('cloudinary_cloud_name', 'cloudinary_api_key', 'cloudinary_api_secret')"
+    );
+    const cfg = {};
+    rows.forEach((r) => {
+      if (r.setting_value && r.setting_value.trim() !== "") {
+        cfg[r.setting_key] = r.setting_value.trim();
+      }
+    });
+    if (cfg.cloudinary_cloud_name && cfg.cloudinary_api_key && cfg.cloudinary_api_secret) {
+      cloudinary.config({
+        cloud_name: cfg.cloudinary_cloud_name,
+        api_key: cfg.cloudinary_api_key,
+        api_secret: cfg.cloudinary_api_secret,
+        secure: true,
+      });
+    }
+  } catch (err) {
+    console.warn("Cloudinary DB config sync notice:", err.message);
+  }
+};
 
 // Pure Node.js Stream without external packages
 const streamUpload = (fileBuffer, options) => {
@@ -11,7 +37,7 @@ const streamUpload = (fileBuffer, options) => {
   });
 };
 
-// Upload Image (Course Thumbnail, Mentor Photo, etc.)
+// Upload Image (Course Thumbnail, Mentor Photo, Favicon, Logo, etc.)
 export const uploadImage = async (req, res) => {
   try {
     if (!req.file) {
@@ -20,6 +46,8 @@ export const uploadImage = async (req, res) => {
         message: "No image file provided",
       });
     }
+
+    await syncCloudinaryConfig();
 
     const folder = req.body.folder || "knowway_images";
     const result = await streamUpload(req.file.buffer, {
@@ -58,6 +86,8 @@ export const uploadVideo = async (req, res) => {
         message: "No video file provided",
       });
     }
+
+    await syncCloudinaryConfig();
 
     const folder = req.body.folder || "knowway_courses/lectures";
     const result = await streamUpload(req.file.buffer, {
