@@ -86,7 +86,7 @@ export default function SuperAdminLoginPage() {
       } else {
         setErrorMsg(
           err.message ||
-            "Failed to connect to backend server. Make sure server is running on http://localhost:5000"
+            "Failed to connect to backend server. Make sure server is running on http://localhost:3000"
         );
       }
     } finally {

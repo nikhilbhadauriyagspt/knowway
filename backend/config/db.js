@@ -1315,6 +1315,189 @@ export const initDB = async () => {
     `;
     await connection.query(createFreelanceTestimonialsQuery);
 
+    // Digital Marketing Services Table (Managed from Super Admin Services Studio)
+    const createDigitalServicesQuery = `
+      CREATE TABLE IF NOT EXISTS digital_services (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        service_number VARCHAR(20) DEFAULT '01',
+        category VARCHAR(100) NOT NULL DEFAULT 'Digital Marketing',
+        title VARCHAR(255) NOT NULL,
+        description TEXT NOT NULL,
+        points JSON DEFAULT NULL,
+        image_url LONGTEXT DEFAULT NULL,
+        vector_type VARCHAR(50) DEFAULT 'ads',
+        theme_color VARCHAR(50) DEFAULT 'blue',
+        button_text VARCHAR(100) DEFAULT 'Enquire About This Service',
+        order_index INT DEFAULT 1,
+        is_published BOOLEAN DEFAULT TRUE,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX (is_published),
+        INDEX (order_index)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `;
+    await connection.query(createDigitalServicesQuery);
+
+    // Seed Default Digital Marketing Services if table is empty
+    try {
+      const [existingServices] = await connection.query("SELECT COUNT(*) AS cnt FROM digital_services");
+      if ((existingServices?.[0]?.cnt || 0) === 0) {
+        const seedServices = [
+          {
+            service_number: "01",
+            category: "Paid Advertising",
+            title: "Meta & Google Ads Management",
+            description:
+              "Reach the right customers at the right time with targeted ads on Facebook, Instagram, Google Search, and YouTube. We handle setup, ad design, and daily optimization so you get quality leads and sales within your budget.",
+            points: JSON.stringify([
+              "Complete Facebook, Instagram & Google Ads setup",
+              "Eye-catching ad graphics, video hooks & simple copywriting",
+              "Audience targeting & retargeting to convert interested visitors",
+              "Clear weekly reports showing leads, sales, and ad spend",
+            ]),
+            image_url: "",
+            vector_type: "ads",
+            theme_color: "blue",
+            button_text: "Enquire About This Service",
+            order_index: 1,
+          },
+          {
+            service_number: "02",
+            category: "Organic Search",
+            title: "Search Engine Optimization (SEO)",
+            description:
+              "Help your website rank higher on Google when people search for your products or services. We improve your website speed, keywords, and Google Business Profile for steady, long-term organic traffic.",
+            points: JSON.stringify([
+              "Right keyword research for what your customers are searching",
+              "On-page website fixes, meta tags & content optimization",
+              "Google Business Profile (Local SEO) setup for local visibility",
+              "Quality backlinks & monthly ranking progress updates",
+            ]),
+            image_url: "",
+            vector_type: "seo",
+            theme_color: "purple",
+            button_text: "Enquire About This Service",
+            order_index: 2,
+          },
+          {
+            service_number: "03",
+            category: "Brand Presence",
+            title: "Social Media Management & Branding",
+            description:
+              "Build a clean, trustworthy brand on Instagram, LinkedIn, Facebook, and YouTube. We plan your monthly content calendar, design posts, and keep your audience active and engaged.",
+            points: JSON.stringify([
+              "Monthly content planning & post scheduling",
+              "Clean, branded social media posts, carousels & stories",
+              "Profile bio, highlights & page optimization",
+              "Consistent audience engagement & monthly growth review",
+            ]),
+            image_url: "",
+            vector_type: "social",
+            theme_color: "orange",
+            button_text: "Enquire About This Service",
+            order_index: 3,
+          },
+          {
+            service_number: "04",
+            category: "Video & Content",
+            title: "Video Editing & Reels Production",
+            description:
+              "Short-form videos are the fastest way to grab attention online. We edit high-quality Instagram Reels, YouTube Shorts, and promotional videos with clean captions, smooth transitions, and engaging hooks.",
+            points: JSON.stringify([
+              "Engaging Instagram Reels & YouTube Shorts editing",
+              "Clean captions, motion graphics & sound design",
+              "Ad video creatives designed to hold viewer attention",
+              "Custom thumbnails & ready-to-post vertical formats",
+            ]),
+            image_url: "",
+            vector_type: "video",
+            theme_color: "pink",
+            button_text: "Enquire About This Service",
+            order_index: 4,
+          },
+          {
+            service_number: "05",
+            category: "Web & Landing Pages",
+            title: "Website & Landing Page Design",
+            description:
+              "Get a fast, clean, mobile-friendly website or landing page that makes a great first impression and turns visitors into inquiries or paying customers.",
+            points: JSON.stringify([
+              "Clean, modern UI design that works smoothly on mobile & desktop",
+              "Fast loading pages built for leads and customer trust",
+              "Contact forms, WhatsApp button & payment gateway integration",
+              "SEO-friendly structure ready for Google and ad campaigns",
+            ]),
+            image_url: "",
+            vector_type: "web",
+            theme_color: "blue",
+            button_text: "Enquire About This Service",
+            order_index: 5,
+          },
+          {
+            service_number: "06",
+            category: "Leads & Follow-Up",
+            title: "Lead Generation & WhatsApp Automation",
+            description:
+              "Never miss a customer inquiry again. We set up simple lead funnels along with automated WhatsApp and email follow-ups so every lead gets an instant response.",
+            points: JSON.stringify([
+              "Simple lead capture forms & landing page funnels",
+              "Instant WhatsApp & email welcome messages for new leads",
+              "Automated follow-up reminders to increase conversions",
+              "Easy lead tracking in Google Sheets or your CRM",
+            ]),
+            image_url: "",
+            vector_type: "funnel",
+            theme_color: "emerald",
+            button_text: "Enquire About This Service",
+            order_index: 6,
+          },
+        ];
+
+        for (const srv of seedServices) {
+          await connection.query(
+            `INSERT INTO digital_services
+              (service_number, category, title, description, points, image_url, vector_type, theme_color, button_text, order_index, is_published)
+             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, TRUE)`,
+            [
+              srv.service_number,
+              srv.category,
+              srv.title,
+              srv.description,
+              srv.points,
+              srv.image_url,
+              srv.vector_type,
+              srv.theme_color,
+              srv.button_text,
+              srv.order_index,
+            ]
+          );
+        }
+        console.log("✅ Seeded 6 default Digital Marketing services into digital_services!");
+      }
+    } catch (seedErr) {
+      console.warn("Notice seeding digital_services:", seedErr.message);
+    }
+
+    // Service Inquiries Table (Popup Form Submissions from /services page)
+    const createServiceInquiriesQuery = `
+      CREATE TABLE IF NOT EXISTS service_inquiries (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(150) NOT NULL,
+        phone VARCHAR(30) NOT NULL,
+        email VARCHAR(191) NOT NULL,
+        service_id INT DEFAULT NULL,
+        service_title VARCHAR(255) NOT NULL,
+        message TEXT DEFAULT NULL,
+        status ENUM('new', 'contacted', 'converted', 'closed') DEFAULT 'new',
+        admin_notes TEXT DEFAULT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+        INDEX (status),
+        INDEX (created_at)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+    `;
+    await connection.query(createServiceInquiriesQuery);
+
     connection.release();
   } catch (err) {
     console.warn("⚠️ MySQL Schema Notice:", err.message);

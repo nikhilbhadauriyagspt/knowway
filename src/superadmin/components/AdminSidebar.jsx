@@ -71,6 +71,12 @@ export default function AdminSidebar({
       badge: "Modules",
     },
     {
+      id: "servicesstudio",
+      label: "Services Studio",
+      icon: Sparkles,
+      badge: "Services",
+    },
+    {
       id: "mentors",
       label: "Instructors & Mentors",
       icon: GraduationCap,

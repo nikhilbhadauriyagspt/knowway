@@ -53,6 +53,7 @@ import AdminSidebar from "./components/AdminSidebar";
 import AdminHeader from "./components/AdminHeader";
 import DashboardCharts from "./components/DashboardCharts";
 import FreelanceStudioTab from "./components/FreelanceStudioTab";
+import ServicesStudioTab from "./components/ServicesStudioTab";
 import AdminAffiliateAnnouncementsManager from "./components/AdminAffiliateAnnouncementsManager";
 import {
   isAdminAuthenticated,
@@ -121,6 +122,7 @@ const DEFAULT_ADMIN_MODULES = [
   { id: "dashboard", name: "Dashboard Overview & Metrics", description: "View revenue, user growth, quick analytics & charts" },
   { id: "courses", name: "Courses Studio & Lectures", description: "Add, edit, price, and curate courses and video lessons" },
   { id: "packages", name: "Package Studio & Bundles", description: "Create course bundles, dynamic pricing & package FAQs" },
+  { id: "servicesstudio", name: "Services Studio & Leads", description: "Manage Digital Marketing services, upload images & view enquiries" },
   { id: "mentors", name: "Mentors & Instructors Hub", description: "Manage instructors, profiles, badges and bio info" },
   { id: "users", name: "Student Directory & Management", description: "Manage registered students, enrollments & purchases" },
   { id: "payments", name: "Payments & Financial Orders", description: "Monitor Razorpay payment orders, receipts and txn logs" },
@@ -250,7 +252,7 @@ export default function SuperAdminDashboard() {
     site_description: "Practical digital skills, freelancing, performance marketing, and digital business courses to help you earn and grow.",
     site_tagline: "Simple learning paths, practical digital skills and useful knowledge designed to help you keep progressing.",
     site_logo: "/images/logo/logo.png",
-    site_favicon: "/favicon.svg",
+    site_favicon: "/favicon.webp",
     contact_email: "support@theskillpreneur.com",
     contact_phone: "+91 98765 43210",
     contact_address: "The Skillpreneur Headquarters, India",
@@ -2400,11 +2402,17 @@ export default function SuperAdminDashboard() {
           )}
 
           {/* ======================================================== */}
-          {/* ======================================================== */}
           {/* TAB: FREELANCE ACCELERATOR STUDIO */}
           {/* ======================================================== */}
           {activeTab === "freelancestudio" && (
             <FreelanceStudioTab darkMode={darkMode} />
+          )}
+
+          {/* ======================================================== */}
+          {/* TAB: DIGITAL MARKETING SERVICES STUDIO */}
+          {/* ======================================================== */}
+          {activeTab === "servicesstudio" && (
+            <ServicesStudioTab darkMode={darkMode} />
           )}
 
           {/* ======================================================== */}
@@ -3186,10 +3194,10 @@ export default function SuperAdminDashboard() {
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded-2xl border p-1 bg-white shrink-0 flex items-center justify-center overflow-hidden shadow-xs">
                           <img
-                            src={brandingSettings.site_favicon || "/favicon.svg"}
+                            src={brandingSettings.site_favicon || "/favicon.webp"}
                             alt="Favicon"
                             className="w-7 h-7 object-contain"
-                            onError={(e) => { e.currentTarget.src = "/favicon.svg"; }}
+                            onError={(e) => { e.currentTarget.src = "/favicon.webp"; }}
                           />
                         </div>
                         <div className="flex-1 min-w-0">

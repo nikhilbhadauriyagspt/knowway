@@ -88,6 +88,8 @@ export default function AdminHeader({
         return "Mentors & Instructors";
       case "courses":
         return "Course & Video Management";
+      case "servicesstudio":
+        return "Services Studio & Client Enquiries";
       case "users":
         return "Student Directory";
       case "payments":

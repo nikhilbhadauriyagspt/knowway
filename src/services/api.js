@@ -13,7 +13,7 @@ const isLocal =
 export const API_BASE_URL =
   import.meta.env.VITE_API_URL ||
   (isLocal
-    ? "http://localhost:5000/api"
+    ? "http://localhost:3000/api"
     : "/api");
 
 const ADMIN_TOKEN_KEY = "knowway_admin_token";
@@ -941,3 +941,60 @@ export const deleteAdminAffiliateAnnouncementApi = (id) => {
     method: "DELETE",
   });
 };
+
+// ============================================================
+// DIGITAL MARKETING SERVICES & SERVICES STUDIO APIs
+// ============================================================
+
+export const getPublicServicesApi = () => {
+  return apiRequest("/services");
+};
+
+export const submitServiceInquiryApi = (payload) => {
+  return apiRequest("/services/inquire", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+};
+
+export const getAdminServicesApi = () => {
+  return apiRequest("/services/admin/all");
+};
+
+export const createAdminServiceApi = (payload) => {
+  return apiRequest("/services/admin", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+};
+
+export const updateAdminServiceApi = (id, payload) => {
+  return apiRequest("/services/admin/" + id, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+};
+
+export const deleteAdminServiceApi = (id) => {
+  return apiRequest("/services/admin/" + id, {
+    method: "DELETE",
+  });
+};
+
+export const getAdminServiceInquiriesApi = () => {
+  return apiRequest("/services/admin/inquiries");
+};
+
+export const updateAdminServiceInquiryStatusApi = (id, payload) => {
+  return apiRequest("/services/admin/inquiries/" + id, {
+    method: "PUT",
+    body: JSON.stringify(payload),
+  });
+};
+
+export const deleteAdminServiceInquiryApi = (id) => {
+  return apiRequest("/services/admin/inquiries/" + id, {
+    method: "DELETE",
+  });
+};
+

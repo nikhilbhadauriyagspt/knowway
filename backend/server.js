@@ -8,6 +8,7 @@ import packageRoutes from "./routes/packageRoutes.js";
 import paymentRoutes from "./routes/paymentRoutes.js";
 import affiliateRoutes from "./routes/affiliateRoutes.js";
 import freelanceRoutes from "./routes/freelanceRoutes.js";
+import serviceRoutes from "./routes/serviceRoutes.js";
 
 import path from "path";
 import { fileURLToPath } from "url";
@@ -38,8 +39,8 @@ app.use(cors({
   origin: true,
   credentials: true,
 }));
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: "25mb" }));
+app.use(express.urlencoded({ extended: true, limit: "25mb" }));
 
 // API Info Route
 app.get("/api", (req, res) => {
@@ -70,6 +71,7 @@ app.use("/api/packages", packageRoutes);
 app.use("/api/payment", paymentRoutes);
 app.use("/api/affiliate", affiliateRoutes);
 app.use("/api/freelance", freelanceRoutes);
+app.use("/api/services", serviceRoutes);
 
 // Dynamic Favicon Redirect if Admin uploaded a custom favicon in DB
 app.get(["/favicon.ico", "/favicon.svg"], async (req, res, next) => {
@@ -82,6 +84,7 @@ app.get(["/favicon.ico", "/favicon.svg"], async (req, res, next) => {
       res.setHeader("Cache-Control", "no-cache");
       return res.redirect(302, customFavicon);
     }
+    return res.redirect(302, "/favicon.webp");
   } catch (_) {}
   next();
 });
@@ -115,8 +118,8 @@ if (fs.existsSync(distPath)) {
       const siteDesc = dbSettings.site_description;
       const siteFavicon = dbSettings.site_favicon;
 
-      if (siteFavicon) {
-        html = html.replace(/href="\/favicon\.svg"/g, `href="${escapeHtml(siteFavicon)}"`);
+      if (siteFavicon && siteFavicon !== "/favicon.svg") {
+        html = html.replace(/href="\/favicon\.(svg|webp|ico)"/g, `href="${escapeHtml(siteFavicon)}"`);
       }
       if (siteTitle) {
         html = html.replace(/<title>.*?<\/title>/s, `<title>${escapeHtml(siteTitle)}</title>`);

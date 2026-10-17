@@ -1971,7 +1971,7 @@ export const getPublicSettings = async (req, res) => {
       site_description: 'Practical digital skills, freelancing, performance marketing, and digital business courses to help you earn and grow.',
       site_tagline: 'Simple learning paths, practical digital skills and useful knowledge designed to help you keep progressing.',
       site_logo: '/images/logo/logo.png',
-      site_favicon: '/favicon.svg',
+      site_favicon: '/favicon.webp',
       contact_email: 'support@theskillpreneur.com',
       contact_phone: '+91 98765 43210',
       contact_address: 'The Skillpreneur Headquarters, India',
@@ -1986,6 +1986,7 @@ export const getPublicSettings = async (req, res) => {
 
     rows.forEach((r) => {
       if (r.setting_value !== null && r.setting_value !== undefined && r.setting_value !== '') {
+        if (r.setting_key === 'site_favicon' && r.setting_value === '/favicon.svg') return;
         settings[r.setting_key] = r.setting_value;
       }
     });

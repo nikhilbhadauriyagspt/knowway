@@ -36,14 +36,14 @@ export default function CreatorProgramSection() {
           <div className="grid grid-cols-1 items-center gap-8 lg:gap-10 lg:grid-cols-[1.05fr_0.95fr]">
             {/* LEFT CONTENT */}
             <div className="relative z-10 max-w-[680px]">
-              <div className="mb-4 sm:mb-5 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/15 px-3.5 sm:px-4 py-1.5 sm:py-2 backdrop-blur-md">
+              <div className="mb-4 sm:mb-5 inline-flex items-center gap-2 rounded-full border border-white/25 bg-[#0B0F13] px-3.5 sm:px-4 py-1.5 sm:py-2 backdrop-blur-md">
                 <Sparkles size={13} className="text-white" />
                 <span className="text-[11.5px] sm:text-[12px] font-semibold tracking-[0.02em] text-white">
                   Creator Program
                 </span>
               </div>
 
-              <div className="max-w-[560px] rounded-[24px] sm:rounded-[28px] border border-white/20 bg-white/10 p-5 sm:p-7 backdrop-blur-sm">
+              <div className="max-w-[560px] rounded-[24px] sm:rounded-[28px] border border-white/20 bg-[#0B0F13] p-5 sm:p-7 backdrop-blur-sm">
                 <p className="text-[16px] sm:text-[22px] leading-[1.4] text-blue-100 font-medium">
                   Turn learning into
                 </p>
@@ -77,7 +77,7 @@ export default function CreatorProgramSection() {
               <div className="mt-6 sm:mt-8 flex flex-wrap items-center gap-3 sm:gap-4">
                 <a
                   href="/signup"
-                  className="inline-flex h-[48px] sm:h-[54px] items-center gap-3 rounded-full bg-[#FA8C03] px-5 sm:px-6 pr-2 text-[12.5px] sm:text-[13px] font-bold text-white transition-all duration-200 hover:bg-[#e07b02] shadow-xl shadow-black/20 cursor-pointer transform hover:-translate-y-0.5"
+                  className="inline-flex h-[48px] sm:h-[54px] items-center gap-3 rounded-full bg-[#FA8C03] px-5 sm:px-6 !pr-2 text-[12.5px] sm:text-[13px] font-bold text-white transition-all duration-200 hover:bg-[#e07b02] shadow-xl shadow-black/20 cursor-pointer transform hover:-translate-y-0.5"
                 >
                   <span>Join Now</span>
                   <span className="flex h-8 w-8 sm:h-10 sm:w-10 items-center justify-center rounded-full bg-white text-[#FA8C03]">
@@ -85,7 +85,7 @@ export default function CreatorProgramSection() {
                   </span>
                 </a>
 
-                <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-white/15 px-3.5 sm:px-4 py-2.5 sm:py-3 text-[11.5px] sm:text-[12px] font-semibold text-white backdrop-blur-md">
+                <div className="inline-flex items-center gap-2 rounded-full border border-white/20 bg-[#0B0F13] px-3.5 sm:px-4 py-2.5 sm:py-3 text-[11.5px] sm:text-[12px] font-semibold text-white backdrop-blur-md">
                   <BriefcaseBusiness size={14} className="text-amber-300" />
                   <span>Practical Growth Experience</span>
                 </div>

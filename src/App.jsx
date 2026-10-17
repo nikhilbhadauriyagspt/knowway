@@ -16,6 +16,7 @@ import CreateCoursePage from "./superadmin/CreateCoursePage";
 import CreatePackagePage from "./superadmin/CreatePackagePage";
 import AffiliatePage from "./pages/AffiliatePage";
 import ContactPage from "./pages/ContactPage";
+import ServicesPage from "./pages/ServicesPage";
 import SessionHeartbeatMonitor from "./components/SessionHeartbeatMonitor";
 import PackageRequiredModal from "./components/PackageRequiredModal";
 import { getPublicSettingsApi } from "./services/api";
@@ -87,6 +88,7 @@ export default function App() {
         <Route path="/packages/:id" element={<PackageDetailPage />} />
         <Route path="/package" element={<PackageDetailPage />} />
         <Route path="/packages" element={<PackageDetailPage />} />
+        <Route path="/services" element={<ServicesPage />} />
         <Route path="/checkout/:slug" element={<CheckoutPage />} />
         <Route path="/checkout" element={<CheckoutPage />} />
         <Route path="/contact" element={<ContactPage />} />

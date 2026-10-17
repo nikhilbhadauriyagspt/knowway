@@ -3,18 +3,12 @@ import { Link, useNavigate } from "react-router-dom";
 import {
   ArrowUpRight,
   ChevronDown,
+  ChevronRight,
   Menu,
   X,
-  Sparkles,
-  Layers3,
-  ArrowRight,
   HelpCircle,
-  BookOpen,
   LayoutDashboard,
-  User,
   LogOut,
-  GraduationCap,
-  ShieldCheck,
 } from "lucide-react";
 import {
   getUserData,
@@ -22,8 +16,37 @@ import {
   clearUserSession,
   isUserHasPurchasedPackage,
   openPackageRequiredModal,
+  getPackagesApi,
+  getPublicSettingsApi,
 } from "../services/api";
 import UserAvatarDropdown from "./UserAvatarDropdown";
+
+const defaultPackageItems = [
+  {
+    id: "pro",
+    name: "Pro",
+    image: "/images/packages/pro.png",
+    link: "/package/pro",
+  },
+  {
+    id: "supreme",
+    name: "Supreme",
+    image: "/images/packages/supreme.png",
+    link: "/package/supreme",
+  },
+  {
+    id: "premium",
+    name: "Premium",
+    image: "/images/packages/premium.png",
+    link: "/package/premium",
+  },
+  {
+    id: "premium-plus",
+    name: "Premium Plus",
+    image: "/images/packages/premium-plus.png",
+    link: "/package/premium-plus",
+  },
+];
 
 export default function Header() {
   const navigate = useNavigate();
@@ -32,6 +55,9 @@ export default function Header() {
   const [mobilePackagesOpen, setMobilePackagesOpen] = useState(false);
   const [scrolled, setScrolled] = useState(false);
   const [userDropdownOpen, setUserDropdownOpen] = useState(false);
+  const [packageItems, setPackageItems] = useState(defaultPackageItems);
+  const [siteLogo, setSiteLogo] = useState("/images/logo/logo.png");
+  const [siteName, setSiteName] = useState("The Skillpreneur");
 
   // Authentication State
   const [currentUser, setCurrentUser] = useState(getUserData());
@@ -39,6 +65,36 @@ export default function Header() {
 
   const dropdownRef = useRef(null);
   const userDropdownRef = useRef(null);
+
+  // Dynamically load packages & public branding from backend
+  useEffect(() => {
+    let isMounted = true;
+
+    getPackagesApi()
+      .then((res) => {
+        if (!isMounted || !res?.success || !Array.isArray(res.packages) || res.packages.length === 0) return;
+        const mapped = res.packages.map((pkg, idx) => ({
+          id: pkg.slug || pkg.id,
+          name: pkg.name,
+          image: pkg.image_url || defaultPackageItems[idx % defaultPackageItems.length]?.image || "/images/packages/pro.png",
+          link: `/package/${pkg.slug || pkg.id}`,
+        }));
+        setPackageItems(mapped);
+      })
+      .catch(() => {});
+
+    getPublicSettingsApi()
+      .then((res) => {
+        if (!isMounted || !res?.settings) return;
+        if (res.settings.site_logo) setSiteLogo(res.settings.site_logo);
+        if (res.settings.site_name) setSiteName(res.settings.site_name);
+      })
+      .catch(() => {});
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   // Synchronize auth state on custom events & storage changes
   useEffect(() => {
@@ -91,57 +147,6 @@ export default function Header() {
     navigate("/", { replace: true });
   };
 
-  const packageItems = [
-    {
-      id: "pro",
-      name: "Pro Package",
-      subtitle: "Foundations & In-Demand Digital Skills",
-      desc: "Practical skills in AI, video editing, and modern digital tools to kickstart your career.",
-      image: "/images/packages/pro.png",
-      badge: "Popular Starter",
-      accent: "#035BE3",
-      bgBadge: "bg-[#EFF4FF] text-[#035BE3]",
-      features: ["AI Tools", "Video Editing", "Certificate"],
-      link: "/package/pro",
-    },
-    {
-      id: "supreme",
-      name: "Supreme Package",
-      subtitle: "Growth Marketing & Business Strategy",
-      desc: "Master high-converting digital marketing, client scaling, and business workflows.",
-      image: "/images/packages/supreme.png",
-      badge: "Best Value",
-      accent: "#FA8C03",
-      bgBadge: "bg-[#FFF4E6] text-[#E07B00]",
-      features: ["Meta Ads", "Sales Funnels", "Growth Playbook"],
-      link: "/package/supreme",
-    },
-    {
-      id: "premium",
-      name: "Premium Package",
-      subtitle: "Digital Commerce & Tech Mastery",
-      desc: "End-to-end frontend development, digital product selling, and practical monetization.",
-      image: "/images/packages/premium.png",
-      badge: "Trending Track",
-      accent: "#2563EB",
-      bgBadge: "bg-[#EFF6FF] text-[#1D4ED8]",
-      features: ["Web Tech", "Ecommerce", "Real Projects"],
-      link: "/package/premium",
-    },
-    {
-      id: "premium-plus",
-      name: "Premium Plus",
-      subtitle: "All-in-One Flagship Career Suite",
-      desc: "Complete access to all modules, creator branding, and live mentorship guidance.",
-      image: "/images/packages/premium-plus.png",
-      badge: "All-in-One Suite",
-      accent: "#7C3AED",
-      bgBadge: "bg-[#F5F3FF] text-[#6D28D9]",
-      features: ["Full Library", "Mentorship", "Lifetime Access"],
-      link: "/package/premium-plus",
-    },
-  ];
-
   const userInitial = currentUser?.name ? currentUser.name.charAt(0).toUpperCase() : "U";
 
   return (
@@ -160,8 +165,11 @@ export default function Header() {
         {/* ================= LOGO ================= */}
         <Link to="/" className="flex items-center gap-2 group">
           <img
-            src="/images/logo/logo.png"
-            alt="KnowWay LearnSpace"
+            src={siteLogo}
+            alt={siteName}
+            onError={(e) => {
+              e.currentTarget.src = "/images/logo/logo.png";
+            }}
             className="h-10 sm:h-12 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
           />
         </Link>
@@ -183,7 +191,7 @@ export default function Header() {
             Home
           </Link>
 
-          {/* 2. Packages with Rich Mega-Dropdown */}
+          {/* 2. Packages with Clean, Lightweight Dynamic Dropdown */}
           <div className="relative" ref={dropdownRef}>
             <button
               onClick={() => setPackagesOpen(!packagesOpen)}
@@ -209,91 +217,34 @@ export default function Header() {
               />
             </button>
 
-            {/* Mega Dropdown Menu */}
+            {/* Lightweight Dropdown Menu */}
             {packagesOpen && (
-              <div className="absolute left-1/2 -translate-x-1/2 top-full mt-3 w-[660px] rounded-[28px] border border-[#E4EBF5] bg-white p-5 shadow-2xl shadow-blue-900/10 backdrop-blur-xl animate-in fade-in zoom-in-95 duration-150 z-50">
-                <div className="flex flex-col">
-                  
-                  {/* Dropdown Header */}
-                  <div className="flex items-center justify-between pb-3 border-b border-[#F0F4FA] px-1">
-                    <div className="flex items-center gap-2">
-                      <div className="flex h-7 w-7 items-center justify-center rounded-full bg-[#EEF4FF] text-[#035BE3]">
-                        <Layers3 size={15} />
-                      </div>
-                      <div>
-                        <h3 className="text-[13px] font-bold text-[#161B29]">Career Skill Bundles</h3>
-                        <p className="text-[11px] text-[#64748B]">Structured multi-course learning tracks</p>
-                      </div>
-                    </div>
-
-                    <a
-                      href="/#packages"
+              <div className="absolute left-0 top-full mt-2 w-[230px] rounded-2xl border border-[#E7ECF3] bg-white p-1.5 shadow-lg shadow-slate-900/5 animate-in fade-in zoom-in-95 duration-150 z-50">
+                <div className="flex flex-col gap-0.5">
+                  {packageItems.map((pkg) => (
+                    <Link
+                      key={pkg.id}
+                      to={pkg.link}
                       onClick={() => setPackagesOpen(false)}
-                      className="inline-flex items-center gap-1 text-[12px] font-bold text-[#035BE3] hover:text-[#FA8C03] transition-colors"
+                      className="group/item flex items-center justify-between gap-2.5 rounded-xl px-3 py-2 text-[13.5px] font-medium text-[#334155] transition-colors hover:bg-[#F3F6FD] hover:text-[#035BE3]"
                     >
-                      <span>View All Packages</span>
-                      <ArrowRight size={13} />
-                    </a>
-                  </div>
-
-                  {/* 2x2 Rich Package Cards Grid */}
-                  <div className="mt-3.5 grid grid-cols-2 gap-3">
-                    {packageItems.map((pkg) => (
-                      <a
-                        key={pkg.id}
-                        href={pkg.link}
-                        onClick={() => setPackagesOpen(false)}
-                        className="group/card relative flex items-center gap-3.5 rounded-[20px] border border-[#E9EFF8] bg-[#FBFCFF] p-3.5 transition-all duration-200 hover:border-[#035BE3]/50 hover:bg-white hover:shadow-md hover:shadow-blue-900/5 cursor-pointer"
-                      >
-                        <div className="relative flex h-[76px] w-[76px] shrink-0 items-center justify-center rounded-[16px] bg-white border border-[#E8EEF8] p-1.5 shadow-2xs group-hover/card:scale-105 transition-transform duration-300">
-                          <img
-                            src={pkg.image}
-                            alt={pkg.name}
-                            className="h-full w-full object-contain drop-shadow-sm"
-                          />
-                        </div>
-
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-1">
-                            <h4 className="text-[14px] font-bold text-[#161B29] group-hover/card:text-[#035BE3] transition-colors truncate">
-                              {pkg.name}
-                            </h4>
-                            <span className={`rounded-full px-2 py-0.5 text-[9.5px] font-bold uppercase tracking-wider shrink-0 ${pkg.bgBadge}`}>
-                              {pkg.badge}
-                            </span>
-                          </div>
-
-                          <p className="mt-1 text-[11.5px] leading-snug text-[#64748B] line-clamp-2">
-                            {pkg.desc}
-                          </p>
-                        </div>
-
-                        <div className="absolute right-3 top-3 opacity-0 group-hover/card:opacity-100 group-hover/card:translate-x-0.5 transition-all duration-200 text-[#035BE3]">
-                          <ArrowRight size={14} />
-                        </div>
-                      </a>
-                    ))}
-                  </div>
-
-                  {/* Dropdown Bottom Banner */}
-                  <div className="mt-3.5 flex items-center justify-between rounded-[18px] border border-[#E8EEF8] bg-[#F8FAFD] px-4 py-2.5">
-                    <div className="flex items-center gap-2">
-                      <Sparkles size={14} className="text-[#FA8C03]" />
-                      <span className="text-[12px] font-semibold text-[#334155]">
-                        All packages include practical real-world tasks & verified certificate
-                      </span>
-                    </div>
-
-                    <a
-                      href="/#packages"
-                      onClick={() => setPackagesOpen(false)}
-                      className="inline-flex items-center gap-1.5 rounded-full bg-[#035BE3] px-3.5 py-1.5 text-[11px] font-bold text-white transition-colors hover:bg-[#FA8C03] shadow-xs"
-                    >
-                      <span>Compare Bundles</span>
-                      <ArrowUpRight size={13} />
-                    </a>
-                  </div>
-
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <img
+                          src={pkg.image}
+                          alt={pkg.name}
+                          onError={(e) => {
+                            e.currentTarget.src = "/images/packages/pro.png";
+                          }}
+                          className="h-6 w-6 shrink-0 object-contain"
+                        />
+                        <span className="truncate">{pkg.name}</span>
+                      </div>
+                      <ChevronRight
+                        size={14}
+                        className="shrink-0 text-[#94A3B8] opacity-0 -translate-x-1 transition-all duration-150 group-hover/item:opacity-100 group-hover/item:translate-x-0 group-hover/item:text-[#035BE3]"
+                      />
+                    </Link>
+                  ))}
                 </div>
               </div>
             )}
@@ -313,7 +264,21 @@ export default function Header() {
             Courses
           </Link>
 
-          {/* 4. Contact */}
+          {/* 4. Services */}
+          <Link
+            to="/services"
+            className="
+              rounded-full px-4 py-2
+              text-[14px] font-medium text-[#4A5568]
+              transition-colors
+              hover:bg-[#F3F6FD]
+              hover:text-[#161B29]
+            "
+          >
+            Services
+          </Link>
+
+          {/* 5. Contact */}
           <Link
             to="/contact"
             className="
@@ -327,7 +292,7 @@ export default function Header() {
             Contact
           </Link>
 
-          {/* 5. Help */}
+          {/* 6. Help */}
           <a
             href="/#faq"
             className="
@@ -497,13 +462,54 @@ export default function Header() {
               Courses
             </Link>
 
-            <a
-              href="/#packages"
+            <Link
+              to="/services"
               onClick={() => setMobileOpen(false)}
               className="px-3 py-2.5 text-[15px] font-medium text-[#4F596B] hover:text-[#035BE3]"
             >
-              Packages
-            </a>
+              Services
+            </Link>
+
+            <div>
+              <button
+                type="button"
+                onClick={() => setMobilePackagesOpen(!mobilePackagesOpen)}
+                className="flex w-full items-center justify-between px-3 py-2.5 text-[15px] font-medium text-[#4F596B] hover:text-[#035BE3] cursor-pointer"
+              >
+                <span>Packages</span>
+                <ChevronDown
+                  size={15}
+                  className={`text-[#8C97A8] transition-transform duration-200 ${
+                    mobilePackagesOpen ? "rotate-180 text-[#035BE3]" : ""
+                  }`}
+                />
+              </button>
+              {mobilePackagesOpen && (
+                <div className="ml-3 mt-1 mb-2 flex flex-col gap-1 border-l border-[#E7ECF3] pl-3">
+                  {packageItems.map((pkg) => (
+                    <Link
+                      key={pkg.id}
+                      to={pkg.link}
+                      onClick={() => {
+                        setMobilePackagesOpen(false);
+                        setMobileOpen(false);
+                      }}
+                      className="flex items-center gap-2.5 rounded-lg px-2.5 py-2 text-[13.5px] font-medium text-[#4F596B] hover:bg-[#F3F6FD] hover:text-[#035BE3]"
+                    >
+                      <img
+                        src={pkg.image}
+                        alt={pkg.name}
+                        onError={(e) => {
+                          e.currentTarget.src = "/images/packages/pro.png";
+                        }}
+                        className="h-5 w-5 shrink-0 object-contain"
+                      />
+                      <span>{pkg.name}</span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
 
             <Link
               to="/contact"
