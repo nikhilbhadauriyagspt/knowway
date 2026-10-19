@@ -151,7 +151,7 @@ export default function CreatorProgramSection() {
                 Learn better • Practice consistently • Progress with confidence
               </p>
               <p className="text-[11px] text-blue-100">
-                KnowWay Guided Learning Platform
+                The Skillpreneur Guided Learning Platform
               </p>
             </div>
           </div>

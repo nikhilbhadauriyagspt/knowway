@@ -206,7 +206,7 @@ const fallbackPackagesMap = {
     overview_heading: "The ultimate VIP all-inclusive learning track for visionary builders and high-income consultants.",
     overview_desc: "Master everything from AI pipelines to premium client closing and personal branding.",
     what_you_will_learn: [
-      "Complete access to every course and future releases on KnowWay.",
+      "Complete access to every course and future releases on The Skillpreneur.",
       "Weekly live Q&A webinars and masterclasses with industry practitioners.",
       "Direct founder mastermind network and private deal flow community.",
       "Personal branding playbooks for multi-channel audience growth.",
@@ -252,7 +252,7 @@ function CourseCard({ course }) {
           </h3>
 
           <p className="mt-1 text-xs font-semibold text-slate-500">
-            {course.instructor || course.mentor_name || "KnowWay Instructor"}
+            {course.instructor || course.mentor_name || "The Skillpreneur Instructor"}
           </p>
         </div>
       </Link>
@@ -737,7 +737,7 @@ export default function PackageDetail() {
                       Certificate of Achievement
                     </span>
                     <h4 className="text-base font-black text-[#141A29] mt-1">
-                      KNOWWAY ACCREDITATION
+                      THE SKILLPRENEUR ACCREDITATION
                     </h4>
                     <p className="text-[11px] text-slate-500 italic mt-1">
                       This is to certify that student has completed
@@ -778,10 +778,10 @@ export default function PackageDetail() {
               <p className="mt-4 max-w-sm text-sm leading-7 text-slate-500 font-medium">
                 Still you have any questions? Contact our Team via{" "}
                 <a
-                  href="mailto:support@knowway.com"
+                  href="mailto:support@theskillpreneur.com"
                   className="text-[#155DFC] font-bold underline"
                 >
-                  support@knowway.com
+                  support@theskillpreneur.com
                 </a>
               </p>
             </div>

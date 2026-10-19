@@ -46,8 +46,8 @@ app.use(express.urlencoded({ extended: true, limit: "25mb" }));
 app.get("/api", (req, res) => {
   res.status(200).json({
     status: "ok",
-    service: "KnowWay Backend API",
-    message: "🚀 KnowWay Node.js Express backend is live and healthy!",
+    service: "The Skillpreneur Backend API",
+    message: "🚀 The Skillpreneur Node.js Express backend is live and healthy!",
     timestamp: new Date().toISOString(),
   });
 });
@@ -59,7 +59,7 @@ app.get("/health", (req, res) => {
 app.get("/api/health", (req, res) => {
   res.status(200).json({
     status: "ok",
-    message: "Knowway Node.js Express backend is running successfully!",
+    message: "The Skillpreneur Node.js Express backend is running successfully!",
     timestamp: new Date().toISOString(),
   });
 });

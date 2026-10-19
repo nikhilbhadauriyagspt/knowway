@@ -425,17 +425,17 @@ export default function AffiliateDashboard() {
     {
       title: "🚀 Skill-Building & Career Growth Pitch",
       desc: "Perfect for sharing in student & freelance WhatsApp groups.",
-      text: `Hey! 👋 If you want to learn high-demand digital skills like AI Automation, Full-Stack Web, Graphic Design & Digital Business, check out KnowWay Learning Platform! 🎓\n\nUse my exclusive discount link for direct savings on all packages:\n🔗 ${referralLink}\n\nReferral Code: ${referralCode}\nLet's grow together! 🚀`,
+      text: `Hey! 👋 If you want to learn high-demand digital skills like AI Automation, Full-Stack Web, Graphic Design & Digital Business, check out The Skillpreneur Learning Platform! 🎓\n\nUse my exclusive discount link for direct savings on all packages:\n🔗 ${referralLink}\n\nReferral Code: ${referralCode}\nLet's grow together! 🚀`,
     },
     {
       title: "💡 Special Member Discount Access",
       desc: "Highlights the cut-price savings for enrolled students.",
-      text: `🔥 Massive Discount Alert on KnowWay Learning Hub! 🔥\nUnlock Pro, Supreme & Premium packages with live mentor support and verified certificates at discounted rates.\n\nClaim your seat here:\n👉 ${referralLink}\nReferral Code: ${referralCode}`,
+      text: `🔥 Massive Discount Alert on The Skillpreneur Learning Hub! 🔥\nUnlock Pro, Supreme & Premium packages with live mentor support and verified certificates at discounted rates.\n\nClaim your seat here:\n👉 ${referralLink}\nReferral Code: ${referralCode}`,
     },
     {
       title: "📱 Instagram & Telegram Short Caption",
       desc: "Concise and high-converting for bio or story stickers.",
-      text: `Level up your digital skills with KnowWay 🌟 Tap the link to claim student discounts & get verified mentorship: ${referralLink} (Code: ${referralCode})`,
+      text: `Level up your digital skills with The Skillpreneur 🌟 Tap the link to claim student discounts & get verified mentorship: ${referralLink} (Code: ${referralCode})`,
     },
   ];
 
@@ -575,7 +575,7 @@ export default function AffiliateDashboard() {
 
                     <a
                       href={`https://api.whatsapp.com/send?text=${encodeURIComponent(
-                        `Hey! Join KnowWay with my referral link to get special student discounts on top digital skill packages: ${referralLink}`
+                        `Hey! Join The Skillpreneur with my referral link to get special student discounts on top digital skill packages: ${referralLink}`
                       )}`}
                       target="_blank"
                       rel="noreferrer"
@@ -603,7 +603,7 @@ export default function AffiliateDashboard() {
                   <p className="text-xl sm:text-2xl font-black text-emerald-500">
                     ₹{lifetimeEarned.toLocaleString()}
                   </p>
-                  <p className="text-[10px] text-[#8A99AD] mt-0.5">All 2-tier payouts</p>
+                  <p className="text-[10px] text-[#8A99AD] mt-0.5">All bonus payouts</p>
                 </div>
 
                 <div
@@ -612,7 +612,7 @@ export default function AffiliateDashboard() {
                   }`}
                 >
                   <div className="flex items-center justify-between text-[#8A99AD] mb-1">
-                    <span className="text-[11px] font-bold uppercase text-emerald-600 dark:text-emerald-400">🟢 Direct (Tier 1)</span>
+                    <span className="text-[11px] font-bold uppercase text-emerald-600 dark:text-emerald-400">🟢 Direct Bonus</span>
                     <Users className="w-4 h-4 text-emerald-500" />
                   </div>
                   <p className="text-xl sm:text-2xl font-black text-emerald-600 dark:text-emerald-400">
@@ -627,7 +627,7 @@ export default function AffiliateDashboard() {
                   }`}
                 >
                   <div className="flex items-center justify-between text-[#8A99AD] mb-1">
-                    <span className="text-[11px] font-bold uppercase text-amber-600 dark:text-amber-400">⭐ Sponsor (Tier 2)</span>
+                    <span className="text-[11px] font-bold uppercase text-amber-600 dark:text-amber-400">⭐ Leadership Bonus</span>
                     <Award className="w-4 h-4 text-amber-500" />
                   </div>
                   <p className="text-xl sm:text-2xl font-black text-amber-600 dark:text-amber-400">
@@ -750,11 +750,11 @@ export default function AffiliateDashboard() {
                     <span className="p-2 rounded-xl bg-amber-500/10 text-amber-500">
                       <Sparkles className="w-4 h-4" />
                     </span>
-                    <h3 className="text-sm font-bold">Invite & Earn 2-Tiers</h3>
+                    <h3 className="text-sm font-bold">Invite & Earn Bonuses</h3>
                   </div>
 
                   <p className="text-xs text-[#8A99AD] mb-4">
-                    Share your unique link with students. Earn Tier 1 commission on direct sales and Tier 2 sponsor bonus on your team sales!
+                    Share your unique link with students. Earn Direct Bonus on direct sales and Leadership Bonus on your team sales!
                   </p>
 
                   <div className={`p-3 rounded-xl border mb-4 space-y-1.5 ${
@@ -856,7 +856,7 @@ export default function AffiliateDashboard() {
                   >
                     <tr>
                       <th className="py-3.5 px-5 font-bold uppercase tracking-wider text-[10px]">Referral ID</th>
-                      <th className="py-3.5 px-5 font-bold uppercase tracking-wider text-[10px]">Tier / Level</th>
+                      <th className="py-3.5 px-5 font-bold uppercase tracking-wider text-[10px]">Bonus Type</th>
                       <th className="py-3.5 px-5 font-bold uppercase tracking-wider text-[10px]">Student Details</th>
                       <th className="py-3.5 px-5 font-bold uppercase tracking-wider text-[10px]">Item Enrolled</th>
                       <th className="py-3.5 px-5 font-bold uppercase tracking-wider text-[10px]">Package Value</th>
@@ -910,11 +910,11 @@ export default function AffiliateDashboard() {
                             <td className="py-3.5 px-5">
                               {isLeadership ? (
                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                                  ⭐ Level 2 (Leadership)
+                                  ⭐ Leadership Bonus
                                 </span>
                               ) : (
                                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-black bg-emerald-500/10 text-emerald-500 border border-emerald-500/20">
-                                  🟢 Level 1 (Direct)
+                                  🟢 Direct Bonus
                                 </span>
                               )}
                             </td>
@@ -1246,18 +1246,18 @@ export default function AffiliateDashboard() {
             >
               <div className="mb-6">
                 <span className="px-3 py-1 rounded-full text-xs font-bold bg-amber-500/10 text-amber-500 border border-amber-500/20">
-                  Transparent 2-Tier Commission Matrix
+                  Transparent Commission Matrix
                 </span>
-                <h2 className="text-xl font-black mt-2">Earn Direct & Team Sponsor Commissions</h2>
+                <h2 className="text-xl font-black mt-2">Earn Direct Bonus & Leadership Bonus</h2>
                 <p className="text-xs text-[#8A99AD] mt-1">
                   Commission is calculated directly from the final checkout price (either % percentage or flat rate defined by admin) and credited to your wallet instantly.
                 </p>
               </div>
 
-              {/* Packages Commission Matrix (2-Tier Direct + Leadership) */}
+              {/* Packages Commission Matrix (Direct Bonus + Leadership Bonus) */}
               <div className="mb-6">
                 <h3 className="text-sm font-bold uppercase tracking-wider text-[#8A99AD] mb-3 flex items-center gap-1.5">
-                  <Layers3 className="w-4 h-4 text-amber-500" /> Package 2-Tier Commission Rates
+                  <Layers3 className="w-4 h-4 text-amber-500" /> Package Commission Rates
                 </h3>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                   {(commissionPackages.length > 0 ? commissionPackages : [
@@ -1291,7 +1291,7 @@ export default function AffiliateDashboard() {
                               {item.slug || "Package"}
                             </span>
                             <span className="text-[11px] font-black text-emerald-500">
-                              {isDirectFlat ? `₹${directVal} Flat` : `${directVal}%`} Direct
+                              {isDirectFlat ? `₹${directVal} Flat` : `${directVal}%`} Direct Bonus
                             </span>
                           </div>
                           <h4 className="text-sm font-bold">{item.name}</h4>
@@ -1302,21 +1302,21 @@ export default function AffiliateDashboard() {
                         </div>
 
                         <div className="mt-4 pt-3 border-t border-inherit space-y-2">
-                          {/* Level 1 Direct */}
+                          {/* Direct Bonus */}
                           <div className={`p-2 rounded-xl border flex items-center justify-between ${
                             darkMode ? "bg-emerald-950/20 border-emerald-900/40" : "bg-emerald-50/70 border-emerald-200/80"
                           }`}>
-                            <span className="text-[10.5px] font-bold text-emerald-600 dark:text-emerald-400">🟢 Tier 1 (Direct):</span>
+                            <span className="text-[10.5px] font-bold text-emerald-600 dark:text-emerald-400">🟢 Direct Bonus:</span>
                             <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">
                               +₹{directEarning.toLocaleString()}
                             </span>
                           </div>
 
-                          {/* Level 2 Leadership Sponsor */}
+                          {/* Leadership Bonus */}
                           <div className={`p-2 rounded-xl border flex items-center justify-between ${
                             darkMode ? "bg-amber-950/20 border-amber-900/40" : "bg-amber-50/70 border-amber-200/80"
                           }`}>
-                            <span className="text-[10.5px] font-bold text-amber-600 dark:text-amber-400">⭐ Tier 2 (Sponsor):</span>
+                            <span className="text-[10.5px] font-bold text-amber-600 dark:text-amber-400">⭐ Leadership Bonus:</span>
                             <span className="text-xs font-black text-amber-600 dark:text-amber-400">
                               +₹{leadEarning.toLocaleString()} ({isLeadFlat ? "Flat" : `${leadVal}%`})
                             </span>
@@ -1328,11 +1328,11 @@ export default function AffiliateDashboard() {
                 </div>
               </div>
 
-              {/* Individual Courses Commission Matrix (2-Tier) */}
+              {/* Individual Courses Commission Matrix */}
               {commissionCourses.length > 0 && (
                 <div>
                   <h3 className="text-sm font-bold uppercase tracking-wider text-[#8A99AD] mb-3 flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-blue-500" /> Individual Course Commissions (2-Tier)
+                    <Sparkles className="w-4 h-4 text-blue-500" /> Individual Course Commissions
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
                     {commissionCourses.slice(0, 6).map((c, idx) => {
@@ -1361,10 +1361,10 @@ export default function AffiliateDashboard() {
                           </div>
                           <div className="text-right">
                             <span className="text-xs font-black text-emerald-500 block">
-                              +₹{directEarning.toLocaleString()} <span className="text-[9px] text-[#8A99AD] font-normal">(L1 Direct)</span>
+                              +₹{directEarning.toLocaleString()} <span className="text-[9px] text-[#8A99AD] font-normal">(Direct Bonus)</span>
                             </span>
                             <span className="text-[10px] font-bold text-amber-500 block">
-                              +₹{leadEarning.toLocaleString()} <span className="text-[9px] text-[#8A99AD] font-normal">(L2 Sponsor)</span>
+                              +₹{leadEarning.toLocaleString()} <span className="text-[9px] text-[#8A99AD] font-normal">(Leadership Bonus)</span>
                             </span>
                           </div>
                         </div>

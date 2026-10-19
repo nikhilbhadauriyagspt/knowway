@@ -231,7 +231,7 @@ export default function UserAvatarDropdown({
               {user?.name || "Student Learner"}
             </h3>
             <p className={`text-xs mt-0.5 truncate max-w-[240px] ${darkMode ? "text-[#8A99AD]" : "text-[#64748B]"}`}>
-              {user?.email || "student@knowway.com"}
+              {user?.email || "student@theskillpreneur.com"}
             </p>
 
             {/* Student ID badge */}

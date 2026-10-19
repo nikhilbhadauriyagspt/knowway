@@ -91,7 +91,7 @@ export const getCourseQuiz = async (req, res) => {
         },
         {
           id: 105,
-          question: "What is the key takeaway of KnowWay hands-on training?",
+          question: "What is the key takeaway of The Skillpreneur hands-on training?",
           option_a: "Practical execution over passive watching",
           option_b: "Never asking mentors for clarification",
           option_c: "Skipping final assessments",

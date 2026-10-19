@@ -89,7 +89,7 @@ export default function CustomPolicyPage({ defaultSlug }) {
               <div>
                 <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#035BE3]/10 text-[#035BE3] text-xs font-bold mb-3">
                   <ShieldCheck className="w-3.5 h-3.5" />
-                  <span>Official Knowway Policy</span>
+                  <span>Official The Skillpreneur Policy</span>
                 </div>
                 <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-[#0F172A] tracking-tight">
                   {page.title}

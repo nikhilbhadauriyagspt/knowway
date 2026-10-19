@@ -19,20 +19,20 @@ const CURRENT_YEAR = new Date().getFullYear();
 
 export default function Footer() {
   const [settings, setSettings] = useState({
-    site_name: "Knowway",
+    site_name: "The Skillpreneur",
     site_tagline:
       "Simple learning paths, practical digital skills and useful knowledge designed to help you keep progressing.",
     site_logo: "/images/logo/logo.png",
-    contact_email: "support@knowway.in",
+    contact_email: "support@theskillpreneur.com",
     contact_phone: "+91 98765 43210",
     contact_address:
-      "Knowway EdTech Tower, Tech Zone 4, Greater Noida, UP - 201306",
-    social_instagram: "https://instagram.com/knowway",
-    social_youtube: "https://youtube.com/@knowway",
-    social_linkedin: "https://linkedin.com/company/knowway",
-    social_telegram: "https://t.me/knowway_official",
-    social_twitter: "https://twitter.com/knowway",
-    copyright_text: "Knowway. All rights reserved.",
+      "The Skillpreneur EdTech Tower, Tech Zone 4, Greater Noida, UP - 201306",
+    social_instagram: "https://instagram.com/theskillpreneur",
+    social_youtube: "https://youtube.com/@theskillpreneur",
+    social_linkedin: "https://linkedin.com/company/theskillpreneur",
+    social_telegram: "https://t.me/theskillpreneur_official",
+    social_twitter: "https://twitter.com/theskillpreneur",
+    copyright_text: "The Skillpreneur. All rights reserved.",
   });
 
   const [pages, setPages] = useState([]);
@@ -295,7 +295,7 @@ export default function Footer() {
         <div className="mt-9 pt-6 border-t border-white/10 flex flex-col-reverse gap-4 sm:flex-row sm:items-center sm:justify-between">
           <p className="text-center sm:text-left text-[12px] text-[#8E9DB5]">
             © {CURRENT_YEAR}{" "}
-            {settings.copyright_text || "Knowway. All rights reserved."}
+            {settings.copyright_text || "The Skillpreneur. All rights reserved."}
           </p>
 
           {/* Social Brand Icons */}

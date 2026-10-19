@@ -564,13 +564,13 @@ export default function AffiliateIncomeReports({ darkMode, user, setActiveTab })
                 <div className="w-7 h-7 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center">
                   <PieChart className="w-3.5 h-3.5" />
                 </div>
-                <h3 className="text-sm font-bold">2-Tier Commission Split</h3>
+                <h3 className="text-sm font-bold">Bonus Commission Split</h3>
               </div>
               <span className="text-[10px] font-bold text-[#8A99AD] uppercase">Ratio</span>
             </div>
 
             <p className="text-xs text-[#8A99AD] mb-4">
-              Breakdown between direct referrals vs sponsor team bonuses.
+              Breakdown between Direct Bonus vs Leadership Bonus.
             </p>
 
             {/* Split Progress bar */}
@@ -578,24 +578,24 @@ export default function AffiliateIncomeReports({ darkMode, user, setActiveTab })
               <div
                 className="bg-emerald-500 h-full transition-all duration-[2200ms] ease-out"
                 style={{ width: animateChart ? `${directPct}%` : "0%" }}
-                title={`Tier 1 Direct: ${directPct}%`}
+                title={`Direct Bonus: ${directPct}%`}
               />
               <div
                 className="bg-purple-500 h-full transition-all duration-[2200ms] ease-out"
                 style={{ width: animateChart ? `${leadershipPct}%` : "0%" }}
-                title={`Tier 2 Team: ${leadershipPct}%`}
+                title={`Leadership Bonus: ${leadershipPct}%`}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-2 pt-2 border-t border-inherit">
               <div className="p-2.5 rounded-xl bg-emerald-500/5 border border-emerald-500/10">
-                <span className="text-[10px] font-bold text-emerald-500 block uppercase">🟢 Tier 1 Direct</span>
+                <span className="text-[10px] font-bold text-emerald-500 block uppercase">🟢 Direct Bonus</span>
                 <span className="text-sm font-black font-mono text-emerald-500">{directPct}%</span>
                 <span className="text-[10px] text-[#8A99AD] block">₹{currentData?.direct?.toLocaleString("en-IN") || 0}</span>
               </div>
 
               <div className="p-2.5 rounded-xl bg-purple-500/5 border border-purple-500/10">
-                <span className="text-[10px] font-bold text-purple-400 block uppercase">⭐ Tier 2 Team</span>
+                <span className="text-[10px] font-bold text-purple-400 block uppercase">⭐ Leadership Bonus</span>
                 <span className="text-sm font-black font-mono text-purple-400">{leadershipPct}%</span>
                 <span className="text-[10px] text-[#8A99AD] block">₹{currentData?.leadership?.toLocaleString("en-IN") || 0}</span>
               </div>
@@ -671,7 +671,7 @@ export default function AffiliateIncomeReports({ darkMode, user, setActiveTab })
               <tr>
                 <th className="py-3 px-4 font-bold uppercase tracking-wider text-[10px]">Item Enrolled</th>
                 <th className="py-3 px-4 font-bold uppercase tracking-wider text-[10px]">Student</th>
-                <th className="py-3 px-4 font-bold uppercase tracking-wider text-[10px]">Tier Level</th>
+                <th className="py-3 px-4 font-bold uppercase tracking-wider text-[10px]">Bonus Type</th>
                 <th className="py-3 px-4 font-bold uppercase tracking-wider text-[10px]">Package Price</th>
                 <th className="py-3 px-4 font-bold uppercase tracking-wider text-[10px]">Commission Amount</th>
                 <th className="py-3 px-4 font-bold uppercase tracking-wider text-[10px]">Date</th>
@@ -692,12 +692,12 @@ export default function AffiliateIncomeReports({ darkMode, user, setActiveTab })
                     <td className="py-3.5 px-4">
                       <span
                         className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
-                          r.tier.includes("Tier 2")
+                          r.tier.includes("Leadership") || r.tier.includes("Tier 2")
                             ? "bg-purple-500/10 text-purple-400 border border-purple-500/20"
                             : "bg-emerald-500/10 text-emerald-500 border border-emerald-500/20"
                         }`}
                       >
-                        {r.tier}
+                        {r.tier.includes("Leadership") || r.tier.includes("Tier 2") ? "Leadership Bonus" : "Direct Bonus"}
                       </span>
                     </td>
                     <td className="py-3.5 px-4 font-mono">₹{r.price.toLocaleString("en-IN")}</td>

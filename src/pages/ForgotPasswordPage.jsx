@@ -167,7 +167,7 @@ export default function ForgotPasswordPage() {
         <Link to="/" className="flex items-center group">
           <img
             src="/images/logo/logo.png"
-            alt="KnowWay Logo"
+            alt="The Skillpreneur Logo"
             className="h-10 sm:h-12 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
           />
         </Link>
@@ -199,7 +199,7 @@ export default function ForgotPasswordPage() {
             Reset Your Password
           </h1>
           <p className="mt-1.5 text-xs sm:text-sm text-[#64748B]">
-            Follow the 3 simple steps to securely restore access to your KnowWay account.
+            Follow the 3 simple steps to securely restore access to your The Skillpreneur account.
           </p>
         </div>
 
@@ -410,7 +410,7 @@ export default function ForgotPasswordPage() {
       </main>
 
       <footer className="w-full py-4 text-center text-xs text-[#94A3B8] border-t border-[#EDF1F7]">
-        &copy; {CURRENT_YEAR} KnowWay LearnSpace. All rights reserved.
+        &copy; {CURRENT_YEAR} The Skillpreneur. All rights reserved.
       </footer>
     </div>
   );

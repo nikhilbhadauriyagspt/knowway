@@ -202,7 +202,7 @@ export default function AdminSidebar({
           <Link
             to="/"
             className="flex items-center justify-center group"
-            title="Knowway Home"
+            title="The Skillpreneur Home"
           >
             <img
               src="/images/logo/logo.png"

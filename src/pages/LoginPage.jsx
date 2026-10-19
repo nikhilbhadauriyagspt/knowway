@@ -122,7 +122,7 @@ export default function LoginPage() {
         <Link to="/" className="flex items-center group">
           <img
             src="/images/logo/logo.png"
-            alt="KnowWay Logo"
+            alt="The Skillpreneur Logo"
             className="h-10 sm:h-12 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
           />
         </Link>
@@ -150,7 +150,7 @@ export default function LoginPage() {
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#111827] tracking-tight">
-            Welcome Back to KnowWay
+            Welcome Back to The Skillpreneur
           </h1>
           <p className="mt-1.5 text-xs sm:text-sm text-[#64748B]">
             Sign in to continue your enrolled courses, certifications, and resources.
@@ -353,7 +353,7 @@ export default function LoginPage() {
       )}
 
       <footer className="w-full py-4 text-center text-xs text-[#94A3B8] border-t border-[#EDF1F7]">
-        &copy; {CURRENT_YEAR} KnowWay LearnSpace. All rights reserved.
+        &copy; {CURRENT_YEAR} The Skillpreneur. All rights reserved.
       </footer>
     </div>
   );

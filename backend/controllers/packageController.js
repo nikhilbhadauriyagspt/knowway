@@ -73,7 +73,7 @@ export const getPackageBySlugOrId = async (req, res) => {
     pkg.courses = (courses || []).map((c) => ({
       ...c,
       image: c.thumbnail_url || "https://images.unsplash.com/photo-1522202176988-66273c2fd55f?q=80&w=600&auto=format&fit=crop",
-      instructor: c.mentor_name || "KnowWay Instructor",
+      instructor: c.mentor_name || "The Skillpreneur Instructor",
       duration: `${c.duration || "2 Hours"}, ${c.languages || "English"}`,
     }));
 

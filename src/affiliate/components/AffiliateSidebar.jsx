@@ -71,10 +71,10 @@ export default function AffiliateSidebar({
             ${darkMode ? "bg-[#131926] border-[#222B3D]" : "bg-white border-[#E2E8F0]"}
           `}
         >
-          <Link to="/" className="flex items-center gap-2 group" title="KnowWay Platform">
+          <Link to="/" className="flex items-center gap-2 group" title="The Skillpreneur Platform">
             <img
               src="/images/logo/logo.png"
-              alt="KnowWay Logo"
+              alt="The Skillpreneur Logo"
               className="h-8 sm:h-9 w-auto object-contain transition-transform group-hover:scale-105"
             />
           </Link>

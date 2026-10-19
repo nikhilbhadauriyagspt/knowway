@@ -120,7 +120,7 @@ export default function SuperAdminLoginPage() {
         <Link to="/" className="flex items-center gap-3 group">
           <img
             src="/images/logo/logo.png"
-            alt="KnowWay Logo"
+            alt="The Skillpreneur Logo"
             className="h-10 sm:h-11 w-auto object-contain transition-transform group-hover:scale-105"
           />
           <div className="hidden sm:flex flex-col">
@@ -286,7 +286,7 @@ export default function SuperAdminLoginPage() {
 
       {/* Footer */}
       <footer className="relative z-10 py-5 text-center text-xs text-[#5B6F96]">
-        &copy; {CURRENT_YEAR} KnowWay. All rights reserved. Authorized administrative access only.
+        &copy; {CURRENT_YEAR} The Skillpreneur. All rights reserved. Authorized administrative access only.
       </footer>
     </div>
   );

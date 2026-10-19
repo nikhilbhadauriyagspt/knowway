@@ -504,14 +504,24 @@ export const createCourse = async (req, res) => {
   try {
     await connection.beginTransaction();
 
+    let validCreateMentorId = null;
+    let validCreateMentorName = mentor_name || null;
+    if (mentor_id !== undefined && mentor_id !== null && mentor_id !== "" && Number(mentor_id) > 0) {
+      const [mRows] = await connection.query("SELECT id, name FROM mentors WHERE id = ? LIMIT 1", [Number(mentor_id)]);
+      if (mRows && mRows.length > 0) {
+        validCreateMentorId = mRows[0].id;
+        if (!validCreateMentorName) validCreateMentorName = mRows[0].name;
+      }
+    }
+
     const [courseResult] = await connection.query(
       `INSERT INTO courses (title, slug, mentor_id, mentor_name, category, languages, duration, regular_price, promo_price, promo_code, thumbnail_url, description, what_you_will_learn, software_required, total_lectures, referral_commission_type, referral_commission_value)
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
       [
         title.trim(),
         slug,
-        mentor_id ? Number(mentor_id) : null,
-        mentor_name || null,
+        validCreateMentorId,
+        validCreateMentorName,
         category.trim(),
         Array.isArray(languages) ? languages.join(", ") : (languages || "Hindi"),
         duration || "1 Hour",
@@ -615,11 +625,24 @@ export const updateCourse = async (req, res) => {
   try {
     await connection.beginTransaction();
 
-    const [existing] = await connection.query("SELECT id FROM courses WHERE id = ? LIMIT 1", [id]);
+    const [existing] = await connection.query("SELECT id, mentor_id, mentor_name FROM courses WHERE id = ? LIMIT 1", [id]);
     if (!existing || existing.length === 0) {
       await connection.rollback();
       connection.release();
       return res.status(404).json({ success: false, message: "Course not found" });
+    }
+
+    let validMentorId = null;
+    let validMentorName = mentor_name || existing[0].mentor_name || null;
+    const candidateMentorId =
+      mentor_id !== undefined && mentor_id !== "" ? Number(mentor_id) : Number(existing[0].mentor_id);
+
+    if (candidateMentorId && candidateMentorId > 0) {
+      const [mRows] = await connection.query("SELECT id, name FROM mentors WHERE id = ? LIMIT 1", [candidateMentorId]);
+      if (mRows && mRows.length > 0) {
+        validMentorId = mRows[0].id;
+        if (!mentor_name) validMentorName = mRows[0].name;
+      }
     }
 
     const learnJson = what_you_will_learn
@@ -629,7 +652,7 @@ export const updateCourse = async (req, res) => {
     await connection.query(
       `UPDATE courses SET 
         title = COALESCE(?, title),
-        mentor_id = COALESCE(?, mentor_id),
+        mentor_id = ?,
         mentor_name = COALESCE(?, mentor_name),
         category = COALESCE(?, category),
         languages = COALESCE(?, languages),
@@ -646,8 +669,8 @@ export const updateCourse = async (req, res) => {
        WHERE id = ?`,
       [
         title ? title.trim() : null,
-        mentor_id !== undefined && mentor_id !== "" ? Number(mentor_id) : null,
-        mentor_name || null,
+        validMentorId,
+        validMentorName,
         category ? category.trim() : null,
         languages ? (Array.isArray(languages) ? languages.join(", ") : languages) : null,
         duration || null,
@@ -987,7 +1010,7 @@ export const executeRazorpayxPayout = async (req, res) => {
                 },
           queue_if_low_balance: true,
           reference_id: `KW-PAYOUT-${payout.id}`,
-          narration: "KnowWay Affiliate Payout",
+          narration: "The Skillpreneur Affiliate Payout",
         };
 
         const apiRes = await fetch("https://api.razorpay.com/v1/payouts", {
@@ -1186,7 +1209,7 @@ export const getAdminAffiliateUsers = async (req, res) => {
   try {
     const [users] = await pool.query(`
       SELECT 
-        u.id, u.name, u.email, u.phone, u.student_id, u.avatar_url, u.status, u.created_at,
+        u.id, u.name, u.email, u.phone, u.student_id, u.referral_code, u.avatar_url, u.created_at,
         COALESCE(w.current_balance, 0) AS current_balance,
         COALESCE(w.total_earned, 0) AS total_earned,
         COALESCE(w.direct_earnings, 0) AS direct_earnings,
@@ -1199,7 +1222,7 @@ export const getAdminAffiliateUsers = async (req, res) => {
       LEFT JOIN affiliate_wallets w ON u.id = w.user_id
       LEFT JOIN affiliate_referrals r ON u.id = r.referrer_id
       LEFT JOIN affiliate_payout_requests p ON u.id = p.user_id
-      GROUP BY u.id, u.name, u.email, u.phone, u.student_id, u.avatar_url, u.status, u.created_at, w.current_balance, w.total_earned, w.direct_earnings, w.leadership_earnings, w.total_withdrawn
+      GROUP BY u.id, u.name, u.email, u.phone, u.student_id, u.referral_code, u.avatar_url, u.created_at, w.current_balance, w.total_earned, w.direct_earnings, w.leadership_earnings, w.total_withdrawn
       ORDER BY total_earned DESC, u.id DESC
     `);
 
@@ -1212,14 +1235,16 @@ export const getAdminAffiliateUsers = async (req, res) => {
         email: u.email,
         phone: u.phone,
         student_id: u.student_id || `KW${u.id}`,
+        referral_code: u.referral_code || `KW${u.id}`,
         avatar_url: u.avatar_url,
-        status: u.status || "active",
+        status: "active",
         current_balance: Number(u.current_balance) || 0,
         total_earned: Number(u.total_earned) || 0,
         direct_earnings: Number(u.direct_earnings) || 0,
         leadership_earnings: Number(u.leadership_earnings) || 0,
         total_withdrawn: Number(u.total_withdrawn) || 0,
         total_referrals: Number(u.total_referrals) || 0,
+        total_referral_sales: Number(u.total_referrals) || 0,
         total_payout_requests: Number(u.total_payout_requests) || 0,
         pending_payout_amount: Number(u.pending_payout_amount) || 0,
         created_at: u.created_at,

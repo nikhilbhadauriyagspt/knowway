@@ -92,7 +92,7 @@ export default function AffiliateAnnouncements({ darkMode, externalSearchQuery =
               darkMode ? "text-[#94A3B8]" : "text-[#556377]"
             }`}
           >
-            Direct notices from KnowWay Admin: bonus sprints, commission contests, payout cycles, and marketing materials.
+            Direct notices from The Skillpreneur Admin: bonus sprints, commission contests, payout cycles, and marketing materials.
           </p>
         </div>
 

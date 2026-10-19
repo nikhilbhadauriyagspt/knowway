@@ -74,7 +74,7 @@ export default function StudentSidebar({
           <Link to="/" className="flex items-center gap-2.5 group" title="Back to Homepage">
             <img
               src="/images/logo/logo.png"
-              alt="KnowWay Logo"
+              alt="The Skillpreneur Logo"
               className="h-8 sm:h-9 w-auto object-contain transition-transform group-hover:scale-105"
             />
           </Link>

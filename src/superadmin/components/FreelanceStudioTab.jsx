@@ -1415,7 +1415,7 @@ export default function FreelanceStudioTab({ darkMode }) {
                             Click to upload video file (.mp4, .mov, .webm)
                           </p>
                           <p className="text-[10px] text-[#8A99AD]">
-                            Directly uploads to KnowWay secure Cloudinary storage
+                            Directly uploads to The Skillpreneur secure Cloudinary storage
                           </p>
                         </div>
                       )}

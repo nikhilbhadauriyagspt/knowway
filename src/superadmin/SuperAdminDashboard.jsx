@@ -34,6 +34,7 @@ import {
   Clock,
   Globe,
   Pencil,
+  Edit3,
   IndianRupee,
   Copy,
   Eye,
@@ -127,7 +128,7 @@ const DEFAULT_ADMIN_MODULES = [
   { id: "users", name: "Student Directory & Management", description: "Manage registered students, enrollments & purchases" },
   { id: "payments", name: "Payments & Financial Orders", description: "Monitor Razorpay payment orders, receipts and txn logs" },
   { id: "affiliates", name: "Affiliate Payouts & Partners", description: "Process 1-click RazorpayX payouts & view partner stats" },
-  { id: "commissions", name: "2-Tier Commission Matrix", description: "Configure Tier-1 Direct & Tier-2 Sponsor commission rates" },
+  { id: "commissions", name: "Commission Matrix", description: "Configure Direct Bonus & Leadership Bonus commission rates" },
   { id: "videosecurity", name: "Video Security & DRM Protection", description: "Manage anti-piracy, watermarks & devtools shields" },
   { id: "subadmins", name: "Staff & Sub-Admin Roles (RBAC)", description: "Create staff users, assign permissions and control access" },
   { id: "history", name: "Activity Logs & Audit History", description: "Full system audit trail of admin actions & student events" },
@@ -381,7 +382,7 @@ export default function SuperAdminDashboard() {
           leadership_value: p.leadership_commission_value !== undefined && p.leadership_commission_value !== null ? p.leadership_commission_value : 5,
         };
       });
-      setPackageCommissionDrafts((prev) => ({ ...drafts, ...prev }));
+      setPackageCommissionDrafts(drafts);
     }
   }, [packagesList]);
 
@@ -397,7 +398,7 @@ export default function SuperAdminDashboard() {
           leadership_value: c.leadership_commission_value !== undefined && c.leadership_commission_value !== null ? c.leadership_commission_value : 5,
         };
       });
-      setCourseCommissionDrafts((prev) => ({ ...drafts, ...prev }));
+      setCourseCommissionDrafts(drafts);
     }
   }, [coursesList]);
 
@@ -455,7 +456,7 @@ export default function SuperAdminDashboard() {
     smtp_port: "587",
     smtp_user: "",
     smtp_pass: "",
-    smtp_from_name: "KnowWay LearnSpace",
+    smtp_from_name: "The Skillpreneur",
     smtp_from_email: "",
     smtp_is_active: "false",
   });
@@ -478,7 +479,7 @@ export default function SuperAdminDashboard() {
     role_title: "",
     photo_url: "",
     bio: "",
-    experience_badge: "5+ Yrs Exp",
+    experience_badge: "",
     expertise: "",
     social_linkedin: "",
     social_instagram: "",
@@ -608,7 +609,7 @@ export default function SuperAdminDashboard() {
             smtp_port: settingsRes.settings.smtp_port || "587",
             smtp_user: settingsRes.settings.smtp_user || "",
             smtp_pass: settingsRes.settings.smtp_pass || "",
-            smtp_from_name: settingsRes.settings.smtp_from_name || "KnowWay LearnSpace",
+            smtp_from_name: settingsRes.settings.smtp_from_name || "The Skillpreneur",
             smtp_from_email: settingsRes.settings.smtp_from_email || "",
             smtp_is_active: settingsRes.settings.smtp_is_active || "false",
           });
@@ -719,15 +720,20 @@ export default function SuperAdminDashboard() {
 
   // Handle Save Single Package Commission (2-Tier)
   const handleSavePackageCommission = async (pkgId) => {
-    const draft = packageCommissionDrafts[pkgId];
-    if (!draft) return;
+    const pkgObj = packagesList.find((p) => p.id === pkgId) || {};
+    const draft = packageCommissionDrafts[pkgId] || {
+      direct_type: pkgObj.referral_commission_type || "percentage",
+      direct_value: pkgObj.referral_commission_value ?? 20,
+      leadership_type: pkgObj.leadership_commission_type || "percentage",
+      leadership_value: pkgObj.leadership_commission_value ?? 5,
+    };
     setSavingCommissionId(`pkg-${pkgId}`);
     try {
       const res = await updatePackageCommissionApi(pkgId, {
-        referral_commission_type: draft.direct_type,
-        referral_commission_value: draft.direct_value,
-        leadership_commission_type: draft.leadership_type,
-        leadership_commission_value: draft.leadership_value,
+        referral_commission_type: draft.direct_type || "percentage",
+        referral_commission_value: Number(draft.direct_value) || 0,
+        leadership_commission_type: draft.leadership_type || "percentage",
+        leadership_commission_value: Number(draft.leadership_value) || 0,
       });
       if (res?.success) {
         showToast(res.message || "Package 2-tier commissions updated!");
@@ -770,15 +776,20 @@ export default function SuperAdminDashboard() {
   };
 
   const handleSaveCourseCommission = async (courseId) => {
-    const draft = courseCommissionDrafts[courseId];
-    if (!draft) return;
+    const crsObj = coursesList.find((c) => c.id === courseId) || {};
+    const draft = courseCommissionDrafts[courseId] || {
+      direct_type: crsObj.referral_commission_type || "percentage",
+      direct_value: crsObj.referral_commission_value ?? 20,
+      leadership_type: crsObj.leadership_commission_type || "percentage",
+      leadership_value: crsObj.leadership_commission_value ?? 5,
+    };
     setSavingCommissionId(`crs-${courseId}`);
     try {
       const res = await updateCourseCommissionApi(courseId, {
-        referral_commission_type: draft.direct_type,
-        referral_commission_value: draft.direct_value,
-        leadership_commission_type: draft.leadership_type,
-        leadership_commission_value: draft.leadership_value,
+        referral_commission_type: draft.direct_type || "percentage",
+        referral_commission_value: Number(draft.direct_value) || 0,
+        leadership_commission_type: draft.leadership_type || "percentage",
+        leadership_commission_value: Number(draft.leadership_value) || 0,
       });
       if (res?.success) {
         showToast(res.message || "Course 2-tier commissions updated!");
@@ -906,7 +917,7 @@ export default function SuperAdminDashboard() {
           role_title: "",
           photo_url: "",
           bio: "",
-          experience_badge: "5+ Yrs Exp",
+          experience_badge: "",
           expertise: "",
           social_linkedin: "",
           social_instagram: "",
@@ -1382,7 +1393,7 @@ export default function SuperAdminDashboard() {
       const selectedMentor = mentorsList.find((m) => String(m.id) === String(newCourse.mentor_id));
       const payload = {
         ...newCourse,
-        mentor_name: selectedMentor?.name || "Knowway Instructor",
+        mentor_name: selectedMentor?.name || "The Skillpreneur Instructor",
         what_you_will_learn: newCourse.what_you_will_learn.filter((item) => item.trim() !== ""),
       };
 
@@ -2075,7 +2086,9 @@ export default function SuperAdminDashboard() {
                         <div className="min-w-0">
                           <h3 className="text-base font-bold truncate">{mentor.name}</h3>
                           <p className="text-xs text-[#035BE3] font-semibold truncate">{mentor.role_title}</p>
-                          <span className="inline-block mt-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-700">
+                          <span className={`inline-block mt-1 text-[10px] font-bold px-2.5 py-0.5 rounded-full ${
+                            darkMode ? "bg-blue-950/60 text-blue-400 border border-blue-900/50" : "bg-blue-50 text-[#035BE3] border border-blue-200"
+                          }`}>
                             {mentor.experience_badge || "Mentor"}
                           </span>
                         </div>
@@ -2086,17 +2099,33 @@ export default function SuperAdminDashboard() {
                       </p>
                     </div>
 
-                    <div className="mt-5 pt-4 border-t border-inherit flex items-center justify-between">
-                      <span className="text-[11px] font-semibold text-[#64748B]">
+                    <div className="mt-5 pt-4 border-t border-inherit flex items-center justify-between gap-2">
+                      <span className="text-[11px] font-semibold text-[#64748B] truncate">
                         Expertise: {mentor.expertise || "General"}
                       </span>
-                      <button
-                        onClick={() => setItemToDelete({ type: "mentor", id: mentor.id, name: mentor.name })}
-                        className="p-2 text-[#94A3B8] hover:text-red-600 hover:bg-red-500/10 rounded-full transition cursor-pointer"
-                        title="Delete Mentor"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => setEditingMentor(mentor)}
+                          className={`px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1.5 transition cursor-pointer ${
+                            darkMode
+                              ? "bg-blue-500/10 text-blue-400 hover:bg-blue-500/20 border border-blue-500/20"
+                              : "bg-blue-50 text-[#035BE3] hover:bg-blue-100 border border-blue-200"
+                          }`}
+                          title="Edit Mentor & Experience"
+                        >
+                          <Edit3 className="w-3.5 h-3.5" />
+                          <span>Edit</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setItemToDelete({ type: "mentor", id: mentor.id, name: mentor.name })}
+                          className="p-2 text-[#94A3B8] hover:text-red-600 hover:bg-red-500/10 rounded-full transition cursor-pointer"
+                          title="Delete Mentor"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -2887,7 +2916,7 @@ export default function SuperAdminDashboard() {
 
                     <div className="pt-4 border-t border-inherit flex items-center justify-between">
                       <a
-                        href={`mailto:${selectedInquiry.email}?subject=Re: ${encodeURIComponent(selectedInquiry.subject || 'Your Inquiry on Knowway')}`}
+                        href={`mailto:${selectedInquiry.email}?subject=Re: ${encodeURIComponent(selectedInquiry.subject || 'Your Inquiry on The Skillpreneur')}`}
                         className="px-4 py-2 rounded-full bg-[#035BE3] text-white text-xs font-bold hover:bg-[#024bc0] transition flex items-center gap-1.5 cursor-pointer"
                       >
                         <Mail className="w-3.5 h-3.5" />
@@ -3308,7 +3337,7 @@ export default function SuperAdminDashboard() {
                         type="email"
                         value={brandingSettings.contact_email || ""}
                         onChange={(e) => setBrandingSettings({ ...brandingSettings, contact_email: e.target.value })}
-                        placeholder="support@knowway.in"
+                        placeholder="support@theskillpreneur.com"
                         className={`w-full h-10 rounded-xl border px-3.5 text-xs font-semibold outline-none focus:border-[#035BE3] ${
                           darkMode ? "bg-[#0B0F17] border-[#222B3D] text-white" : "bg-white border-[#E2E8F0] text-[#0F172A]"
                         }`}
@@ -3619,7 +3648,7 @@ export default function SuperAdminDashboard() {
                         </label>
                         <input
                           type="text"
-                          placeholder="e.g. info@knowway.com"
+                          placeholder="e.g. info@theskillpreneur.com"
                           value={smtpSettings.smtp_user}
                           onChange={(e) => setSmtpSettings({ ...smtpSettings, smtp_user: e.target.value })}
                           className={`w-full rounded-2xl border px-3.5 py-2.5 text-xs outline-none focus:border-[#035BE3] ${
@@ -3650,7 +3679,7 @@ export default function SuperAdminDashboard() {
                           </label>
                           <input
                             type="text"
-                            placeholder="KnowWay LearnSpace"
+                            placeholder="The Skillpreneur"
                             value={smtpSettings.smtp_from_name}
                             onChange={(e) => setSmtpSettings({ ...smtpSettings, smtp_from_name: e.target.value })}
                             className={`w-full rounded-2xl border px-3.5 py-2.5 text-xs outline-none focus:border-[#035BE3] ${
@@ -3664,7 +3693,7 @@ export default function SuperAdminDashboard() {
                           </label>
                           <input
                             type="text"
-                            placeholder="e.g. no-reply@knowway.com"
+                            placeholder="e.g. no-reply@theskillpreneur.com"
                             value={smtpSettings.smtp_from_email}
                             onChange={(e) => setSmtpSettings({ ...smtpSettings, smtp_from_email: e.target.value })}
                             className={`w-full rounded-2xl border px-3.5 py-2.5 text-xs outline-none focus:border-[#035BE3] ${
@@ -3736,7 +3765,7 @@ export default function SuperAdminDashboard() {
                       <input
                         type="text"
                         required
-                        placeholder="e.g. knowway-media"
+                        placeholder="e.g. theskillpreneur-media"
                         value={cloudinarySettings.cloud_name}
                         onChange={(e) => setCloudinarySettings({ ...cloudinarySettings, cloud_name: e.target.value })}
                         className={`w-full rounded-2xl border px-4 py-3 text-xs outline-none focus:border-[#035BE3] ${
@@ -4406,7 +4435,7 @@ export default function SuperAdminDashboard() {
                           <th className="py-3.5 px-6 font-bold">Referral Code</th>
                           <th className="py-3.5 px-6 font-bold">Wallet Balance</th>
                           <th className="py-3.5 px-6 font-bold">Lifetime Earned</th>
-                          <th className="py-3.5 px-6 font-bold">2-Tier Split (L1 / L2)</th>
+                          <th className="py-3.5 px-6 font-bold">Bonus Split (Direct / Leadership)</th>
                           <th className="py-3.5 px-6 font-bold">Total Withdrawn</th>
                           <th className="py-3.5 px-6 font-bold">Referral Sales</th>
                           <th className="py-3.5 px-6 font-bold">Payouts Count</th>
@@ -4476,11 +4505,11 @@ export default function SuperAdminDashboard() {
                                 <td className="py-4 px-6">
                                   <div className="space-y-0.5 text-[11px]">
                                     <div className="flex items-center gap-1 text-emerald-600 dark:text-emerald-400 font-bold">
-                                      <span>🟢 L1 Direct:</span>
+                                      <span>🟢 Direct Bonus:</span>
                                       <span>₹{directEarned.toLocaleString("en-IN")}</span>
                                     </div>
                                     <div className="flex items-center gap-1 text-amber-600 dark:text-amber-400 font-bold">
-                                      <span>⭐ L2 Sponsor:</span>
+                                      <span>⭐ Leadership Bonus:</span>
                                       <span>₹{leadEarned.toLocaleString("en-IN")}</span>
                                     </div>
                                   </div>
@@ -4527,7 +4556,7 @@ export default function SuperAdminDashboard() {
                           darkMode ? "bg-[#0B0F17] border-[#222B3D] text-[#94A3B8]" : "bg-[#F8FAFD] border-[#E2E8F0] text-[#64748B]"
                         }`}>
                           <th className="py-3.5 px-6 font-bold"># Ref ID</th>
-                          <th className="py-3.5 px-6 font-bold">Tier / Level</th>
+                          <th className="py-3.5 px-6 font-bold">Bonus Type</th>
                           <th className="py-3.5 px-6 font-bold">Affiliate Beneficiary</th>
                           <th className="py-3.5 px-6 font-bold">Buyer (Student)</th>
                           <th className="py-3.5 px-6 font-bold">Item Purchased</th>
@@ -4558,11 +4587,11 @@ export default function SuperAdminDashboard() {
                                 <td className="py-4 px-6">
                                   {isLeadership ? (
                                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10.5px] font-black bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20">
-                                      ⭐ Level 2 (Leadership)
+                                      ⭐ Leadership Bonus
                                     </span>
                                   ) : (
                                     <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-[10.5px] font-black bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
-                                      🟢 Level 1 (Direct)
+                                      🟢 Direct Bonus
                                     </span>
                                   )}
                                 </td>
@@ -4775,15 +4804,30 @@ export default function SuperAdminDashboard() {
                   </div>
                   <div>
                     <h2 className={`text-base sm:text-lg font-bold ${darkMode ? "text-white" : "text-[#0F172A]"}`}>
-                      2-Tier Affiliate Commission Matrix
+                      Affiliate Commission Matrix
                     </h2>
                     <p className={`text-xs mt-0.5 ${darkMode ? "text-[#94A3B8]" : "text-[#64748B]"}`}>
-                      Configure Tier-1 Direct Referral payout & Tier-2 Leadership Sponsor reward for all packages & courses.
+                      Configure Direct Bonus & Leadership Bonus rewards for all packages & courses.
                     </p>
                   </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <div className="relative">
+                    <Search className={`w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 ${darkMode ? "text-[#94A3B8]" : "text-[#64748B]"}`} />
+                    <input
+                      type="text"
+                      value={commissionSearch}
+                      onChange={(e) => setCommissionSearch(e.target.value)}
+                      placeholder={`Search ${commissionActiveTab}...`}
+                      className={`h-9 pl-8 pr-3 rounded-full border text-xs outline-none transition w-44 sm:w-52 ${
+                        darkMode
+                          ? "bg-[#0B0F17] border-[#222B3D] text-white focus:border-[#035BE3]"
+                          : "bg-slate-50 border-[#E2E8F0] text-[#0F172A] focus:border-[#035BE3]"
+                      }`}
+                    />
+                  </div>
+
                   <div className={`flex items-center gap-1 p-1 rounded-full border ${
                     darkMode ? "bg-[#0B0F17] border-[#222B3D]" : "bg-slate-100 border-[#E2E8F0]"
                   }`}>
@@ -4810,6 +4854,16 @@ export default function SuperAdminDashboard() {
                       Individual Courses ({coursesList.length})
                     </button>
                   </div>
+
+                  <button
+                    type="button"
+                    onClick={handleBulkSaveCommissions}
+                    disabled={isSavingBulkCommissions}
+                    className="h-9 px-4 rounded-full bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition flex items-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-50"
+                  >
+                    <Check className="w-3.5 h-3.5" />
+                    <span>{isSavingBulkCommissions ? "Saving All..." : "Save All Rates"}</span>
+                  </button>
                 </div>
               </div>
 
@@ -4830,7 +4884,11 @@ export default function SuperAdminDashboard() {
                           leadership_type: pkg.leadership_commission_type || "percentage",
                           leadership_value: pkg.leadership_commission_value !== undefined && pkg.leadership_commission_value !== null ? pkg.leadership_commission_value : 5,
                         };
-                        const pkgPrice = Number(pkg.price || 999);
+                        const pkgPrice = Number(pkg.promo_price || pkg.price || 999);
+                        const pkgMrp = Number(pkg.mrp_price || pkg.regular_price || 0);
+                        const pkgThumb = pkg.image_url || pkg.thumbnail_url;
+                        const pkgCoursesCount = pkg.total_courses ?? pkg.course_count ?? (pkg.course_ids ? pkg.course_ids.length : 0);
+
                         const isDirectFlat = draft.direct_type === "flat";
                         const directVal = Number(draft.direct_value) || 0;
                         const directEarning = isDirectFlat ? directVal : Math.round((pkgPrice * directVal) / 100);
@@ -4851,9 +4909,9 @@ export default function SuperAdminDashboard() {
                           >
                             <div className="space-y-4">
                               <div className="flex items-start gap-3">
-                                {pkg.thumbnail_url && (
+                                {pkgThumb && (
                                   <img
-                                    src={pkg.thumbnail_url}
+                                    src={pkgThumb}
                                     alt={pkg.name}
                                     className={`w-14 h-11 object-cover rounded-xl border shrink-0 ${
                                       darkMode ? "bg-gray-900 border-[#222B3D]" : "bg-slate-100 border-[#E2E8F0]"
@@ -4867,13 +4925,13 @@ export default function SuperAdminDashboard() {
                                       ? "bg-blue-950/50 text-blue-400 border-blue-900"
                                       : "bg-blue-50 text-[#035BE3] border-blue-200"
                                   }`}>
-                                    {pkg.badge_text || "Package"}
+                                    {pkg.badge_text || pkg.badge || pkg.slug || "Package"}
                                   </span>
                                   <h3 className={`text-xs font-bold mt-1 line-clamp-1 ${darkMode ? "text-white" : "text-[#0F172A]"}`} title={pkg.name}>
                                     {pkg.name}
                                   </h3>
                                   <p className={`text-[10.5px] truncate ${darkMode ? "text-[#94A3B8]" : "text-[#64748B]"}`}>
-                                    {(pkg.course_count || (pkg.course_ids ? pkg.course_ids.length : 0))} Courses Included
+                                    {pkgCoursesCount} Courses Included {pkg.total_hours ? `• ${pkg.total_hours}` : ""}
                                   </p>
                                 </div>
                               </div>
@@ -4884,15 +4942,15 @@ export default function SuperAdminDashboard() {
                                 <span className={`text-lg font-black ${darkMode ? "text-white" : "text-[#0F172A]"}`}>
                                   ₹{pkgPrice.toLocaleString("en-IN")}
                                 </span>
-                                {pkg.regular_price > 0 && (
+                                {pkgMrp > 0 && (
                                   <span className={`text-xs line-through ${darkMode ? "text-[#94A3B8]" : "text-slate-400"}`}>
-                                    ₹{Number(pkg.regular_price).toLocaleString("en-IN")}
+                                    ₹{pkgMrp.toLocaleString("en-IN")}
                                   </span>
                                 )}
-                                <span className={`text-[10.5px] ${darkMode ? "text-[#94A3B8]" : "text-[#64748B]"}`}>Active Price</span>
+                                <span className={`text-[10.5px] ${darkMode ? "text-[#94A3B8]" : "text-[#64748B]"}`}>Referral Active Price</span>
                               </div>
 
-                              {/* LEVEL 1: DIRECT REFERRAL COMMISSION */}
+                              {/* DIRECT BONUS */}
                               <div className={`p-3.5 rounded-2xl border space-y-2.5 ${
                                 darkMode ? "bg-[#0B0F17] border-emerald-900/40" : "bg-emerald-50/70 border-emerald-200"
                               }`}>
@@ -4900,7 +4958,7 @@ export default function SuperAdminDashboard() {
                                   <div className="flex items-center gap-1.5">
                                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                                     <span className={`text-xs font-black ${darkMode ? "text-emerald-400" : "text-emerald-700"}`}>
-                                      Tier 1: Direct Referrer
+                                      Direct Bonus
                                     </span>
                                   </div>
                                   <div className={`flex items-center gap-1 p-0.5 rounded-full border ${
@@ -4966,14 +5024,14 @@ export default function SuperAdminDashboard() {
                                 </div>
 
                                 <div className="flex items-center justify-between text-[11px] pt-0.5">
-                                  <span className={darkMode ? "text-[#94A3B8]" : "text-[#64748B]"}>Direct Referrer gets:</span>
+                                  <span className={darkMode ? "text-[#94A3B8]" : "text-[#64748B]"}>Direct Bonus:</span>
                                   <span className={`font-black ${darkMode ? "text-emerald-400" : "text-emerald-600"}`}>
                                     ₹{directEarning.toLocaleString("en-IN")} {isDirectFlat ? "(Flat)" : `(${draft.direct_value}%)`}
                                   </span>
                                 </div>
                               </div>
 
-                              {/* LEVEL 2: LEADERSHIP SPONSOR COMMISSION */}
+                              {/* LEADERSHIP BONUS */}
                               <div className={`p-3.5 rounded-2xl border space-y-2.5 ${
                                 darkMode ? "bg-[#0B0F17] border-amber-900/40" : "bg-amber-50/70 border-amber-200"
                               }`}>
@@ -4981,7 +5039,7 @@ export default function SuperAdminDashboard() {
                                   <div className="flex items-center gap-1.5">
                                     <span className="w-2 h-2 rounded-full bg-amber-500" />
                                     <span className={`text-xs font-black ${darkMode ? "text-amber-400" : "text-amber-700"}`}>
-                                      Tier 2: Leadership Sponsor
+                                      Leadership Bonus
                                     </span>
                                   </div>
                                   <div className={`flex items-center gap-1 p-0.5 rounded-full border ${
@@ -5047,7 +5105,7 @@ export default function SuperAdminDashboard() {
                                 </div>
 
                                 <div className="flex items-center justify-between text-[11px] pt-0.5">
-                                  <span className={darkMode ? "text-[#94A3B8]" : "text-[#64748B]"}>Sponsor gets:</span>
+                                  <span className={darkMode ? "text-[#94A3B8]" : "text-[#64748B]"}>Leadership Bonus:</span>
                                   <span className={`font-black ${darkMode ? "text-amber-400" : "text-amber-600"}`}>
                                     ₹{leadEarning.toLocaleString("en-IN")} {isLeadFlat ? "(Flat)" : `(${draft.leadership_value}%)`}
                                   </span>
@@ -5058,7 +5116,7 @@ export default function SuperAdminDashboard() {
                               <div className={`p-2.5 rounded-xl border flex items-center justify-between text-xs ${
                                 darkMode ? "bg-[#0B0F17] border-[#222B3D]" : "bg-blue-50/70 border-blue-200"
                               }`}>
-                                <span className={`text-[11px] font-bold ${darkMode ? "text-[#94A3B8]" : "text-[#64748B]"}`}>Total Payout (2-Tiers):</span>
+                                <span className={`text-[11px] font-bold ${darkMode ? "text-[#94A3B8]" : "text-[#64748B]"}`}>Total Bonus Payout:</span>
                                 <span className="font-black text-[#035BE3]">
                                   ₹{totalPayout.toLocaleString("en-IN")} / sale
                                 </span>
@@ -5074,7 +5132,7 @@ export default function SuperAdminDashboard() {
                                 className="w-full h-9 rounded-full bg-[#035BE3] hover:bg-[#024bc0] text-white font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-50"
                               >
                                 <Check className="w-3.5 h-3.5" />
-                                <span>{isSavingThis ? "Saving Rates..." : "Update Package 2-Tier Rate"}</span>
+                                <span>{isSavingThis ? "Saving Rates..." : "Update Package Bonus Rate"}</span>
                               </button>
                             </div>
                           </div>
@@ -5166,7 +5224,7 @@ export default function SuperAdminDashboard() {
                                 <span className={`text-[10.5px] ${darkMode ? "text-[#94A3B8]" : "text-[#64748B]"}`}>Active Price</span>
                               </div>
 
-                              {/* LEVEL 1: DIRECT REFERRAL COMMISSION */}
+                              {/* DIRECT BONUS */}
                               <div className={`p-3.5 rounded-2xl border space-y-2.5 ${
                                 darkMode ? "bg-[#0B0F17] border-emerald-900/40" : "bg-emerald-50/70 border-emerald-200"
                               }`}>
@@ -5174,7 +5232,7 @@ export default function SuperAdminDashboard() {
                                   <div className="flex items-center gap-1.5">
                                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
                                     <span className={`text-xs font-black ${darkMode ? "text-emerald-400" : "text-emerald-700"}`}>
-                                      Tier 1: Direct Referrer
+                                      Direct Bonus
                                     </span>
                                   </div>
                                   <div className={`flex items-center gap-1 p-0.5 rounded-full border ${
@@ -5240,14 +5298,14 @@ export default function SuperAdminDashboard() {
                                 </div>
 
                                 <div className="flex items-center justify-between text-[11px] pt-0.5">
-                                  <span className={darkMode ? "text-[#94A3B8]" : "text-[#64748B]"}>Direct Referrer gets:</span>
+                                  <span className={darkMode ? "text-[#94A3B8]" : "text-[#64748B]"}>Direct Bonus:</span>
                                   <span className={`font-black ${darkMode ? "text-emerald-400" : "text-emerald-600"}`}>
                                     ₹{directEarning.toLocaleString("en-IN")} {isDirectFlat ? "(Flat)" : `(${draft.direct_value}%)`}
                                   </span>
                                 </div>
                               </div>
 
-                              {/* LEVEL 2: LEADERSHIP SPONSOR COMMISSION */}
+                              {/* LEADERSHIP BONUS */}
                               <div className={`p-3.5 rounded-2xl border space-y-2.5 ${
                                 darkMode ? "bg-[#0B0F17] border-amber-900/40" : "bg-amber-50/70 border-amber-200"
                               }`}>
@@ -5255,7 +5313,7 @@ export default function SuperAdminDashboard() {
                                   <div className="flex items-center gap-1.5">
                                     <span className="w-2 h-2 rounded-full bg-amber-500" />
                                     <span className={`text-xs font-black ${darkMode ? "text-amber-400" : "text-amber-700"}`}>
-                                      Tier 2: Leadership Sponsor
+                                      Leadership Bonus
                                     </span>
                                   </div>
                                   <div className={`flex items-center gap-1 p-0.5 rounded-full border ${
@@ -5321,7 +5379,7 @@ export default function SuperAdminDashboard() {
                                 </div>
 
                                 <div className="flex items-center justify-between text-[11px] pt-0.5">
-                                  <span className={darkMode ? "text-[#94A3B8]" : "text-[#64748B]"}>Sponsor gets:</span>
+                                  <span className={darkMode ? "text-[#94A3B8]" : "text-[#64748B]"}>Leadership Bonus:</span>
                                   <span className={`font-black ${darkMode ? "text-amber-400" : "text-amber-600"}`}>
                                     ₹{leadEarning.toLocaleString("en-IN")} {isLeadFlat ? "(Flat)" : `(${draft.leadership_value}%)`}
                                   </span>
@@ -5332,7 +5390,7 @@ export default function SuperAdminDashboard() {
                               <div className={`p-2.5 rounded-xl border flex items-center justify-between text-xs ${
                                 darkMode ? "bg-[#0B0F17] border-[#222B3D]" : "bg-blue-50/70 border-blue-200"
                               }`}>
-                                <span className={`text-[11px] font-bold ${darkMode ? "text-[#94A3B8]" : "text-[#64748B]"}`}>Total Payout (2-Tiers):</span>
+                                <span className={`text-[11px] font-bold ${darkMode ? "text-[#94A3B8]" : "text-[#64748B]"}`}>Total Bonus Payout:</span>
                                 <span className="font-black text-[#035BE3]">
                                   ₹{totalPayout.toLocaleString("en-IN")} / sale
                                 </span>
@@ -5348,7 +5406,7 @@ export default function SuperAdminDashboard() {
                                 className="w-full h-9 rounded-full bg-[#035BE3] hover:bg-[#024bc0] text-white font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow-xs disabled:opacity-50"
                               >
                                 <Check className="w-3.5 h-3.5" />
-                                <span>{isSavingThis ? "Saving Rates..." : "Update Course 2-Tier Rate"}</span>
+                                <span>{isSavingThis ? "Saving Rates..." : "Update Course Bonus Rate"}</span>
                               </button>
                             </div>
                           </div>
@@ -6755,26 +6813,54 @@ export default function SuperAdminDashboard() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold mb-1.5">Photo URL</label>
-                <input
-                  type="text"
-                  value={editingMentor.photo_url || ""}
-                  onChange={(e) => setEditingMentor({ ...editingMentor, photo_url: e.target.value })}
-                  placeholder="https://..."
-                  className={`w-full h-10 rounded-xl border px-3 text-xs font-semibold outline-none focus:border-[#035BE3] ${
-                    darkMode ? "bg-[#0B0F17] border-[#222B3D] text-white" : "bg-white border-[#E2E8F0] text-[#0F172A]"
-                  }`}
-                />
+                <label className="block text-xs font-bold mb-1.5">Mentor Profile Photo (Upload or URL)</label>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    value={editingMentor.photo_url || ""}
+                    onChange={(e) => setEditingMentor({ ...editingMentor, photo_url: e.target.value })}
+                    placeholder="https://... or upload photo"
+                    className={`flex-1 h-10 rounded-xl border px-3 text-xs font-semibold outline-none focus:border-[#035BE3] ${
+                      darkMode ? "bg-[#0B0F17] border-[#222B3D] text-white" : "bg-white border-[#E2E8F0] text-[#0F172A]"
+                    }`}
+                  />
+                  <label className={`px-3 py-2.5 rounded-xl border text-xs font-bold cursor-pointer transition shrink-0 ${
+                    mentorPhotoUploading ? "opacity-50" : "bg-[#035BE3] text-white hover:bg-[#024bc0]"
+                  }`}>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={async (e) => {
+                        const file = e.target.files?.[0];
+                        if (!file) return;
+                        setMentorPhotoUploading(true);
+                        try {
+                          const res = await uploadImageApi(file, "knowway_mentors");
+                          if (res?.success && res.data?.url) {
+                            setEditingMentor((prev) => ({ ...prev, photo_url: res.data.url }));
+                            showToast("Photo uploaded to Cloudinary!");
+                          }
+                        } catch (err) {
+                          showToast(err.message || "Failed to upload photo", "error");
+                        } finally {
+                          setMentorPhotoUploading(false);
+                        }
+                      }}
+                    />
+                    <span>{mentorPhotoUploading ? "Uploading..." : "Upload Photo"}</span>
+                  </label>
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
-                  <label className="block text-xs font-bold mb-1.5">Experience Badge</label>
+                  <label className="block text-xs font-bold mb-1.5">Experience (Any Custom Value)</label>
                   <input
                     type="text"
                     value={editingMentor.experience_badge || ""}
                     onChange={(e) => setEditingMentor({ ...editingMentor, experience_badge: e.target.value })}
-                    placeholder="e.g. Senior Mentor"
+                    placeholder="e.g. 8+ Yrs Exp, 12+ Years, etc."
                     className={`w-full h-10 rounded-xl border px-3 text-xs font-semibold outline-none focus:border-[#035BE3] ${
                       darkMode ? "bg-[#0B0F17] border-[#222B3D] text-white" : "bg-white border-[#E2E8F0] text-[#0F172A]"
                     }`}
@@ -6917,7 +7003,7 @@ export default function SuperAdminDashboard() {
                   <input
                     type="email"
                     required
-                    placeholder="subadmin@knowway.com"
+                    placeholder="subadmin@theskillpreneur.com"
                     value={newSubAdminData.email}
                     onChange={(e) => setNewSubAdminData({ ...newSubAdminData, email: e.target.value })}
                     className={`w-full rounded-2xl border px-3.5 py-2.5 text-xs outline-none focus:border-[#035BE3] ${
@@ -7189,28 +7275,54 @@ export default function SuperAdminDashboard() {
             </div>
 
             <form onSubmit={handleCreateMentor} className="space-y-4 mt-5">
-              <div>
-                <label className="block text-xs font-bold mb-1">Mentor Name *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Yaswanth Sai"
-                  value={newMentor.name}
-                  onChange={(e) => setNewMentor({ ...newMentor, name: e.target.value })}
-                  className={`w-full rounded-2xl border px-4 py-2.5 text-xs outline-none focus:border-[#035BE3] ${darkMode ? "bg-[#0B0F17] border-[#222B3D]" : "bg-[#F8FAFD] border-[#E2E8F0]"}`}
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold mb-1">Mentor Name *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Yaswanth Sai"
+                    value={newMentor.name}
+                    onChange={(e) => setNewMentor({ ...newMentor, name: e.target.value })}
+                    className={`w-full rounded-2xl border px-4 py-2.5 text-xs outline-none focus:border-[#035BE3] ${darkMode ? "bg-[#0B0F17] border-[#222B3D]" : "bg-[#F8FAFD] border-[#E2E8F0]"}`}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold mb-1">Role / Designation *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Meta Ads & Growth Specialist"
+                    value={newMentor.role_title}
+                    onChange={(e) => setNewMentor({ ...newMentor, role_title: e.target.value })}
+                    className={`w-full rounded-2xl border px-4 py-2.5 text-xs outline-none focus:border-[#035BE3] ${darkMode ? "bg-[#0B0F17] border-[#222B3D]" : "bg-[#F8FAFD] border-[#E2E8F0]"}`}
+                  />
+                </div>
               </div>
 
-              <div>
-                <label className="block text-xs font-bold mb-1">Role / Designation *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Meta Ads & Growth Specialist"
-                  value={newMentor.role_title}
-                  onChange={(e) => setNewMentor({ ...newMentor, role_title: e.target.value })}
-                  className={`w-full rounded-2xl border px-4 py-2.5 text-xs outline-none focus:border-[#035BE3] ${darkMode ? "bg-[#0B0F17] border-[#222B3D]" : "bg-[#F8FAFD] border-[#E2E8F0]"}`}
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-xs font-bold mb-1">Experience (Any Custom Value)</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. 5+ Yrs Exp, 10+ Years, etc."
+                    value={newMentor.experience_badge}
+                    onChange={(e) => setNewMentor({ ...newMentor, experience_badge: e.target.value })}
+                    className={`w-full rounded-2xl border px-4 py-2.5 text-xs outline-none focus:border-[#035BE3] ${darkMode ? "bg-[#0B0F17] border-[#222B3D]" : "bg-[#F8FAFD] border-[#E2E8F0]"}`}
+                  />
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold mb-1">Expertise Tags</label>
+                  <input
+                    type="text"
+                    placeholder="e.g. Performance Marketing, AI Tools"
+                    value={newMentor.expertise}
+                    onChange={(e) => setNewMentor({ ...newMentor, expertise: e.target.value })}
+                    className={`w-full rounded-2xl border px-4 py-2.5 text-xs outline-none focus:border-[#035BE3] ${darkMode ? "bg-[#0B0F17] border-[#222B3D]" : "bg-[#F8FAFD] border-[#E2E8F0]"}`}
+                  />
+                </div>
               </div>
 
               <div>
@@ -7259,7 +7371,7 @@ export default function SuperAdminDashboard() {
               </div>
 
               <div>
-                <label className="block text-xs font-bold mb-1">Experience / Bio</label>
+                <label className="block text-xs font-bold mb-1">Mentor Bio / Description</label>
                 <textarea
                   rows={3}
                   placeholder="Short bio about the mentor..."
@@ -7270,8 +7382,8 @@ export default function SuperAdminDashboard() {
               </div>
 
               <div className="flex gap-3 pt-2">
-                <button type="button" onClick={() => setShowMentorModal(false)} className="flex-1 py-3 rounded-full border text-xs font-semibold">Cancel</button>
-                <button type="submit" disabled={isProcessing} className="flex-1 py-3 rounded-full bg-[#035BE3] text-white text-xs font-semibold">{isProcessing ? "Saving..." : "Create Mentor"}</button>
+                <button type="button" onClick={() => setShowMentorModal(false)} className="flex-1 py-3 rounded-full border text-xs font-semibold cursor-pointer">Cancel</button>
+                <button type="submit" disabled={isProcessing} className="flex-1 py-3 rounded-full bg-[#035BE3] text-white text-xs font-semibold cursor-pointer">{isProcessing ? "Saving..." : "Create Mentor"}</button>
               </div>
             </form>
           </div>

@@ -284,7 +284,7 @@ export const getAffiliateIncomeAnalytics = async (req, res) => {
           title: r.item_title,
           amount: Number(r.commission_amount) || 0,
           price: Number(r.item_price) || 0,
-          tier: r.commission_tier === 'leadership' || Number(r.tier_level) === 2 ? 'Tier 2 (Sponsor)' : 'Tier 1 (Direct)',
+          tier: r.commission_tier === 'leadership' || Number(r.tier_level) === 2 ? 'Leadership Bonus' : 'Direct Bonus',
           student: r.referred_user_name || 'Student',
           date: r.created_at,
           status: r.status || 'credited'

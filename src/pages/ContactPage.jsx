@@ -20,10 +20,10 @@ import { getPublicSettingsApi, submitContactInquiryApi } from "../services/api";
 
 export default function ContactPage() {
   const [settings, setSettings] = useState({
-    site_name: "Knowway",
-    contact_email: "support@knowway.in",
+    site_name: "The Skillpreneur",
+    contact_email: "support@theskillpreneur.com",
     contact_phone: "+91 98765 43210",
-    contact_address: "Knowway EdTech Tower, Tech Zone 4, Greater Noida, UP - 201306",
+    contact_address: "The Skillpreneur EdTech Tower, Tech Zone 4, Greater Noida, UP - 201306",
   });
 
   const [formData, setFormData] = useState({
@@ -256,7 +256,7 @@ export default function ContactPage() {
                     <div className="space-y-1">
                       <h3 className="text-xl font-bold text-[#141A29]">Message Sent Successfully!</h3>
                       <p className="text-sm text-[#64748B] max-w-md mx-auto">
-                        Thank you for contacting Knowway. Our administration and support team have received your query and will reply via email shortly.
+                        Thank you for contacting The Skillpreneur. Our administration and support team have received your query and will reply via email shortly.
                       </p>
                     </div>
                     <button

@@ -14,7 +14,7 @@ export const getSmtpSettings = async () => {
       smtp_port: process.env.SMTP_PORT || "587",
       smtp_user: process.env.SMTP_USER || "",
       smtp_pass: process.env.SMTP_PASS || "",
-      smtp_from_name: process.env.SMTP_FROM_NAME || "KnowWay LearnSpace",
+      smtp_from_name: process.env.SMTP_FROM_NAME || "The Skillpreneur",
       smtp_from_email: process.env.SMTP_FROM_EMAIL || "",
       smtp_is_active: process.env.SMTP_IS_ACTIVE === "true" ? "true" : "false",
     };
@@ -31,7 +31,7 @@ export const getSmtpSettings = async () => {
       smtp_port: process.env.SMTP_PORT || "587",
       smtp_user: process.env.SMTP_USER || "",
       smtp_pass: process.env.SMTP_PASS || "",
-      smtp_from_name: "KnowWay LearnSpace",
+      smtp_from_name: "The Skillpreneur",
       smtp_from_email: "",
       smtp_is_active: "false",
     };
@@ -53,15 +53,15 @@ export const sendOtpEmail = async ({ to, otp, type = "signup", name = "Learner" 
 
   const subject =
     type === "signup"
-      ? `🔐 Verify Your KnowWay Account - OTP: ${otp}`
-      : `🔑 Password Reset OTP for KnowWay - ${otp}`;
+      ? `🔐 Verify Your The Skillpreneur Account - OTP: ${otp}`
+      : `🔑 Password Reset OTP for The Skillpreneur - ${otp}`;
 
   const titleText =
     type === "signup" ? "Verify Your Email Address" : "Password Reset Request";
   const descText =
     type === "signup"
-      ? "Welcome to KnowWay LearnSpace! Please use the 6-digit one-time password (OTP) below to complete your registration."
-      : "We received a request to reset your KnowWay LearnSpace password. Use the 6-digit OTP below to proceed.";
+      ? "Welcome to The Skillpreneur! Please use the 6-digit one-time password (OTP) below to complete your registration."
+      : "We received a request to reset your The Skillpreneur password. Use the 6-digit OTP below to proceed.";
 
   const htmlContent = `
     <!DOCTYPE html>
@@ -84,7 +84,7 @@ export const sendOtpEmail = async ({ to, otp, type = "signup", name = "Learner" 
       <body>
         <div class="container">
           <div class="logo-box">
-            <span class="badge">KnowWay LearnSpace</span>
+            <span class="badge">The Skillpreneur</span>
           </div>
           <h2 class="title">${titleText}</h2>
           <p class="text">Hello <strong>${name || "Learner"}</strong>,<br/>${descText}</p>
@@ -97,7 +97,7 @@ export const sendOtpEmail = async ({ to, otp, type = "signup", name = "Learner" 
           <p class="text" style="font-size: 13px;">If you did not request this OTP, please safely ignore this email.</p>
           
           <div class="footer">
-            &copy; ${new Date().getFullYear()} KnowWay Inc. All rights reserved.<br/>
+            &copy; ${new Date().getFullYear()} The Skillpreneur All rights reserved.<br/>
             Skill-First Learning & Career Mastery Platform.
           </div>
         </div>
@@ -120,7 +120,7 @@ export const sendOtpEmail = async ({ to, otp, type = "signup", name = "Learner" 
       });
 
       const senderEmail = config.smtp_from_email || config.smtp_user;
-      const senderName = config.smtp_from_name || "KnowWay LearnSpace";
+      const senderName = config.smtp_from_name || "The Skillpreneur";
 
       await transporter.sendMail({
         from: `"${senderName}" <${senderEmail}>`,
@@ -174,12 +174,12 @@ export const testSmtpTransport = async ({ host, port, user, pass, from_name, fro
 
   // Send a test message
   const info = await transporter.sendMail({
-    from: `"${from_name || "KnowWay Admin"}" <${from_email || user}>`,
+    from: `"${from_name || "The Skillpreneur Admin"}" <${from_email || user}>`,
     to: target_email || user,
-    subject: "✅ KnowWay SMTP Configuration Test - Success!",
+    subject: "✅ The Skillpreneur SMTP Configuration Test - Success!",
     html: `
       <div style="font-family: sans-serif; padding: 20px; background: #f8fafd; border-radius: 12px;">
-        <h3 style="color: #035BE3;">🎉 KnowWay SMTP Configuration is Working!</h3>
+        <h3 style="color: #035BE3;">🎉 The Skillpreneur SMTP Configuration is Working!</h3>
         <p>Your SMTP mail credentials have been verified and tested successfully.</p>
         <p>Host: <strong>${host}</strong> | Port: <strong>${portNum}</strong></p>
         <p style="color: #64748B; font-size: 12px;">Sent at: ${new Date().toLocaleString()}</p>
@@ -198,8 +198,8 @@ export const sendWelcomeRegistrationEmail = async ({ to, name = "Learner", stude
   const isActive = config.smtp_is_active === "true" || config.smtp_is_active === "1";
   const isConfigured = Boolean(config.smtp_host && config.smtp_user && config.smtp_pass);
 
-  const finalLoginUrl = loginUrl || process.env.FRONTEND_URL || "https://knowway.in/login";
-  const subject = `🎉 Welcome to KnowWay LearnSpace! Your Student ID: ${studentId}`;
+  const finalLoginUrl = loginUrl || process.env.FRONTEND_URL || "https://theskillpreneur.com/login";
+  const subject = `🎉 Welcome to The Skillpreneur! Your Student ID: ${studentId}`;
 
   const htmlContent = `
     <!DOCTYPE html>
@@ -239,7 +239,7 @@ export const sendWelcomeRegistrationEmail = async ({ to, name = "Learner", stude
       <body>
         <div class="container">
           <div class="logo-box">
-            <span class="badge">KnowWay LearnSpace</span>
+            <span class="badge">The Skillpreneur</span>
           </div>
 
           <h1 class="title">Welcome, ${name}! 🎉</h1>
@@ -290,8 +290,8 @@ export const sendWelcomeRegistrationEmail = async ({ to, name = "Learner", stude
           </div>
           
           <div class="footer">
-            &copy; ${new Date().getFullYear()} KnowWay Inc. All rights reserved.<br/>
-            Need assistance? Reach out to support@knowway.in
+            &copy; ${new Date().getFullYear()} The Skillpreneur All rights reserved.<br/>
+            Need assistance? Reach out to support@theskillpreneur.com
           </div>
         </div>
       </body>
@@ -312,7 +312,7 @@ export const sendWelcomeRegistrationEmail = async ({ to, name = "Learner", stude
       });
 
       const senderEmail = config.smtp_from_email || config.smtp_user;
-      const senderName = config.smtp_from_name || "KnowWay LearnSpace";
+      const senderName = config.smtp_from_name || "The Skillpreneur";
 
       await transporter.sendMail({
         from: `"${senderName}" <${senderEmail}>`,
@@ -385,7 +385,7 @@ export const sendPayoutApprovedEmail = async ({
       <body>
         <div class="container">
           <div class="logo-box">
-            <span class="badge">KnowWay Affiliate Payout Settled</span>
+            <span class="badge">The Skillpreneur Affiliate Payout Settled</span>
           </div>
           <h2 class="title">Your Funds Have Been Transferred! 🚀</h2>
           <p class="text">Hello <strong>${name}</strong>,<br/>Your commission withdrawal request has been approved and successfully transferred to your destination account.</p>
@@ -423,8 +423,8 @@ export const sendPayoutApprovedEmail = async ({
           <p class="text" style="font-size: 12px; margin-bottom: 0;">It may take a few minutes for your bank statement to reflect this deposit depending on your bank's processing cycles.</p>
           
           <div class="footer">
-            &copy; ${new Date().getFullYear()} KnowWay Inc. All rights reserved.<br/>
-            Need assistance? Reach out to support@knowway.in
+            &copy; ${new Date().getFullYear()} The Skillpreneur All rights reserved.<br/>
+            Need assistance? Reach out to support@theskillpreneur.com
           </div>
         </div>
       </body>
@@ -442,7 +442,7 @@ export const sendPayoutApprovedEmail = async ({
       });
 
       const senderEmail = config.smtp_from_email || config.smtp_user;
-      const senderName = config.smtp_from_name || "KnowWay Partner Hub";
+      const senderName = config.smtp_from_name || "The Skillpreneur Partner Hub";
 
       await transporter.sendMail({
         from: `"${senderName}" <${senderEmail}>`,
@@ -518,7 +518,7 @@ export const sendPayoutRejectedEmail = async ({
           </div>
 
           <div class="refund-banner">
-            ✅ <strong>₹${formattedAmount} has been refunded immediately</strong> back to your KnowWay Affiliate Wallet balance.
+            ✅ <strong>₹${formattedAmount} has been refunded immediately</strong> back to your The Skillpreneur Affiliate Wallet balance.
           </div>
 
           <p class="text" style="font-size: 12.5px;">
@@ -526,8 +526,8 @@ export const sendPayoutRejectedEmail = async ({
           </p>
           
           <div class="footer">
-            &copy; ${new Date().getFullYear()} KnowWay Inc. All rights reserved.<br/>
-            Need help updating your payout details? Contact us at support@knowway.in
+            &copy; ${new Date().getFullYear()} The Skillpreneur All rights reserved.<br/>
+            Need help updating your payout details? Contact us at support@theskillpreneur.com
           </div>
         </div>
       </body>
@@ -545,7 +545,7 @@ export const sendPayoutRejectedEmail = async ({
       });
 
       const senderEmail = config.smtp_from_email || config.smtp_user;
-      const senderName = config.smtp_from_name || "KnowWay Partner Hub";
+      const senderName = config.smtp_from_name || "The Skillpreneur Partner Hub";
 
       await transporter.sendMail({
         from: `"${senderName}" <${senderEmail}>`,

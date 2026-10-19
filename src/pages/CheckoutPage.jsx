@@ -298,7 +298,7 @@ export default function CheckoutPage() {
         key: razorpayKey,
         amount: orderData.amount,
         currency: orderData.currency || "INR",
-        name: "KnowWay LearnSpace",
+        name: "The Skillpreneur",
         description: `Enrollment: ${packageData.name || packageData.title}`,
         image: "/images/logo/logo.png",
         order_id: orderData.id,
@@ -449,7 +449,7 @@ export default function CheckoutPage() {
         <Link to="/" className="flex items-center group">
           <img
             src="/images/logo/logo.png"
-            alt="KnowWay Logo"
+            alt="The Skillpreneur Logo"
             className="h-10 sm:h-11 w-auto object-contain transition-transform group-hover:scale-105"
           />
         </Link>
@@ -779,7 +779,7 @@ export default function CheckoutPage() {
 
       {/* Footer */}
       <footer className="w-full text-center py-6 text-xs text-[#94A3B8] border-t border-[#EDF0F6]">
-        &copy; {new Date().getFullYear()} KnowWay LearnSpace. All payments are securely processed via Razorpay.
+        &copy; {new Date().getFullYear()} The Skillpreneur. All payments are securely processed via Razorpay.
       </footer>
     </div>
   );

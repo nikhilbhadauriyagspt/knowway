@@ -198,7 +198,7 @@ export default function SignupPage() {
         <Link to="/" className="flex items-center group">
           <img
             src="/images/logo/logo.png"
-            alt="KnowWay Logo"
+            alt="The Skillpreneur Logo"
             className="h-10 sm:h-12 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
           />
         </Link>
@@ -474,7 +474,7 @@ export default function SignupPage() {
 
       {/* Footer */}
       <footer className="w-full py-4 text-center text-xs text-[#94A3B8] border-t border-[#EDF1F7]">
-        &copy; {CURRENT_YEAR} KnowWay LearnSpace. All rights reserved.
+        &copy; {CURRENT_YEAR} The Skillpreneur. All rights reserved.
       </footer>
     </div>
   );

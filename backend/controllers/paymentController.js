@@ -67,12 +67,20 @@ export const createPaymentOrder = async (req, res) => {
 
     const isCourse = itemType === "course" || Boolean(courseSlug || courseId);
 
-    // Determine referral eligibility
+    // Determine referral eligibility (only when a valid sponsor referral code is applied on checkout)
     let hasReferral = Boolean(referralCode && referralCode.trim());
-    if (!hasReferral && userId) {
-      const [userRows] = await pool.query("SELECT referral_code FROM users WHERE id = ? LIMIT 1", [userId]);
-      if (userRows.length > 0 && userRows[0].referral_code) {
-        hasReferral = true;
+    if (hasReferral && userId) {
+      const [userRows] = await pool.query(
+        "SELECT referral_code, student_id FROM users WHERE id = ? LIMIT 1",
+        [userId]
+      );
+      if (userRows.length > 0) {
+        const cleanRef = referralCode.trim().toUpperCase();
+        const ownCode = (userRows[0].referral_code || "").toUpperCase();
+        const ownStudentId = (userRows[0].student_id || "").toUpperCase();
+        if (cleanRef === ownCode || cleanRef === ownStudentId || cleanRef === `KW${userId}`) {
+          hasReferral = false;
+        }
       }
     }
 
@@ -299,19 +307,22 @@ export const verifyPayment = async (req, res) => {
         token = generateToken(userId);
       } else {
         const studentId = `KW-${new Date().getFullYear()}-${Math.floor(100000 + Math.random() * 900000)}`;
+        const ownRefCode = `KW${Math.floor(100000 + Math.random() * 900000)}`;
+        const sponsorRef = referralCode?.trim().toUpperCase() || null;
         const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password || "KnowWay@2026", salt);
+        const hashedPassword = await bcrypt.hash(password || "The Skillpreneur@2026", salt);
 
         const [insertRes] = await pool.query(
-          `INSERT INTO users (student_id, name, email, phone, password, referral_code, is_verified)
-           VALUES (?, ?, ?, ?, ?, ?, TRUE)`,
+          `INSERT INTO users (student_id, name, email, phone, password, referral_code, referred_by, is_verified)
+           VALUES (?, ?, ?, ?, ?, ?, ?, TRUE)`,
           [
             studentId,
             name?.trim() || "Student",
             cleanEmail,
             phone?.trim() || null,
             hashedPassword,
-            referralCode?.trim().toUpperCase() || null,
+            ownRefCode,
+            sponsorRef,
           ]
         );
 
@@ -324,7 +335,8 @@ export const verifyPayment = async (req, res) => {
           name: name?.trim() || "Student",
           email: cleanEmail,
           phone: phone || "",
-          referral_code: referralCode || null,
+          referral_code: ownRefCode,
+          referred_by: sponsorRef,
         };
 
         sendWelcomeRegistrationEmail({
@@ -335,6 +347,7 @@ export const verifyPayment = async (req, res) => {
       }
     }
 
+    const hasValidRef = Boolean(referralCode && referralCode.trim());
     let purchasedItem = null;
 
     if (isCourse) {
@@ -351,6 +364,9 @@ export const verifyPayment = async (req, res) => {
       const cId = courseObj?.id || 1;
       const cTitle = courseObj?.title || "Master Course";
       purchasedItem = courseObj || { id: cId, title: cTitle };
+      const paidCourseAmount = hasValidRef
+        ? Number(courseObj?.promo_price || 499)
+        : Number(courseObj?.regular_price || 2999);
 
       // Update Payment
       const [updatePayment] = await pool.query(
@@ -383,7 +399,7 @@ export const verifyPayment = async (req, res) => {
           `INSERT INTO user_courses (user_id, course_id, amount_paid, status)
            VALUES (?, ?, ?, 'active')
            ON DUPLICATE KEY UPDATE status = 'active', enrolled_at = NOW()`,
-          [userId, cId, courseObj?.promo_price || 499]
+          [userId, cId, paidCourseAmount]
         );
       }
     } else {
@@ -399,8 +415,11 @@ export const verifyPayment = async (req, res) => {
 
       const pkgId = pkg?.id || 1;
       const pkgSlug = pkg?.slug || packageSlug || "pro";
-      const pkgName = pkg?.name || "KnowWay Package";
+      const pkgName = pkg?.name || "The Skillpreneur Package";
       purchasedItem = pkg || { id: pkgId, name: pkgName, slug: pkgSlug };
+      const paidPkgAmount = hasValidRef
+        ? Number(pkg?.promo_price || 7999)
+        : Number(pkg?.mrp_price || 11800);
 
       // Update Payment
       await pool.query(
@@ -435,7 +454,7 @@ export const verifyPayment = async (req, res) => {
           `INSERT INTO user_packages (user_id, package_id, package_slug, amount_paid, status)
            VALUES (?, ?, ?, ?, 'active')
            ON DUPLICATE KEY UPDATE status = 'active', enrolled_at = NOW()`,
-          [userId, pkgId, pkgSlug, pkg?.promo_price || 7999]
+          [userId, pkgId, pkgSlug, paidPkgAmount]
         );
 
         // Fetch courses linked to this package and enroll student

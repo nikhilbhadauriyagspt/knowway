@@ -135,7 +135,7 @@ export default function StudentDashboard() {
       list = courses.map((c) => ({
         id: c.id,
         title: c.title,
-        mentor: c.mentor_name || c.mentor || "KnowWay Mentor",
+        mentor: c.mentor_name || c.mentor || "The Skillpreneur Mentor",
         mentorRole: c.category || "Masterclass",
         progress: getCourseProgress(c),
         thumbnail:
@@ -150,7 +150,7 @@ export default function StudentDashboard() {
       list = (allCourses.length > 0 ? allCourses.slice(0, 3) : []).map((c) => ({
         id: c.id,
         title: c.title,
-        mentor: c.mentor_name || c.mentor || "KnowWay Mentor",
+        mentor: c.mentor_name || c.mentor || "The Skillpreneur Mentor",
         mentorRole: c.category || "Masterclass",
         progress: 0,
         thumbnail:
@@ -763,7 +763,7 @@ export default function StudentDashboard() {
                 >
                   {(courses.length > 0 ? courses : premiumCoursesList).map((course) => {
                     const courseId = course.slug || course.id;
-                    const mentorName = course.mentor_name || course.mentor || "KnowWay Mentor";
+                    const mentorName = course.mentor_name || course.mentor || "The Skillpreneur Mentor";
                     const mentorRole = course.category || "Masterclass";
                     const mentorPhoto = course.mentor_photo || course.photo_url || null;
                     const mentorInitial = mentorName ? mentorName.charAt(0).toUpperCase() : "M";
@@ -1092,7 +1092,7 @@ export default function StudentDashboard() {
                     Turn Your Skills Into Opportunities
                   </h2>
                   <p className="text-xs sm:text-sm text-gray-300">
-                    Discover freelance gigs, internship matches and high-paying jobs aligned with your verified KnowWay certifications.
+                    Discover freelance gigs, internship matches and high-paying jobs aligned with your verified The Skillpreneur certifications.
                   </p>
                 </div>
 

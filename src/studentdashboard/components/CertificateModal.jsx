@@ -1,12 +1,29 @@
-import React, { useRef, useState } from "react";
+import React, { useRef, useState, useEffect } from "react";
 import { X, Download, Printer, CheckCircle2, ShieldCheck, Share2, Award, Sparkles, QrCode } from "lucide-react";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import { getPublicSettingsApi } from "../../services/api";
 
 export default function CertificateModal({ certificate, onClose }) {
   const certificateRef = useRef(null);
   const [isDownloading, setIsDownloading] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [siteLogo, setSiteLogo] = useState("/images/logo/logo.png");
+  const [siteName, setSiteName] = useState("The Skillpreneur");
+
+  useEffect(() => {
+    let isMounted = true;
+    getPublicSettingsApi()
+      .then((res) => {
+        if (!isMounted || !res?.settings) return;
+        if (res.settings.site_logo) setSiteLogo(res.settings.site_logo);
+        if (res.settings.site_name) setSiteName(res.settings.site_name.trim());
+      })
+      .catch(() => {});
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   if (!certificate) return null;
 
@@ -45,7 +62,8 @@ export default function CertificateModal({ certificate, onClose }) {
       const pdfWidth = pdf.internal.pageSize.getWidth();
       const pdfHeight = pdf.internal.pageSize.getHeight();
       pdf.addImage(imgData, "PNG", 0, 0, pdfWidth, pdfHeight);
-      pdf.save(`KnowWay-Certificate-${certId}.pdf`);
+      const cleanBrand = (siteName || "Certificate").replace(/\s+/g, "-");
+      pdf.save(`${cleanBrand}-Certificate-${certId}.pdf`);
     } catch (err) {
       console.error("Failed to generate PDF:", err);
       // Fallback to print
@@ -139,17 +157,18 @@ export default function CertificateModal({ certificate, onClose }) {
 
             <div className="relative z-10 h-full flex flex-col justify-between text-center py-2 sm:py-4 px-3 sm:px-6">
               
-              {/* Header with Logo */}
+              {/* Header with Dynamic Logo */}
               <div className="space-y-1">
-                <div className="flex items-center justify-center gap-2 mb-1">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-lg bg-[#035BE3] text-white flex items-center justify-center font-black text-base shadow-sm">
-                      K
-                    </div>
-                    <span className="text-xl font-black tracking-tight text-[#0F172A]">
-                      KNOW<span className="text-[#035BE3]">WAY</span>
-                    </span>
-                  </div>
+                <div className="flex items-center justify-center mb-1.5">
+                  <img
+                    src={siteLogo || "/images/logo/logo.png"}
+                    alt={siteName || "Brand Logo"}
+                    crossOrigin="anonymous"
+                    className="h-9 sm:h-11 w-auto object-contain"
+                    onError={(e) => {
+                      e.currentTarget.src = "/images/logo/logo.png";
+                    }}
+                  />
                 </div>
 
                 <p className="text-[9px] sm:text-[10px] uppercase font-extrabold tracking-[5px] text-[#035BE3]">
@@ -218,7 +237,7 @@ export default function CertificateModal({ certificate, onClose }) {
                   </div>
                   <div className="w-32 ml-auto border-b border-gray-400" />
                   <p className="text-[10px] font-bold text-[#0F172A]">Academic Director</p>
-                  <p className="text-[8.5px] text-[#64748B]">KnowWay Global Academy</p>
+                  <p className="text-[8.5px] text-[#64748B]">{siteName} Global Academy</p>
                 </div>
               </div>
 

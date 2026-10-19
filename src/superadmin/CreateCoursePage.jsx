@@ -274,7 +274,7 @@ export default function CreateCoursePage() {
     },
     {
       id: "q-5",
-      question: "What is the key takeaway of KnowWay hands-on training?",
+      question: "What is the key takeaway of The Skillpreneur hands-on training?",
       option_a: "Practical execution over passive watching",
       option_b: "Never asking mentors for clarification",
       option_c: "Skipping final assessments",
@@ -336,12 +336,17 @@ export default function CreateCoursePage() {
           getSystemSettingsApi(),
         ]);
 
-        if (mentorsRes.status === "fulfilled" && mentorsRes.value?.mentors) {
-          setMentorsList(mentorsRes.value.mentors);
-          if (!isEditMode && mentorsRes.value.mentors.length > 0) {
+        const loadedMentors =
+          mentorsRes.status === "fulfilled" && Array.isArray(mentorsRes.value?.mentors)
+            ? mentorsRes.value.mentors
+            : [];
+
+        if (loadedMentors.length > 0) {
+          setMentorsList(loadedMentors);
+          if (!isEditMode) {
             setCourseData((prev) => ({
               ...prev,
-              mentor_id: prev.mentor_id || String(mentorsRes.value.mentors[0].id),
+              mentor_id: prev.mentor_id || String(loadedMentors[0].id),
             }));
           }
         }
@@ -361,9 +366,17 @@ export default function CreateCoursePage() {
               if (c.category) {
                 setCategoryList((prev) => (prev.includes(c.category) ? prev : [...prev, c.category]));
               }
+              const hasValidMentor =
+                c.mentor_id && loadedMentors.some((m) => String(m.id) === String(c.mentor_id));
+              const resolvedMentorId = hasValidMentor
+                ? String(c.mentor_id)
+                : loadedMentors[0]
+                  ? String(loadedMentors[0].id)
+                  : "";
+
               setCourseData({
                 title: c.title || "",
-                mentor_id: c.mentor_id ? String(c.mentor_id) : "",
+                mentor_id: resolvedMentorId,
                 category: c.category || "Meta Ads",
                 selectedLanguages: c.languages
                   ? c.languages.split(",").map((s) => s.trim())
@@ -703,8 +716,8 @@ export default function CreateCoursePage() {
 
       const payload = {
         title: courseData.title,
-        mentor_id: courseData.mentor_id ? Number(courseData.mentor_id) : null,
-        mentor_name: selectedMentor?.name || "KnowWay Instructor",
+        mentor_id: selectedMentor?.id ? Number(selectedMentor.id) : null,
+        mentor_name: selectedMentor?.name || "The Skillpreneur Instructor",
         category: courseData.category,
         languages: courseData.selectedLanguages.join(", "),
         duration: courseData.duration || "2.5 Hours",
@@ -1397,7 +1410,7 @@ export default function CreateCoursePage() {
                         </p>
                         <div className="pt-3 flex items-center justify-between text-xs text-[#64748B] font-semibold border-t border-inherit">
                           <span>⏱️ {courseData.duration}</span>
-                          <span className="text-[#035BE3]">KnowWay Certified</span>
+                          <span className="text-[#035BE3]">The Skillpreneur Certified</span>
                         </div>
                       </div>
                     </div>
@@ -1500,7 +1513,7 @@ export default function CreateCoursePage() {
                       <div className="flex items-center gap-3">
                         <Award className="w-5 h-5 text-[#035BE3]" />
                         <div>
-                          <p className="text-xs font-bold">Verified KnowWay Certificate</p>
+                          <p className="text-xs font-bold">Verified The Skillpreneur Certificate</p>
                           <p className="text-[11px] text-[#64748B]">
                             Issue verified certificate upon 100% course completion
                           </p>
@@ -2311,7 +2324,7 @@ export default function CreateCoursePage() {
                         ) : (
                           <>
                             <Sparkles className="w-4 h-4" />
-                            <span>{isEditMode ? "Save & Update Course" : "Publish Course to KnowWay"}</span>
+                            <span>{isEditMode ? "Save & Update Course" : "Publish Course to The Skillpreneur"}</span>
                           </>
                         )}
                       </button>

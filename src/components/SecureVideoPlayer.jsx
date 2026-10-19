@@ -32,7 +32,7 @@ export default function SecureVideoPlayer({
       getUserData() || {
         name: "Verified Student",
         student_id: "KW-STUDENT",
-        email: "student@knowway.in",
+        email: "student@theskillpreneur.com",
       }
     );
   }, []);

@@ -586,7 +586,7 @@ export default function CourseDetailPage() {
                   </div>
 
                   <h3 className="text-base sm:text-lg font-black text-[#0F172A]">
-                    KnowWay Accredited Certificate of Mastery 📜
+                    The Skillpreneur Accredited Certificate of Mastery 📜
                   </h3>
 
                   <p className="text-xs text-[#64748B] max-w-lg leading-relaxed">
@@ -647,7 +647,7 @@ export default function CourseDetailPage() {
 
                   {/* Top Seal */}
                   <div className="flex items-center justify-between border-b border-gray-100 pb-1">
-                    <span className="text-[8px] font-black text-[#035BE3] uppercase">KNOWWAY LEARNSPACE</span>
+                    <span className="text-[8px] font-black text-[#035BE3] uppercase">THE SKILLPRENEUR</span>
                     <span className="text-[8px] font-bold text-amber-600 flex items-center gap-0.5">
                       <ShieldCheck size={9} /> VERIFIED
                     </span>

@@ -1143,29 +1143,29 @@ export const initDB = async () => {
           (
             'Privacy Policy',
             'privacy-policy',
-            '<h2>1. Introduction</h2><p>Welcome to Knowway. We value your privacy and are committed to protecting your personal data. This Privacy Policy explains how we collect, use, and safeguard your information when you access our e-learning platform and masterclasses.</p><h2>2. Information We Collect</h2><p>We collect information you provide directly, such as your full name, email address, mobile number, account credentials, and transaction records when purchasing skill packages or requesting affiliate payouts.</p><h2>3. How We Use Your Information</h2><ul><li>To provide and maintain your account and course enrollments</li><li>To process Razorpay payments and affiliate payout distributions</li><li>To prevent unauthorized concurrent logins and protect DRM video content</li><li>To send important transactional receipts and course updates</li></ul><h2>4. Contact Us</h2><p>If you have any questions regarding this Privacy Policy, please contact our support desk via our official email or help center.</p>',
-            'Official Privacy Policy and data protection terms for Knowway platform learners and affiliates.',
+            '<h2>1. Introduction</h2><p>Welcome to The Skillpreneur. We value your privacy and are committed to protecting your personal data. This Privacy Policy explains how we collect, use, and safeguard your information when you access our e-learning platform and masterclasses.</p><h2>2. Information We Collect</h2><p>We collect information you provide directly, such as your full name, email address, mobile number, account credentials, and transaction records when purchasing skill packages or requesting affiliate payouts.</p><h2>3. How We Use Your Information</h2><ul><li>To provide and maintain your account and course enrollments</li><li>To process Razorpay payments and affiliate payout distributions</li><li>To prevent unauthorized concurrent logins and protect DRM video content</li><li>To send important transactional receipts and course updates</li></ul><h2>4. Contact Us</h2><p>If you have any questions regarding this Privacy Policy, please contact our support desk via our official email or help center.</p>',
+            'Official Privacy Policy and data protection terms for The Skillpreneur platform learners and affiliates.',
             TRUE, TRUE, 'legal', 1
           ),
           (
             'Terms of Service',
             'terms-and-conditions',
-            '<h2>1. Acceptance of Terms</h2><p>By registering, accessing, or purchasing courses/packages on Knowway, you agree to be bound by these Terms of Service. If you do not agree, please do not use the platform.</p><h2>2. License & Account Access</h2><p>Upon enrollment, you receive a personal, non-transferable, revocable lifetime license to stream the video content. Account sharing, credential distribution, or downloading/re-uploading protected videos is strictly prohibited.</p><h2>3. Affiliate & Referral Program</h2><p>Affiliate commissions are paid according to the current 2-tier commission matrix upon successful, verified transactions. Fraudulent self-referrals or chargeback abuse will result in instant account termination.</p><h2>4. Intellectual Property</h2><p>All video masterclasses, curriculum, slides, and branding assets are the exclusive intellectual property of Knowway.</p>',
-            'Terms and conditions governing access, course streaming, and affiliate participation on Knowway.',
+            '<h2>1. Acceptance of Terms</h2><p>By registering, accessing, or purchasing courses/packages on The Skillpreneur, you agree to be bound by these Terms of Service. If you do not agree, please do not use the platform.</p><h2>2. License & Account Access</h2><p>Upon enrollment, you receive a personal, non-transferable, revocable lifetime license to stream the video content. Account sharing, credential distribution, or downloading/re-uploading protected videos is strictly prohibited.</p><h2>3. Affiliate & Referral Program</h2><p>Affiliate commissions are paid according to the current 2-tier commission matrix upon successful, verified transactions. Fraudulent self-referrals or chargeback abuse will result in instant account termination.</p><h2>4. Intellectual Property</h2><p>All video masterclasses, curriculum, slides, and branding assets are the exclusive intellectual property of The Skillpreneur.</p>',
+            'Terms and conditions governing access, course streaming, and affiliate participation on The Skillpreneur.',
             TRUE, TRUE, 'legal', 2
           ),
           (
             'Refund & Cancellation Policy',
             'refund-policy',
-            '<h2>1. Digital Product Policy</h2><p>At Knowway, all our skill packages and video masterclasses are digital educational goods that provide immediate access to proprietary curriculum upon purchase.</p><h2>2. 24-Hour Consideration Window</h2><p>We offer a 24-hour consideration refund guarantee if you face technical difficulties accessing your lessons and our support team is unable to resolve the issue within 48 business hours.</p><h2>3. Exceptions to Refund</h2><ul><li>Refunds are not granted after more than 10% of lessons have been watched.</li><li>Refund requests submitted after 24 hours of purchase will not be entertained.</li><li>Affiliate partner fees and payment gateway processing charges are non-refundable.</li></ul><h2>4. How to Request a Refund</h2><p>Please write to support@knowway.in with your Registered Email, Order ID, and reason for cancellation.</p>',
+            '<h2>1. Digital Product Policy</h2><p>At The Skillpreneur, all our skill packages and video masterclasses are digital educational goods that provide immediate access to proprietary curriculum upon purchase.</p><h2>2. 24-Hour Consideration Window</h2><p>We offer a 24-hour consideration refund guarantee if you face technical difficulties accessing your lessons and our support team is unable to resolve the issue within 48 business hours.</p><h2>3. Exceptions to Refund</h2><ul><li>Refunds are not granted after more than 10% of lessons have been watched.</li><li>Refund requests submitted after 24 hours of purchase will not be entertained.</li><li>Affiliate partner fees and payment gateway processing charges are non-refundable.</li></ul><h2>4. How to Request a Refund</h2><p>Please write to support@theskillpreneur.com with your Registered Email, Order ID, and reason for cancellation.</p>',
             'Refund eligibility criteria and cancellation guidelines for digital courses and packages.',
             TRUE, TRUE, 'legal', 3
           ),
           (
             'Affiliate & Income Disclaimer',
             'disclaimer',
-            '<h2>1. Educational Purpose Only</h2><p>All courses, tutorials, and training materials provided on Knowway are for educational and informational purposes only. We do not make any guarantees regarding income, job placements, or financial success.</p><h2>2. Affiliate Earning Transparency</h2><p>Affiliate partner earnings depend entirely on individual marketing effort, sales performance, and adherence to platform promotion guidelines. Past earnings of other affiliates do not guarantee future results.</p>',
-            'Earnings disclosure, educational purpose and legal liability disclaimer for Knowway platform.',
+            '<h2>1. Educational Purpose Only</h2><p>All courses, tutorials, and training materials provided on The Skillpreneur are for educational and informational purposes only. We do not make any guarantees regarding income, job placements, or financial success.</p><h2>2. Affiliate Earning Transparency</h2><p>Affiliate partner earnings depend entirely on individual marketing effort, sales performance, and adherence to platform promotion guidelines. Past earnings of other affiliates do not guarantee future results.</p>',
+            'Earnings disclosure, educational purpose and legal liability disclaimer for The Skillpreneur platform.',
             TRUE, TRUE, 'legal', 4
           )
         `);
@@ -1176,18 +1176,31 @@ export const initDB = async () => {
     try {
       await connection.query(`
         INSERT IGNORE INTO system_settings (setting_key, setting_value) VALUES 
-        ('site_name', 'Knowway'),
+        ('site_name', 'The Skillpreneur'),
         ('site_tagline', 'Simple learning paths, practical digital skills and useful knowledge designed to help you keep progressing.'),
         ('site_logo', '/images/logo/logo.png'),
-        ('contact_email', 'support@knowway.in'),
+        ('contact_email', 'support@theskillpreneur.com'),
         ('contact_phone', '+91 98765 43210'),
-        ('contact_address', 'Knowway EdTech Tower, Tech Zone 4, Greater Noida, UP - 201306'),
-        ('social_instagram', 'https://instagram.com/knowway'),
-        ('social_youtube', 'https://youtube.com/@knowway'),
-        ('social_linkedin', 'https://linkedin.com/company/knowway'),
-        ('social_telegram', 'https://t.me/knowway_official'),
-        ('social_twitter', 'https://twitter.com/knowway'),
-        ('copyright_text', 'Knowway. All rights reserved.')
+        ('contact_address', 'The Skillpreneur Headquarters, India'),
+        ('social_instagram', 'https://instagram.com/theskillpreneur'),
+        ('social_youtube', 'https://youtube.com/@theskillpreneur'),
+        ('social_linkedin', 'https://linkedin.com/company/theskillpreneur'),
+        ('social_telegram', 'https://t.me/theskillpreneur_official'),
+        ('social_twitter', 'https://twitter.com/theskillpreneur'),
+        ('copyright_text', 'The Skillpreneur. All rights reserved.')
+      `);
+
+      // Automatically migrate any legacy brand text in system_settings & custom_pages
+      await connection.query(`
+        UPDATE system_settings 
+        SET setting_value = REPLACE(REPLACE(REPLACE(REPLACE(setting_value, 'KnowWay LearnSpace', 'The Skillpreneur'), 'KnowWay', 'The Skillpreneur'), 'Knowway', 'The Skillpreneur'), 'knowway', 'theskillpreneur')
+        WHERE setting_value LIKE '%knowway%' OR setting_value LIKE '%KnowWay%' OR setting_value LIKE '%Knowway%'
+      `);
+      await connection.query(`
+        UPDATE custom_pages 
+        SET content = REPLACE(REPLACE(REPLACE(content, 'KnowWay', 'The Skillpreneur'), 'Knowway', 'The Skillpreneur'), 'support@knowway.in', 'support@theskillpreneur.com'),
+            meta_description = REPLACE(REPLACE(meta_description, 'KnowWay', 'The Skillpreneur'), 'Knowway', 'The Skillpreneur')
+        WHERE content LIKE '%knowway%' OR meta_description LIKE '%knowway%'
       `);
     } catch (_) {}
 

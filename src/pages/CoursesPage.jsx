@@ -31,7 +31,7 @@ const fallbackCourses = [
     duration: "6.66 Hours",
     thumbnail_url: "https://images.unsplash.com/photo-1522071820081-009f0129c71c?q=80&w=800&auto=format&fit=crop",
     description: "Master freelancing with proven strategies for client acquisition, portfolio building, pricing, sales calls, proposal writing, and business growth.",
-    mentor_name: "KnowWay Instructor",
+    mentor_name: "The Skillpreneur Instructor",
     lectures_count: 14,
   },
   {
@@ -242,7 +242,7 @@ export default function CoursesPage() {
               <div className="inline-flex items-center gap-2 rounded-full border border-[#DCE5F5] bg-white/90 px-4 py-2 shadow-[0_2px_5px_rgba(20,35,70,.04)]">
                 <Sparkles size={13} className="text-[#315FD8]" />
                 <span className="text-[12px] font-semibold text-[#58657D]">
-                  KnowWay Practical Curriculum
+                  The Skillpreneur Practical Curriculum
                 </span>
               </div>
 
@@ -431,7 +431,7 @@ export default function CoursesPage() {
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6 sm:gap-7">
               {filteredCourses.map((course) => {
                 const courseId = course.slug || course.id;
-                const mentorName = course.mentor_name || course.mentor || "KnowWay Mentor";
+                const mentorName = course.mentor_name || course.mentor || "The Skillpreneur Mentor";
                 const mentorRole = course.category || "Masterclass";
                 const mentorPhoto = course.mentor_photo || course.photo_url || null;
                 const mentorInitial = mentorName ? mentorName.charAt(0).toUpperCase() : "M";
