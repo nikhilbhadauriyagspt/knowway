@@ -6,7 +6,7 @@ export const getSmtpSettings = async () => {
   try {
     const [rows] = await pool.query(
       `SELECT setting_key, setting_value FROM system_settings 
-       WHERE setting_key IN ('smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_from_name', 'smtp_from_email', 'smtp_is_active')`
+       WHERE setting_key IN ('smtp_host', 'smtp_port', 'smtp_user', 'smtp_pass', 'smtp_from_name', 'smtp_from_email', 'smtp_is_active', 'site_name', 'contact_email')`
     );
 
     const config = {
@@ -17,10 +17,14 @@ export const getSmtpSettings = async () => {
       smtp_from_name: process.env.SMTP_FROM_NAME || "The Skillpreneur",
       smtp_from_email: process.env.SMTP_FROM_EMAIL || "",
       smtp_is_active: process.env.SMTP_IS_ACTIVE === "true" ? "true" : "false",
+      site_name: "The Skillpreneur",
+      contact_email: "support@theskillpreneur.com",
     };
 
     rows.forEach((r) => {
-      config[r.setting_key] = r.setting_value || "";
+      if (r.setting_value) {
+        config[r.setting_key] = r.setting_value;
+      }
     });
 
     return config;
@@ -34,6 +38,8 @@ export const getSmtpSettings = async () => {
       smtp_from_name: "The Skillpreneur",
       smtp_from_email: "",
       smtp_is_active: "false",
+      site_name: "The Skillpreneur",
+      contact_email: "support@theskillpreneur.com",
     };
   }
 };
@@ -45,6 +51,7 @@ export const getSmtpSettings = async () => {
  */
 export const sendOtpEmail = async ({ to, otp, type = "signup", name = "Learner" }) => {
   const config = await getSmtpSettings();
+  const brandName = (config.site_name || config.smtp_from_name || "The Skillpreneur").trim();
   const isActive = config.smtp_is_active === "true" || config.smtp_is_active === "1";
 
   const isConfigured = Boolean(
@@ -53,15 +60,15 @@ export const sendOtpEmail = async ({ to, otp, type = "signup", name = "Learner" 
 
   const subject =
     type === "signup"
-      ? `🔐 Verify Your The Skillpreneur Account - OTP: ${otp}`
-      : `🔑 Password Reset OTP for The Skillpreneur - ${otp}`;
+      ? `🔐 Verify Your ${brandName} Account - OTP: ${otp}`
+      : `🔑 Password Reset OTP for ${brandName} - ${otp}`;
 
   const titleText =
     type === "signup" ? "Verify Your Email Address" : "Password Reset Request";
   const descText =
     type === "signup"
-      ? "Welcome to The Skillpreneur! Please use the 6-digit one-time password (OTP) below to complete your registration."
-      : "We received a request to reset your The Skillpreneur password. Use the 6-digit OTP below to proceed.";
+      ? `Welcome to ${brandName}! Please use the 6-digit one-time password (OTP) below to complete your registration.`
+      : `We received a request to reset your ${brandName} password. Use the 6-digit OTP below to proceed.`;
 
   const htmlContent = `
     <!DOCTYPE html>
@@ -84,7 +91,7 @@ export const sendOtpEmail = async ({ to, otp, type = "signup", name = "Learner" 
       <body>
         <div class="container">
           <div class="logo-box">
-            <span class="badge">The Skillpreneur</span>
+            <span class="badge">${brandName}</span>
           </div>
           <h2 class="title">${titleText}</h2>
           <p class="text">Hello <strong>${name || "Learner"}</strong>,<br/>${descText}</p>
@@ -97,7 +104,7 @@ export const sendOtpEmail = async ({ to, otp, type = "signup", name = "Learner" 
           <p class="text" style="font-size: 13px;">If you did not request this OTP, please safely ignore this email.</p>
           
           <div class="footer">
-            &copy; ${new Date().getFullYear()} The Skillpreneur All rights reserved.<br/>
+            &copy; ${new Date().getFullYear()} ${brandName}. All rights reserved.<br/>
             Skill-First Learning & Career Mastery Platform.
           </div>
         </div>
@@ -120,7 +127,7 @@ export const sendOtpEmail = async ({ to, otp, type = "signup", name = "Learner" 
       });
 
       const senderEmail = config.smtp_from_email || config.smtp_user;
-      const senderName = config.smtp_from_name || "The Skillpreneur";
+      const senderName = config.site_name || config.smtp_from_name || brandName;
 
       await transporter.sendMail({
         from: `"${senderName}" <${senderEmail}>`,
@@ -195,11 +202,13 @@ export const testSmtpTransport = async ({ host, port, user, pass, from_name, fro
  */
 export const sendWelcomeRegistrationEmail = async ({ to, name = "Learner", studentId, loginUrl }) => {
   const config = await getSmtpSettings();
+  const brandName = (config.site_name || config.smtp_from_name || "The Skillpreneur").trim();
+  const supportEmail = (config.contact_email || "support@theskillpreneur.com").trim();
   const isActive = config.smtp_is_active === "true" || config.smtp_is_active === "1";
   const isConfigured = Boolean(config.smtp_host && config.smtp_user && config.smtp_pass);
 
   const finalLoginUrl = loginUrl || process.env.FRONTEND_URL || "https://theskillpreneur.com/login";
-  const subject = `🎉 Welcome to The Skillpreneur! Your Student ID: ${studentId}`;
+  const subject = `🎉 Welcome to ${brandName}! Your Student ID: ${studentId}`;
 
   const htmlContent = `
     <!DOCTYPE html>
@@ -239,7 +248,7 @@ export const sendWelcomeRegistrationEmail = async ({ to, name = "Learner", stude
       <body>
         <div class="container">
           <div class="logo-box">
-            <span class="badge">The Skillpreneur</span>
+            <span class="badge">${brandName}</span>
           </div>
 
           <h1 class="title">Welcome, ${name}! 🎉</h1>
@@ -290,8 +299,8 @@ export const sendWelcomeRegistrationEmail = async ({ to, name = "Learner", stude
           </div>
           
           <div class="footer">
-            &copy; ${new Date().getFullYear()} The Skillpreneur All rights reserved.<br/>
-            Need assistance? Reach out to support@theskillpreneur.com
+            &copy; ${new Date().getFullYear()} ${brandName}. All rights reserved.<br/>
+            Need assistance? Reach out to ${supportEmail}
           </div>
         </div>
       </body>
@@ -312,7 +321,7 @@ export const sendWelcomeRegistrationEmail = async ({ to, name = "Learner", stude
       });
 
       const senderEmail = config.smtp_from_email || config.smtp_user;
-      const senderName = config.smtp_from_name || "The Skillpreneur";
+      const senderName = config.site_name || config.smtp_from_name || brandName;
 
       await transporter.sendMail({
         from: `"${senderName}" <${senderEmail}>`,
@@ -347,6 +356,8 @@ export const sendPayoutApprovedEmail = async ({
   processed_at = new Date(),
 }) => {
   const config = await getSmtpSettings();
+  const brandName = (config.site_name || config.smtp_from_name || "The Skillpreneur").trim();
+  const supportEmail = (config.contact_email || "support@theskillpreneur.com").trim();
   const isActive = config.smtp_is_active === "true" || config.smtp_is_active === "1";
   const isConfigured = Boolean(config.smtp_host && config.smtp_user && config.smtp_pass);
 
@@ -385,7 +396,7 @@ export const sendPayoutApprovedEmail = async ({
       <body>
         <div class="container">
           <div class="logo-box">
-            <span class="badge">The Skillpreneur Affiliate Payout Settled</span>
+            <span class="badge">${brandName} Affiliate Payout Settled</span>
           </div>
           <h2 class="title">Your Funds Have Been Transferred! 🚀</h2>
           <p class="text">Hello <strong>${name}</strong>,<br/>Your commission withdrawal request has been approved and successfully transferred to your destination account.</p>
@@ -423,8 +434,8 @@ export const sendPayoutApprovedEmail = async ({
           <p class="text" style="font-size: 12px; margin-bottom: 0;">It may take a few minutes for your bank statement to reflect this deposit depending on your bank's processing cycles.</p>
           
           <div class="footer">
-            &copy; ${new Date().getFullYear()} The Skillpreneur All rights reserved.<br/>
-            Need assistance? Reach out to support@theskillpreneur.com
+            &copy; ${new Date().getFullYear()} ${brandName}. All rights reserved.<br/>
+            Need assistance? Reach out to ${supportEmail}
           </div>
         </div>
       </body>
@@ -442,7 +453,7 @@ export const sendPayoutApprovedEmail = async ({
       });
 
       const senderEmail = config.smtp_from_email || config.smtp_user;
-      const senderName = config.smtp_from_name || "The Skillpreneur Partner Hub";
+      const senderName = `${brandName} Partner Hub`;
 
       await transporter.sendMail({
         from: `"${senderName}" <${senderEmail}>`,
@@ -474,6 +485,8 @@ export const sendPayoutRejectedEmail = async ({
   processed_at = new Date(),
 }) => {
   const config = await getSmtpSettings();
+  const brandName = (config.site_name || config.smtp_from_name || "The Skillpreneur").trim();
+  const supportEmail = (config.contact_email || "support@theskillpreneur.com").trim();
   const isActive = config.smtp_is_active === "true" || config.smtp_is_active === "1";
   const isConfigured = Boolean(config.smtp_host && config.smtp_user && config.smtp_pass);
 
@@ -518,7 +531,7 @@ export const sendPayoutRejectedEmail = async ({
           </div>
 
           <div class="refund-banner">
-            ✅ <strong>₹${formattedAmount} has been refunded immediately</strong> back to your The Skillpreneur Affiliate Wallet balance.
+            ✅ <strong>₹${formattedAmount} has been refunded immediately</strong> back to your ${brandName} Affiliate Wallet balance.
           </div>
 
           <p class="text" style="font-size: 12.5px;">
@@ -526,8 +539,8 @@ export const sendPayoutRejectedEmail = async ({
           </p>
           
           <div class="footer">
-            &copy; ${new Date().getFullYear()} The Skillpreneur All rights reserved.<br/>
-            Need help updating your payout details? Contact us at support@theskillpreneur.com
+            &copy; ${new Date().getFullYear()} ${brandName}. All rights reserved.<br/>
+            Need help updating your payout details? Contact us at ${supportEmail}
           </div>
         </div>
       </body>
@@ -545,7 +558,7 @@ export const sendPayoutRejectedEmail = async ({
       });
 
       const senderEmail = config.smtp_from_email || config.smtp_user;
-      const senderName = config.smtp_from_name || "The Skillpreneur Partner Hub";
+      const senderName = `${brandName} Partner Hub`;
 
       await transporter.sendMail({
         from: `"${senderName}" <${senderEmail}>`,

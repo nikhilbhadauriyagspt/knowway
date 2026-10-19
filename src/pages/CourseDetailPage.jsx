@@ -45,6 +45,7 @@ import {
   getUserData,
   isUserAuthenticated,
   getVideoSecurityConfigApi,
+  usePublicBrand,
 } from "../services/api";
 
 // Fallback seed detail in case DB is offline
@@ -100,6 +101,7 @@ const fallbackCourseDetail = {
 export default function CourseDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { siteName } = usePublicBrand();
 
   const [course, setCourse] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -130,15 +132,15 @@ export default function CourseDetailPage() {
 
   // Load stored completion, bookmarks, and certificate from LocalStorage
   const courseStorageKey = useMemo(() => {
-    return `knowway_progress_${user.id || "guest"}_${id}`;
+    return `skillpreneur_progress_${user.id || "guest"}_${id}`;
   }, [user.id, id]);
 
   const bookmarksStorageKey = useMemo(() => {
-    return `knowway_bookmarks_${user.id || "guest"}_${id}`;
+    return `skillpreneur_bookmarks_${user.id || "guest"}_${id}`;
   }, [user.id, id]);
 
   const certStorageKey = useMemo(() => {
-    return `knowway_cert_${user.id || "guest"}_${id}`;
+    return `skillpreneur_cert_${user.id || "guest"}_${id}`;
   }, [user.id, id]);
 
   const [lectureBookmarks, setLectureBookmarks] = useState({});
@@ -586,7 +588,7 @@ export default function CourseDetailPage() {
                   </div>
 
                   <h3 className="text-base sm:text-lg font-black text-[#0F172A]">
-                    The Skillpreneur Accredited Certificate of Mastery 📜
+                    {siteName} Accredited Certificate of Mastery 📜
                   </h3>
 
                   <p className="text-xs text-[#64748B] max-w-lg leading-relaxed">
@@ -647,7 +649,7 @@ export default function CourseDetailPage() {
 
                   {/* Top Seal */}
                   <div className="flex items-center justify-between border-b border-gray-100 pb-1">
-                    <span className="text-[8px] font-black text-[#035BE3] uppercase">THE SKILLPRENEUR</span>
+                    <span className="text-[8px] font-black text-[#035BE3] uppercase">{siteName}</span>
                     <span className="text-[8px] font-bold text-amber-600 flex items-center gap-0.5">
                       <ShieldCheck size={9} /> VERIFIED
                     </span>

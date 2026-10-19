@@ -23,7 +23,7 @@ export default function PackageRequiredModal() {
       setIsOpen(true);
     };
 
-    window.addEventListener("knowway_open_package_modal", handleOpen);
+    window.addEventListener("skillpreneur_open_package_modal", handleOpen);
 
     // Check URL query parameters
     const params = new URLSearchParams(location.search);
@@ -32,7 +32,7 @@ export default function PackageRequiredModal() {
     }
 
     return () => {
-      window.removeEventListener("knowway_open_package_modal", handleOpen);
+      window.removeEventListener("skillpreneur_open_package_modal", handleOpen);
     };
   }, [location.search]);
 

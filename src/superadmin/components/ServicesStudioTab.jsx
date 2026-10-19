@@ -303,7 +303,7 @@ export default function ServicesStudioTab({ darkMode }) {
 
     try {
       setIsUploadingImage(true);
-      const res = await uploadImageApi(file, "knowway_services");
+      const res = await uploadImageApi(file, "skillpreneur_services");
       const uploadedUrl = res?.url || res?.data?.url;
       if (uploadedUrl) {
         setServiceForm((prev) => ({ ...prev, image_url: uploadedUrl }));
@@ -324,7 +324,7 @@ export default function ServicesStudioTab({ darkMode }) {
 
     try {
       setIsUploadingImage(true);
-      const res = await uploadImageApi(file, "knowway_services");
+      const res = await uploadImageApi(file, "skillpreneur_services");
       const uploadedUrl = res?.url || res?.data?.url;
       if (uploadedUrl) {
         await updateAdminServiceApi(quickUploadService.id, {

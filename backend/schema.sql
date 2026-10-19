@@ -1,7 +1,7 @@
--- Database Creation Script for Knowway Learning Platform
-CREATE DATABASE IF NOT EXISTS knowway_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
+-- Database Creation Script for The Skillpreneur Learning Platform
+CREATE DATABASE IF NOT EXISTS skillpreneur_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
 
-USE knowway_db;
+USE skillpreneur_db;
 
 -- Users Table (Matches 2-Step Signup Form)
 CREATE TABLE IF NOT EXISTS users (

@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
-import { getPackageBySlugApi, getUserData, isUserAuthenticated } from "../services/api";
+import { getPackageBySlugApi, getUserData, isUserAuthenticated, usePublicBrand } from "../services/api";
 
 // Fallback Courses
 const fallbackCourses = [
@@ -272,6 +272,7 @@ export default function PackageDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
+  const { siteName, contactEmail } = usePublicBrand();
   const currentSlug = (id || "pro").toLowerCase().trim();
 
   // Check if URL has referral parameter or if logged-in user was sponsored by someone (referred_by)
@@ -736,8 +737,8 @@ export default function PackageDetail() {
                     <span className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
                       Certificate of Achievement
                     </span>
-                    <h4 className="text-base font-black text-[#141A29] mt-1">
-                      THE SKILLPRENEUR ACCREDITATION
+                    <h4 className="text-base font-black text-[#141A29] mt-1 uppercase">
+                      {siteName} ACCREDITATION
                     </h4>
                     <p className="text-[11px] text-slate-500 italic mt-1">
                       This is to certify that student has completed
@@ -778,10 +779,10 @@ export default function PackageDetail() {
               <p className="mt-4 max-w-sm text-sm leading-7 text-slate-500 font-medium">
                 Still you have any questions? Contact our Team via{" "}
                 <a
-                  href="mailto:support@theskillpreneur.com"
+                  href={`mailto:${contactEmail}`}
                   className="text-[#155DFC] font-bold underline"
                 >
-                  support@theskillpreneur.com
+                  {contactEmail}
                 </a>
               </p>
             </div>

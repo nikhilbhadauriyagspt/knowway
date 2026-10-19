@@ -103,11 +103,11 @@ export default function Header() {
       setIsLoggedIn(isUserAuthenticated());
     };
 
-    window.addEventListener("knowway_auth_change", handleAuthChange);
+    window.addEventListener("skillpreneur_auth_change", handleAuthChange);
     window.addEventListener("storage", handleAuthChange);
 
     return () => {
-      window.removeEventListener("knowway_auth_change", handleAuthChange);
+      window.removeEventListener("skillpreneur_auth_change", handleAuthChange);
       window.removeEventListener("storage", handleAuthChange);
     };
   }, []);

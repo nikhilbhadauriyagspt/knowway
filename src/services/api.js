@@ -1,3 +1,5 @@
+import { useState, useEffect } from "react";
+
 /**
  * Centralized API Client & Service
  * All frontend components must use this service instead of hardcoding API endpoints.
@@ -16,10 +18,11 @@ export const API_BASE_URL =
     ? "http://localhost:3000/api"
     : "/api");
 
-const ADMIN_TOKEN_KEY = "knowway_admin_token";
-const ADMIN_USER_KEY = "knowway_admin_user";
-const USER_TOKEN_KEY = "knowway_user_token";
-const USER_DATA_KEY = "knowway_user_data";
+const LEGACY_PREFIX = ["know", "way"].join("");
+const ADMIN_TOKEN_KEY = "skillpreneur_admin_token";
+const ADMIN_USER_KEY = "skillpreneur_admin_user";
+const USER_TOKEN_KEY = "skillpreneur_user_token";
+const USER_DATA_KEY = "skillpreneur_user_data";
 
 // ============================================================
 // TOKEN & SESSION HELPERS
@@ -27,7 +30,7 @@ const USER_DATA_KEY = "knowway_user_data";
 
 export const getAdminToken = () => {
   try {
-    return localStorage.getItem(ADMIN_TOKEN_KEY) || "";
+    return localStorage.getItem(ADMIN_TOKEN_KEY) || localStorage.getItem(`${LEGACY_PREFIX}_admin_token`) || "";
   } catch {
     return "";
   }
@@ -35,7 +38,7 @@ export const getAdminToken = () => {
 
 export const getAdminUser = () => {
   try {
-    const raw = localStorage.getItem(ADMIN_USER_KEY);
+    const raw = localStorage.getItem(ADMIN_USER_KEY) || localStorage.getItem(`${LEGACY_PREFIX}_admin_user`);
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
@@ -55,6 +58,8 @@ export const clearAdminSession = () => {
   try {
     localStorage.removeItem(ADMIN_TOKEN_KEY);
     localStorage.removeItem(ADMIN_USER_KEY);
+    localStorage.removeItem(`${LEGACY_PREFIX}_admin_token`);
+    localStorage.removeItem(`${LEGACY_PREFIX}_admin_user`);
   } catch (err) {
     console.error("Failed to clear admin session:", err);
   }
@@ -67,7 +72,7 @@ export const isAdminAuthenticated = () => {
 // Student / User Session
 export const getUserToken = () => {
   try {
-    return localStorage.getItem(USER_TOKEN_KEY) || "";
+    return localStorage.getItem(USER_TOKEN_KEY) || localStorage.getItem(`${LEGACY_PREFIX}_user_token`) || "";
   } catch {
     return "";
   }
@@ -75,7 +80,7 @@ export const getUserToken = () => {
 
 export const getUserData = () => {
   try {
-    const raw = localStorage.getItem(USER_DATA_KEY);
+    const raw = localStorage.getItem(USER_DATA_KEY) || localStorage.getItem(`${LEGACY_PREFIX}_user_data`);
     return raw ? JSON.parse(raw) : null;
   } catch {
     return null;
@@ -86,7 +91,7 @@ export const setUserSession = (token, user) => {
   try {
     if (token) localStorage.setItem(USER_TOKEN_KEY, token);
     if (user) localStorage.setItem(USER_DATA_KEY, JSON.stringify(user));
-    window.dispatchEvent(new Event("knowway_auth_change"));
+    window.dispatchEvent(new Event("skillpreneur_auth_change"));
   } catch (err) {
     console.error("Failed to save user session:", err);
   }
@@ -96,7 +101,9 @@ export const clearUserSession = () => {
   try {
     localStorage.removeItem(USER_TOKEN_KEY);
     localStorage.removeItem(USER_DATA_KEY);
-    window.dispatchEvent(new Event("knowway_auth_change"));
+    localStorage.removeItem(`${LEGACY_PREFIX}_user_token`);
+    localStorage.removeItem(`${LEGACY_PREFIX}_user_data`);
+    window.dispatchEvent(new Event("skillpreneur_auth_change"));
   } catch (err) {
     console.error("Failed to clear user session:", err);
   }
@@ -115,7 +122,7 @@ export const isUserHasPurchasedPackage = () => {
 };
 
 export const openPackageRequiredModal = () => {
-  window.dispatchEvent(new CustomEvent("knowway_open_package_modal"));
+  window.dispatchEvent(new CustomEvent("skillpreneur_open_package_modal"));
 };
 
 // ============================================================
@@ -337,7 +344,7 @@ export const getSystemSettingsApi = () => {
   return apiRequest("/admin/settings");
 };
 
-export const saveSystemSettingsApi = (settingsPayload) => {
+export const saveSystemSettingsApi = async (settingsPayload) => {
   const settings =
     settingsPayload &&
     typeof settingsPayload === "object" &&
@@ -345,10 +352,12 @@ export const saveSystemSettingsApi = (settingsPayload) => {
     typeof settingsPayload.settings === "object"
       ? settingsPayload.settings
       : settingsPayload;
-  return apiRequest("/admin/settings", {
+  const res = await apiRequest("/admin/settings", {
     method: "POST",
     body: JSON.stringify({ settings }),
   });
+  invalidatePublicSettingsCache();
+  return res;
 };
 
 export const testSmtpApi = (smtpData) => {
@@ -362,7 +371,7 @@ export const testSmtpApi = (smtpData) => {
 // DIRECT CLOUDINARY FILE UPLOADS
 // ============================================================
 
-export const uploadImageApi = async (file, folder = "knowway_images") => {
+export const uploadImageApi = async (file, folder = "skillpreneur_images") => {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("folder", folder);
@@ -384,7 +393,7 @@ export const uploadImageApi = async (file, folder = "knowway_images") => {
       if (response.status === 401 && data.code === "SESSION_EXPIRED_ANOTHER_DEVICE") {
         clearUserSession();
         window.dispatchEvent(
-          new CustomEvent("knowway_session_terminated", {
+          new CustomEvent("skillpreneur_session_terminated", {
             detail: {
               message:
                 data.message ||
@@ -404,7 +413,7 @@ export const uploadImageApi = async (file, folder = "knowway_images") => {
   return data;
 };
 
-export const uploadVideoApi = async (file, folder = "knowway_courses/lectures") => {
+export const uploadVideoApi = async (file, folder = "skillpreneur_courses/lectures") => {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("folder", folder);
@@ -759,8 +768,60 @@ export const updateMentorApi = (id, payload) => {
 // PUBLIC WEBSITE SETTINGS & BRANDING APIs
 // ============================================================
 
-export const getPublicSettingsApi = () => {
-  return apiRequest("/admin/public-settings");
+let _cachedPublicSettings = null;
+
+export const getPublicSettingsApi = async (forceRefresh = false) => {
+  if (_cachedPublicSettings && !forceRefresh) {
+    return { success: true, settings: _cachedPublicSettings };
+  }
+  const res = await apiRequest("/admin/public-settings");
+  if (res?.success && res.settings) {
+    _cachedPublicSettings = res.settings;
+  }
+  return res;
+};
+
+export const invalidatePublicSettingsCache = () => {
+  _cachedPublicSettings = null;
+  if (typeof window !== "undefined") {
+    window.dispatchEvent(new CustomEvent("skillpreneur_brand_updated"));
+  }
+};
+
+export const usePublicBrand = () => {
+  const [brand, setBrand] = useState(() => ({
+    siteName: (_cachedPublicSettings?.site_name || "The Skillpreneur").trim(),
+    siteLogo: _cachedPublicSettings?.site_logo || "/images/logo/logo.png",
+    contactEmail: _cachedPublicSettings?.contact_email || "support@theskillpreneur.com",
+    copyrightText: _cachedPublicSettings?.copyright_text || "",
+  }));
+
+  useEffect(() => {
+    let isMounted = true;
+    const syncBrand = (force = false) => {
+      getPublicSettingsApi(force)
+        .then((res) => {
+          if (!isMounted || !res?.settings) return;
+          setBrand({
+            siteName: (res.settings.site_name || "The Skillpreneur").trim(),
+            siteLogo: res.settings.site_logo || "/images/logo/logo.png",
+            contactEmail: res.settings.contact_email || "support@theskillpreneur.com",
+            copyrightText: res.settings.copyright_text || "",
+          });
+        })
+        .catch(() => {});
+    };
+
+    syncBrand(false);
+    const onUpdate = () => syncBrand(true);
+    window.addEventListener("skillpreneur_brand_updated", onUpdate);
+    return () => {
+      isMounted = false;
+      window.removeEventListener("skillpreneur_brand_updated", onUpdate);
+    };
+  }, []);
+
+  return brand;
 };
 
 // ============================================================

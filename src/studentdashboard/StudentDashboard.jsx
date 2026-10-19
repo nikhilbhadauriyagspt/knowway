@@ -57,8 +57,8 @@ export default function StudentDashboard() {
   // Theme & Layout States
   const [darkMode, setDarkMode] = useState(() => {
     return (
-      localStorage.getItem("knowway_theme") === "dark" ||
-      (!("knowway_theme" in localStorage) &&
+      localStorage.getItem("skillpreneur_theme") === "dark" ||
+      (!("skillpreneur_theme" in localStorage) &&
         window.matchMedia("(prefers-color-scheme: dark)").matches)
     );
   });
@@ -66,10 +66,10 @@ export default function StudentDashboard() {
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add("dark");
-      localStorage.setItem("knowway_theme", "dark");
+      localStorage.setItem("skillpreneur_theme", "dark");
     } else {
       document.documentElement.classList.remove("dark");
-      localStorage.setItem("knowway_theme", "light");
+      localStorage.setItem("skillpreneur_theme", "light");
     }
   }, [darkMode]);
   const [mobileOpen, setMobileOpen] = useState(false);
@@ -105,8 +105,8 @@ export default function StudentDashboard() {
     (c) => {
       try {
         const cid = c.slug || c.id;
-        const key1 = `knowway_progress_${user?.id || "guest"}_${cid}`;
-        const key2 = `knowway_progress_${user?.id || "guest"}_${c.id}`;
+        const key1 = `skillpreneur_progress_${user?.id || "guest"}_${cid}`;
+        const key2 = `skillpreneur_progress_${user?.id || "guest"}_${c.id}`;
         const raw = localStorage.getItem(key1) || localStorage.getItem(key2);
         if (raw) {
           const completed = JSON.parse(raw);
@@ -271,7 +271,7 @@ export default function StudentDashboard() {
         const userId = user?.id || "guest";
         for (let i = 0; i < localStorage.length; i++) {
           const key = localStorage.key(i);
-          if (key && key.startsWith(`knowway_certificate_${userId}_`)) {
+          if (key && key.startsWith(`skillpreneur_certificate_${userId}_`)) {
             const raw = localStorage.getItem(key);
             if (raw) {
               const parsed = JSON.parse(raw);

@@ -40,7 +40,7 @@ export default function SessionHeartbeatMonitor() {
       );
     };
 
-    window.addEventListener("knowway_session_terminated", handleTerminatedEvent);
+    window.addEventListener("skillpreneur_session_terminated", handleTerminatedEvent);
 
     // 2. Immediate check when tab is focused / un-minimized
     const handleFocus = () => {
@@ -56,7 +56,7 @@ export default function SessionHeartbeatMonitor() {
     }, 6000);
 
     return () => {
-      window.removeEventListener("knowway_session_terminated", handleTerminatedEvent);
+      window.removeEventListener("skillpreneur_session_terminated", handleTerminatedEvent);
       window.removeEventListener("focus", handleFocus);
       document.removeEventListener("visibilitychange", handleFocus);
       clearInterval(interval);

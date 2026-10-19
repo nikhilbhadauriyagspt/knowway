@@ -171,7 +171,7 @@ export default function FreelanceStudioTab({ darkMode }) {
     setUploadProgressText("Uploading video to Cloudinary...");
 
     try {
-      const res = await uploadVideoApi(file, "knowway_freelance/lectures");
+      const res = await uploadVideoApi(file, "skillpreneur_freelance/lectures");
       if (res?.success && res.data?.url) {
         setLessonForm((prev) => ({
           ...prev,

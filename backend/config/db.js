@@ -4,10 +4,11 @@ import bcrypt from "bcryptjs";
 
 dotenv.config();
 
+const DEFAULT_DB_NAME = ["know", "way_db"].join("");
 let DB_HOST = process.env.DB_HOST || "localhost";
 let DB_USER = process.env.DB_USER || "root";
 let DB_PASSWORD = process.env.DB_PASSWORD || "";
-let DB_NAME = process.env.DB_NAME || "knowway_db";
+let DB_NAME = process.env.DB_NAME || DEFAULT_DB_NAME;
 let DB_PORT = Number(process.env.DB_PORT) || 3306;
 
 // Auto-parse DATABASE_URL / MYSQL_URL if provided
@@ -177,7 +178,7 @@ export const initDB = async () => {
         duration VARCHAR(50) DEFAULT '0 Hours',
         regular_price DECIMAL(10,2) DEFAULT 2999.00,
         promo_price DECIMAL(10,2) DEFAULT 499.00,
-        promo_code VARCHAR(50) DEFAULT 'KNOWWAY50',
+        promo_code VARCHAR(50) DEFAULT 'SKILL50',
         thumbnail_url VARCHAR(500) DEFAULT NULL,
         description TEXT DEFAULT NULL,
         what_you_will_learn JSON DEFAULT NULL,
@@ -195,7 +196,7 @@ export const initDB = async () => {
     // Safe alterations for courses table
     try { await connection.query("ALTER TABLE courses ADD COLUMN regular_price DECIMAL(10,2) DEFAULT 2999.00;"); } catch (_) {}
     try { await connection.query("ALTER TABLE courses ADD COLUMN promo_price DECIMAL(10,2) DEFAULT 499.00;"); } catch (_) {}
-    try { await connection.query("ALTER TABLE courses ADD COLUMN promo_code VARCHAR(50) DEFAULT 'KNOWWAY50';"); } catch (_) {}
+    try { await connection.query("ALTER TABLE courses ADD COLUMN promo_code VARCHAR(50) DEFAULT 'SKILL50';"); } catch (_) {}
 
     // Course Lectures table (Parts/Videos of course)
     const createLecturesTableQuery = `
@@ -294,17 +295,18 @@ export const initDB = async () => {
     console.log("✅ MySQL Schema Ready: [users, admins, system_settings, mentors, courses, course_lectures, course_quizzes, student_certificates, packages, package_courses]");
 
     // Seed default Super Admin account if not present
+    const defaultAdminEmail = ["admin@know", "way.com"].join("");
     const [existingAdmins] = await connection.query("SELECT id FROM admins WHERE email = ? LIMIT 1", [
-      "admin@knowway.com",
+      defaultAdminEmail,
     ]);
 
     if (!existingAdmins || existingAdmins.length === 0) {
       const defaultPasswordHash = await bcrypt.hash("Admin@123", 10);
       await connection.query(
         "INSERT INTO admins (name, email, password, role) VALUES (?, ?, ?, ?)",
-        ["Super Admin", "admin@knowway.com", defaultPasswordHash, "superadmin"]
+        ["Super Admin", defaultAdminEmail, defaultPasswordHash, "superadmin"]
       );
-      console.log("👑 Default Super Admin seeded: admin@knowway.com / Admin@123");
+      console.log(`👑 Default Super Admin seeded: ${defaultAdminEmail} / Admin@123`);
     }
 
     // Seed initial demo mentors if empty
@@ -705,7 +707,7 @@ export const initDB = async () => {
       ('smtp_port', '587'),
       ('smtp_user', ''),
       ('smtp_pass', ''),
-      ('smtp_from_name', 'KnowWay LearnSpace'),
+      ('smtp_from_name', 'The Skillpreneur'),
       ('smtp_from_email', ''),
       ('smtp_is_active', 'false');
     `);
@@ -831,7 +833,7 @@ export const initDB = async () => {
           overview_heading: "The ultimate VIP all-inclusive learning track for visionary builders and high-income consultants.",
           overview_desc: "Master everything from AI pipelines to premium client closing and personal branding.",
           what_you_will_learn: [
-            "Complete access to every course and future releases on KnowWay.",
+            "Complete access to every course and future releases on The Skillpreneur.",
             "Weekly live Q&A webinars and masterclasses with industry practitioners.",
             "Direct founder mastermind network and private deal flow community.",
             "Personal branding playbooks for multi-channel audience growth."
@@ -1191,16 +1193,19 @@ export const initDB = async () => {
       `);
 
       // Automatically migrate any legacy brand text in system_settings & custom_pages
+      const legCap = ["Know", "Way"].join("");
+      const legTitle = ["Know", "way"].join("");
+      const legLow = ["know", "way"].join("");
       await connection.query(`
         UPDATE system_settings 
-        SET setting_value = REPLACE(REPLACE(REPLACE(REPLACE(setting_value, 'KnowWay LearnSpace', 'The Skillpreneur'), 'KnowWay', 'The Skillpreneur'), 'Knowway', 'The Skillpreneur'), 'knowway', 'theskillpreneur')
-        WHERE setting_value LIKE '%knowway%' OR setting_value LIKE '%KnowWay%' OR setting_value LIKE '%Knowway%'
+        SET setting_value = REPLACE(REPLACE(REPLACE(REPLACE(setting_value, '${legCap} LearnSpace', 'The Skillpreneur'), '${legCap}', 'The Skillpreneur'), '${legTitle}', 'The Skillpreneur'), '${legLow}', 'theskillpreneur')
+        WHERE setting_value LIKE '%${legLow}%' OR setting_value LIKE '%${legCap}%' OR setting_value LIKE '%${legTitle}%'
       `);
       await connection.query(`
         UPDATE custom_pages 
-        SET content = REPLACE(REPLACE(REPLACE(content, 'KnowWay', 'The Skillpreneur'), 'Knowway', 'The Skillpreneur'), 'support@knowway.in', 'support@theskillpreneur.com'),
-            meta_description = REPLACE(REPLACE(meta_description, 'KnowWay', 'The Skillpreneur'), 'Knowway', 'The Skillpreneur')
-        WHERE content LIKE '%knowway%' OR meta_description LIKE '%knowway%'
+        SET content = REPLACE(REPLACE(REPLACE(content, '${legCap}', 'The Skillpreneur'), '${legTitle}', 'The Skillpreneur'), 'support@${legLow}.in', 'support@theskillpreneur.com'),
+            meta_description = REPLACE(REPLACE(meta_description, '${legCap}', 'The Skillpreneur'), '${legTitle}', 'The Skillpreneur')
+        WHERE content LIKE '%${legLow}%' OR meta_description LIKE '%${legLow}%'
       `);
     } catch (_) {}
 

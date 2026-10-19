@@ -192,7 +192,7 @@ export default function StudentFreelanceHub({ darkMode, user }) {
   // Dynamic Testimonials from DB with fallback
   const [stories, setStories] = useState(() => {
     try {
-      const saved = localStorage.getItem("knowway_freelancer_stories");
+      const saved = localStorage.getItem("skillpreneur_freelancer_stories");
       return saved ? JSON.parse(saved) : INITIAL_STORIES;
     } catch {
       return INITIAL_STORIES;
@@ -217,7 +217,7 @@ export default function StudentFreelanceHub({ darkMode, user }) {
         }));
         setStories(formatted);
         try {
-          localStorage.setItem("knowway_freelancer_stories", JSON.stringify(formatted));
+          localStorage.setItem("skillpreneur_freelancer_stories", JSON.stringify(formatted));
         } catch (_) {}
       }
     } catch (err) {
@@ -364,7 +364,7 @@ export default function StudentFreelanceHub({ darkMode, user }) {
         const updated = [newStory, ...stories];
         setStories(updated);
         try {
-          localStorage.setItem("knowway_freelancer_stories", JSON.stringify(updated));
+          localStorage.setItem("skillpreneur_freelancer_stories", JSON.stringify(updated));
         } catch (_) {}
       }
     } catch (err) {
@@ -383,7 +383,7 @@ export default function StudentFreelanceHub({ darkMode, user }) {
       const updated = [newStory, ...stories];
       setStories(updated);
       try {
-        localStorage.setItem("knowway_freelancer_stories", JSON.stringify(updated));
+        localStorage.setItem("skillpreneur_freelancer_stories", JSON.stringify(updated));
       } catch (_) {}
     }
 

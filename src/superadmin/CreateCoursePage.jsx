@@ -144,7 +144,7 @@ export default function CreateCoursePage() {
     duration: "2.5 Hours",
     regular_price: "2999",
     promo_price: "499",
-    promo_code: "KNOWWAY50",
+    promo_code: "SKILL50",
     thumbnail_url: "",
     description: "",
     what_you_will_learn: [
@@ -384,7 +384,7 @@ export default function CreateCoursePage() {
                 duration: c.duration || "2.5 Hours",
                 regular_price: String(c.regular_price || "2999"),
                 promo_price: String(c.promo_price || "499"),
-                promo_code: c.promo_code || "KNOWWAY50",
+                promo_code: c.promo_code || "SKILL50",
                 thumbnail_url: c.thumbnail_url || "",
                 description: c.description || "",
                 what_you_will_learn:
@@ -462,7 +462,7 @@ export default function CreateCoursePage() {
 
     setIsUploadingThumb(true);
     try {
-      const res = await uploadImageApi(file, "knowway_courses/thumbnails");
+      const res = await uploadImageApi(file, "skillpreneur_courses/thumbnails");
       if (res?.success && res.data?.url) {
         setCourseData((prev) => ({
           ...prev,
@@ -492,7 +492,7 @@ export default function CreateCoursePage() {
     setUploadingLectures((prev) => ({ ...prev, [lecId]: true }));
 
     try {
-      const res = await uploadVideoApi(file, "knowway_courses/lectures");
+      const res = await uploadVideoApi(file, "skillpreneur_courses/lectures");
       if (res?.success && res.data?.url) {
         setSections((prev) => {
           const updated = [...prev];
@@ -723,7 +723,7 @@ export default function CreateCoursePage() {
         duration: courseData.duration || "2.5 Hours",
         regular_price: Number(courseData.regular_price) || 2999,
         promo_price: Number(courseData.promo_price) || 499,
-        promo_code: courseData.promo_code || "KNOWWAY50",
+        promo_code: courseData.promo_code || "SKILL50",
         thumbnail_url:
           courseData.thumbnail_url ||
           "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?q=80&w=800&auto=format&fit=crop",

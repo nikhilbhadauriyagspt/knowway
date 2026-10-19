@@ -14,13 +14,14 @@ import {
   LogOut,
   X,
 } from "lucide-react";
-import { loginUserApi, setUserSession } from "../services/api";
+import { loginUserApi, setUserSession, usePublicBrand } from "../services/api";
 
 const CURRENT_YEAR = new Date().getFullYear();
 
 export default function LoginPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const { siteName, siteLogo } = usePublicBrand();
   const [showPassword, setShowPassword] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -42,8 +43,8 @@ export default function LoginPage() {
       );
     };
 
-    window.addEventListener("knowway_session_terminated", handleSessionTerminated);
-    return () => window.removeEventListener("knowway_session_terminated", handleSessionTerminated);
+    window.addEventListener("skillpreneur_session_terminated", handleSessionTerminated);
+    return () => window.removeEventListener("skillpreneur_session_terminated", handleSessionTerminated);
   }, []);
 
   const handleSubmit = async (e, forceLogin = false) => {
@@ -121,9 +122,12 @@ export default function LoginPage() {
       <header className="w-full px-6 lg:px-16 pt-6 flex items-center justify-between z-10">
         <Link to="/" className="flex items-center group">
           <img
-            src="/images/logo/logo.png"
-            alt="The Skillpreneur Logo"
+            src={siteLogo || "/images/logo/logo.png"}
+            alt={`${siteName} Logo`}
             className="h-10 sm:h-12 w-auto object-contain transition-transform duration-200 group-hover:scale-105"
+            onError={(e) => {
+              e.currentTarget.src = "/images/logo/logo.png";
+            }}
           />
         </Link>
 
@@ -150,7 +154,7 @@ export default function LoginPage() {
           </div>
 
           <h1 className="text-2xl sm:text-3xl font-extrabold text-[#111827] tracking-tight">
-            Welcome Back to The Skillpreneur
+            Welcome Back to {siteName}
           </h1>
           <p className="mt-1.5 text-xs sm:text-sm text-[#64748B]">
             Sign in to continue your enrolled courses, certifications, and resources.
@@ -353,7 +357,7 @@ export default function LoginPage() {
       )}
 
       <footer className="w-full py-4 text-center text-xs text-[#94A3B8] border-t border-[#EDF1F7]">
-        &copy; {CURRENT_YEAR} The Skillpreneur. All rights reserved.
+        &copy; {CURRENT_YEAR} {siteName}. All rights reserved.
       </footer>
     </div>
   );

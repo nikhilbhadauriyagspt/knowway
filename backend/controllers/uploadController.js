@@ -49,7 +49,7 @@ export const uploadImage = async (req, res) => {
 
     await syncCloudinaryConfig();
 
-    const folder = req.body.folder || "knowway_images";
+    const folder = req.body.folder || "skillpreneur_images";
     try {
       const result = await streamUpload(req.file.buffer, {
         folder: folder,
@@ -105,7 +105,7 @@ export const uploadVideo = async (req, res) => {
 
     await syncCloudinaryConfig();
 
-    const folder = req.body.folder || "knowway_courses/lectures";
+    const folder = req.body.folder || "skillpreneur_courses/lectures";
     const result = await streamUpload(req.file.buffer, {
       folder: folder,
       resource_type: "video",

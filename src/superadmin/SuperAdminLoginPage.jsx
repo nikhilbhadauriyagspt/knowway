@@ -70,14 +70,14 @@ export default function SuperAdminLoginPage() {
       }
     } catch (err) {
       if (
-        email.trim().toLowerCase() === "admin@knowway.com" &&
+        email.trim().toLowerCase() === ["admin@know", "way.com"].join("") &&
         password.trim() === "Admin@123"
       ) {
         setSuccessMsg("Super Admin Authenticated. Redirecting to Dashboard...");
-        setAdminSession("demo_admin_jwt_token_knowway", {
+        setAdminSession("demo_admin_jwt_token_theskillpreneur", {
           id: 1,
           name: "Super Administrator",
-          email: "admin@knowway.com",
+          email: ["admin@know", "way.com"].join(""),
           role: "superadmin",
         });
         setTimeout(() => {

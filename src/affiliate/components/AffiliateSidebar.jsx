@@ -17,7 +17,7 @@ import {
   BarChart3,
   Megaphone,
 } from "lucide-react";
-import { clearUserSession } from "../../services/api";
+import { clearUserSession, usePublicBrand } from "../../services/api";
 
 export default function AffiliateSidebar({
   activeTab,
@@ -30,6 +30,7 @@ export default function AffiliateSidebar({
   darkMode,
 }) {
   const navigate = useNavigate();
+  const { siteName, siteLogo } = usePublicBrand();
 
   const handleLogout = () => {
     clearUserSession();
@@ -71,11 +72,14 @@ export default function AffiliateSidebar({
             ${darkMode ? "bg-[#131926] border-[#222B3D]" : "bg-white border-[#E2E8F0]"}
           `}
         >
-          <Link to="/" className="flex items-center gap-2 group" title="The Skillpreneur Platform">
+          <Link to="/" className="flex items-center gap-2 group" title={`${siteName} Platform`}>
             <img
-              src="/images/logo/logo.png"
-              alt="The Skillpreneur Logo"
+              src={siteLogo || "/images/logo/logo.png"}
+              alt={`${siteName} Logo`}
               className="h-8 sm:h-9 w-auto object-contain transition-transform group-hover:scale-105"
+              onError={(e) => {
+                e.currentTarget.src = "/images/logo/logo.png";
+              }}
             />
           </Link>
 

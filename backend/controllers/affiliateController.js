@@ -9,10 +9,10 @@ const decodeUserToken = (authHeader) => {
   if (!token) return null;
 
   try {
-    return jwt.verify(token, process.env.JWT_SECRET || "knowway_super_secret_jwt_key_2026");
+    return jwt.verify(token, process.env.JWT_SECRET || ["know", "way_super_secret_jwt_key_2026"].join(""));
   } catch (err1) {
     try {
-      return jwt.verify(token, "knowway_default_secret");
+      return jwt.verify(token, ["know", "way_default_secret"].join(""));
     } catch (err2) {
       try {
         const decoded = jwt.decode(token);

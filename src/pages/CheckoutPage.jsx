@@ -27,6 +27,7 @@ import {
   getUserData,
   isUserAuthenticated,
   setUserSession,
+  getPublicSettingsApi,
 } from "../services/api";
 
 // Fallback seed packages map
@@ -126,10 +127,20 @@ export default function CheckoutPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const [errorMsg, setErrorMsg] = useState("");
   const [paymentSuccess, setPaymentSuccess] = useState(null); // { paymentId, studentId, packageName }
+  const [siteName, setSiteName] = useState("The Skillpreneur");
+  const [siteLogo, setSiteLogo] = useState("/images/logo/logo.png");
 
-  // 1. Fetch live package or course from MySQL API
+  // 1. Fetch live package or course from MySQL API + Dynamic Brand Settings
   useEffect(() => {
     let isMounted = true;
+    getPublicSettingsApi()
+      .then((res) => {
+        if (!isMounted || !res?.settings) return;
+        if (res.settings.site_name) setSiteName(res.settings.site_name.trim());
+        if (res.settings.site_logo) setSiteLogo(res.settings.site_logo);
+      })
+      .catch(() => {});
+
     const fetchItem = async () => {
       try {
         if (isCourseCheckout) {
@@ -291,16 +302,16 @@ export default function CheckoutPage() {
       }
 
       const orderData = orderRes.order;
-      const razorpayKey = orderRes.key || "rzp_test_knowway2026";
+      const razorpayKey = orderRes.key || "rzp_test_skillpreneur2026";
 
-      // 3. Configure Razorpay Options
+      // 3. Configure Razorpay Options dynamically from Admin Settings
       const options = {
         key: razorpayKey,
         amount: orderData.amount,
         currency: orderData.currency || "INR",
-        name: "The Skillpreneur",
+        name: (orderRes.site_name || siteName || "The Skillpreneur").trim(),
         description: `Enrollment: ${packageData.name || packageData.title}`,
-        image: "/images/logo/logo.png",
+        image: orderRes.site_logo || siteLogo || "/images/logo/logo.png",
         order_id: orderData.id,
         prefill: {
           name: formData.name.trim(),
@@ -448,9 +459,12 @@ export default function CheckoutPage() {
       <header className="w-full px-6 lg:px-16 pt-6 flex items-center justify-between z-10">
         <Link to="/" className="flex items-center group">
           <img
-            src="/images/logo/logo.png"
-            alt="The Skillpreneur Logo"
+            src={siteLogo || "/images/logo/logo.png"}
+            alt={siteName || "Logo"}
             className="h-10 sm:h-11 w-auto object-contain transition-transform group-hover:scale-105"
+            onError={(e) => {
+              e.currentTarget.src = "/images/logo/logo.png";
+            }}
           />
         </Link>
 
@@ -779,7 +793,7 @@ export default function CheckoutPage() {
 
       {/* Footer */}
       <footer className="w-full text-center py-6 text-xs text-[#94A3B8] border-t border-[#EDF0F6]">
-        &copy; {new Date().getFullYear()} The Skillpreneur. All payments are securely processed via Razorpay.
+        &copy; {new Date().getFullYear()} {siteName}. All payments are securely processed via Razorpay.
       </footer>
     </div>
   );

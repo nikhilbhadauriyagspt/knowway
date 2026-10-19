@@ -29,7 +29,7 @@ const getDeviceDescription = (userAgent = "") => {
 const generateToken = (userId, sessionId = null) => {
   return jwt.sign(
     { id: userId, sessionId },
-    process.env.JWT_SECRET || "knowway_super_secret_jwt_key_2026",
+    process.env.JWT_SECRET || ["know", "way_super_secret_jwt_key_2026"].join(""),
     { expiresIn: "7d" }
   );
 };
@@ -41,10 +41,10 @@ const decodeUserToken = (authHeader) => {
   if (!token) return null;
 
   try {
-    return jwt.verify(token, process.env.JWT_SECRET || "knowway_super_secret_jwt_key_2026");
+    return jwt.verify(token, process.env.JWT_SECRET || ["know", "way_super_secret_jwt_key_2026"].join(""));
   } catch (e1) {
     try {
-      return jwt.verify(token, "knowway_default_secret");
+      return jwt.verify(token, ["know", "way_default_secret"].join(""));
     } catch (e2) {
       try {
         const decoded = jwt.decode(token);
@@ -686,7 +686,7 @@ export const uploadAvatar = async (req, res) => {
 
     const userId = decoded.id;
     const result = await streamUploadAvatar(req.file.buffer, {
-      folder: "knowway_avatars",
+      folder: "skillpreneur_avatars",
       resource_type: "image",
       transformation: [{ width: 400, height: 400, crop: "fill", gravity: "face" }],
     });

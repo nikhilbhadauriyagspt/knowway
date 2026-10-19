@@ -67,8 +67,8 @@ export default function AffiliateDashboard() {
   // Theme state
   const [darkMode, setDarkMode] = useState(() => {
     return (
-      localStorage.getItem("knowway_theme") === "dark" ||
-      (!("knowway_theme" in localStorage) &&
+      localStorage.getItem("skillpreneur_theme") === "dark" ||
+      (!("skillpreneur_theme" in localStorage) &&
         window.matchMedia("(prefers-color-scheme: dark)").matches)
     );
   });
@@ -76,10 +76,10 @@ export default function AffiliateDashboard() {
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add("dark");
-      localStorage.setItem("knowway_theme", "dark");
+      localStorage.setItem("skillpreneur_theme", "dark");
     } else {
       document.documentElement.classList.remove("dark");
-      localStorage.setItem("knowway_theme", "light");
+      localStorage.setItem("skillpreneur_theme", "light");
     }
   }, [darkMode]);
 

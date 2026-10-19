@@ -53,8 +53,8 @@ export default function UserAvatarDropdown({
     const handleAuthChange = () => {
       setUser(getUserData());
     };
-    window.addEventListener("knowway_auth_change", handleAuthChange);
-    return () => window.removeEventListener("knowway_auth_change", handleAuthChange);
+    window.addEventListener("skillpreneur_auth_change", handleAuthChange);
+    return () => window.removeEventListener("skillpreneur_auth_change", handleAuthChange);
   }, []);
 
   // Fetch enrolled packages when dropdown is opened

@@ -1425,7 +1425,7 @@ export default function SuperAdminDashboard() {
         duration: editingCourse.duration,
         regular_price: Number(editingCourse.regular_price) || 2999,
         promo_price: Number(editingCourse.promo_price) || 499,
-        promo_code: editingCourse.promo_code || "KNOWWAY50",
+        promo_code: editingCourse.promo_code || "SKILL50",
       });
 
       if (res?.success) {
@@ -1656,7 +1656,7 @@ export default function SuperAdminDashboard() {
     if (!file) return;
     setUploadingPackageImg(true);
     try {
-      const res = await uploadImageApi(file, "knowway_packages");
+      const res = await uploadImageApi(file, "skillpreneur_packages");
       if (res && res.url) {
         setPackageFormData((prev) => ({ ...prev, image_url: res.url }));
         showToast("Package banner uploaded to Cloudinary!");
@@ -6836,7 +6836,7 @@ export default function SuperAdminDashboard() {
                         if (!file) return;
                         setMentorPhotoUploading(true);
                         try {
-                          const res = await uploadImageApi(file, "knowway_mentors");
+                          const res = await uploadImageApi(file, "skillpreneur_mentors");
                           if (res?.success && res.data?.url) {
                             setEditingMentor((prev) => ({ ...prev, photo_url: res.data.url }));
                             showToast("Photo uploaded to Cloudinary!");
@@ -7346,7 +7346,7 @@ export default function SuperAdminDashboard() {
                           if (!file) return;
                           setMentorPhotoUploading(true);
                           try {
-                            const res = await uploadImageApi(file, "knowway_mentors");
+                            const res = await uploadImageApi(file, "skillpreneur_mentors");
                             if (res?.success && res.data?.url) {
                               setNewMentor((prev) => ({ ...prev, photo_url: res.data.url }));
                               showToast("Photo uploaded to Cloudinary!");

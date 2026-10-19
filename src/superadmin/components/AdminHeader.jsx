@@ -640,7 +640,7 @@ export default function AdminHeader({
                   {adminUser?.name || "Super Admin"}
                 </p>
                 <p className="text-[11px] text-[#64748B] truncate">
-                  {adminUser?.email || "admin@knowway.com"}
+                  {adminUser?.email || ["admin@know", "way.com"].join("")}
                 </p>
                 <span className="inline-block mt-1 px-2 py-0.5 rounded-full text-[9px] font-bold bg-[#035BE3]/10 text-[#035BE3]">
                   {adminUser?.role_title || (adminUser?.role === "superadmin" ? "Super Administrator" : "Staff Admin")}

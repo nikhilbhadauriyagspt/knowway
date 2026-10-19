@@ -1,7 +1,7 @@
 {
-  "name": "knowway-backend",
+  "name": "theskillpreneur-backend",
   "version": "1.0.0",
-  "description": "Node.js Express MySQL backend for Knowway LearnSpace platform",
+  "description": "Node.js Express MySQL backend for The Skillpreneur LearnSpace platform",
   "main": "server.js",
   "type": "module",
   "scripts": {

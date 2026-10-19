@@ -214,7 +214,7 @@ export default function CreatePackagePage() {
 
     setIsUploadingBanner(true);
     try {
-      const res = await uploadImageApi(file, "knowway_packages");
+      const res = await uploadImageApi(file, "skillpreneur_packages");
       if (res?.success && (res.url || res.data?.url)) {
         const uploadedUrl = res.url || res.data?.url;
         setPackageData((prev) => ({
