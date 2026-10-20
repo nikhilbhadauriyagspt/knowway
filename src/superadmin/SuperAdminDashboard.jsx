@@ -813,9 +813,9 @@ export default function SuperAdminDashboard() {
         return {
           id: p.id,
           referral_commission_type: d.direct_type || p.referral_commission_type || "percentage",
-          referral_commission_value: d.direct_value !== undefined ? d.direct_value : (p.referral_commission_value || 20),
+          referral_commission_value: d.direct_value !== undefined ? Number(d.direct_value) : Number(p.referral_commission_value ?? 0),
           leadership_commission_type: d.leadership_type || p.leadership_commission_type || "percentage",
-          leadership_commission_value: d.leadership_value !== undefined ? d.leadership_value : (p.leadership_commission_value || 5),
+          leadership_commission_value: d.leadership_value !== undefined ? Number(d.leadership_value) : Number(p.leadership_commission_value ?? 0),
         };
       });
 
@@ -824,9 +824,9 @@ export default function SuperAdminDashboard() {
         return {
           id: c.id,
           referral_commission_type: d.direct_type || c.referral_commission_type || "percentage",
-          referral_commission_value: d.direct_value !== undefined ? d.direct_value : (c.referral_commission_value || 20),
+          referral_commission_value: d.direct_value !== undefined ? Number(d.direct_value) : Number(c.referral_commission_value ?? 0),
           leadership_commission_type: d.leadership_type || c.leadership_commission_type || "percentage",
-          leadership_commission_value: d.leadership_value !== undefined ? d.leadership_value : (c.leadership_commission_value || 5),
+          leadership_commission_value: d.leadership_value !== undefined ? Number(d.leadership_value) : Number(c.leadership_commission_value ?? 0),
         };
       });
 
