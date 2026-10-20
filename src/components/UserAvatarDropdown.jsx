@@ -150,7 +150,7 @@ export default function UserAvatarDropdown({
       <button
         type="button"
         onClick={() => setIsOpen(!isOpen)}
-        className={`h-11 sm:h-12 rounded-full px-2 sm:px-3.5 pr-3 sm:pr-4 flex items-center gap-2.5 transition cursor-pointer select-none ${
+        className={`h-10 w-10 sm:h-12 sm:w-auto rounded-full p-1 sm:px-3.5 sm:pr-4 flex items-center justify-center sm:justify-start gap-2.5 transition cursor-pointer select-none shrink-0 ${
           darkMode
             ? "bg-[#131926] text-white hover:bg-[#1A2234]"
             : "bg-white text-[#0F172A] hover:bg-[#F8FAFC]"
@@ -183,7 +183,7 @@ export default function UserAvatarDropdown({
         <div
           className={`absolute ${
             align === "left" ? "left-0" : "right-0"
-          } top-full mt-2.5 w-76 sm:w-84 rounded-[28px] p-5 z-50 animate-in fade-in zoom-in-95 duration-150 transition-all select-none ${
+          } top-full mt-2.5 w-[calc(100vw-24px)] max-w-76 sm:w-84 sm:max-w-none rounded-[28px] p-5 z-50 animate-in fade-in zoom-in-95 duration-150 transition-all select-none ${
             darkMode
               ? "bg-[#101622] text-[#E2E8F0]"
               : "bg-[#FFFFFF] text-[#0F172A]"

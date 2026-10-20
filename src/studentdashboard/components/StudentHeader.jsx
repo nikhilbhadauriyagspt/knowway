@@ -108,7 +108,7 @@ export default function StudentHeader({
   return (
     <header
       className={`
-        sticky top-0 z-40 py-3.5 px-4 sm:px-8 lg:px-10 flex items-center justify-between gap-3 sm:gap-4 transition-colors duration-200 backdrop-blur-md border-b
+        sticky top-0 z-40 w-full max-w-full py-2.5 sm:py-3.5 px-3 sm:px-8 lg:px-10 flex items-center justify-between gap-2 sm:gap-4 transition-colors duration-200 backdrop-blur-md border-b
         ${
           darkMode
             ? "bg-[#0B0F17]/85 border-[#222B3D]/80"
@@ -117,10 +117,10 @@ export default function StudentHeader({
       `}
     >
       {/* Mobile Hamburger */}
-      <div className="flex items-center gap-2 lg:hidden">
+      <div className="flex items-center gap-2 lg:hidden shrink-0">
         <button
           onClick={() => setMobileOpen(true)}
-          className={`h-12 w-12 rounded-full border flex items-center justify-center transition cursor-pointer ${
+          className={`flex h-10 w-10 sm:h-12 sm:w-12 rounded-full border items-center justify-center transition cursor-pointer shrink-0 ${
             darkMode ? "bg-[#131926] border-[#222B3D] text-[#E2E8F0]" : "bg-white border-[#E2E8F0] text-[#0F172A]"
           }`}
           aria-label="Open navigation sidebar"
@@ -130,13 +130,13 @@ export default function StudentHeader({
       </div>
 
       {/* Center Search Pill with Interactive Dropdown */}
-      <div className="flex-1 max-w-xl relative" ref={searchBoxRef}>
+      <div className="flex-1 min-w-0 max-w-xl relative" ref={searchBoxRef}>
         <div
-          className={`h-12 rounded-full border flex items-center px-5 transition-all focus-within:border-[#035BE3] ${
+          className={`h-10 sm:h-12 rounded-full border flex items-center px-3 sm:px-5 transition-all focus-within:border-[#035BE3] ${
             darkMode ? "bg-[#131926] border-[#222B3D]" : "bg-white border-[#E2E8F0]"
           }`}
         >
-          <Search className="w-4 h-4 text-[#8A99AD] shrink-0 mr-3" />
+          <Search className="w-4 h-4 text-[#8A99AD] shrink-0 mr-2 sm:mr-3" />
           <input
             type="text"
             value={searchQuery}
@@ -146,7 +146,7 @@ export default function StudentHeader({
               setIsFocused(true);
             }}
             placeholder="Find courses, instructors, or digital skills..."
-            className={`w-full bg-transparent text-xs font-medium outline-none placeholder-[#8A99AD] ${
+            className={`w-full min-w-0 bg-transparent text-xs font-medium outline-none placeholder-[#8A99AD] ${
               darkMode ? "text-white" : "text-[#0F172A]"
             }`}
           />
@@ -168,7 +168,7 @@ export default function StudentHeader({
         {/* Live Search Results Dropdown */}
         {isFocused && searchQuery.trim() && (
           <div
-            className={`absolute left-0 right-0 top-14 rounded-2xl border shadow-xl overflow-hidden z-50 backdrop-blur-md animate-in fade-in slide-in-from-top-2 duration-150 ${
+            className={`fixed sm:absolute left-3 right-3 sm:left-0 sm:right-0 top-15 sm:top-14 rounded-2xl border shadow-xl overflow-hidden z-50 backdrop-blur-md animate-in fade-in slide-in-from-top-2 duration-150 ${
               darkMode
                 ? "bg-[#131926]/95 border-[#222B3D] text-[#E2E8F0]"
                 : "bg-white/95 border-[#E2E8F0] text-[#0F172A]"
@@ -262,11 +262,11 @@ export default function StudentHeader({
       </div>
 
       {/* Right Controls */}
-      <div className="flex items-center gap-2 sm:gap-3 shrink-0">
+      <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
         {/* Affiliate Hub Quick Button */}
         <Link
           to="/affiliate/dashboard"
-          className={`h-12 px-3.5 sm:px-4 rounded-full border flex items-center gap-2 text-xs font-bold transition cursor-pointer shadow-xs ${
+          className={`h-10 sm:h-12 px-2.5 sm:px-4 rounded-full border flex items-center gap-1.5 sm:gap-2 text-xs font-bold transition cursor-pointer shadow-xs shrink-0 ${
             darkMode
               ? "bg-amber-500/10 border-amber-500/30 text-amber-400 hover:bg-amber-500/20"
               : "bg-amber-50 border-amber-200 text-amber-700 hover:bg-amber-100"
@@ -285,7 +285,7 @@ export default function StudentHeader({
           type="button"
           onClick={() => setDarkMode(!darkMode)}
           title={darkMode ? "Switch to Light Mode" : "Switch to Dark Mode"}
-          className={`h-12 w-22 sm:w-24 rounded-full border p-1.5 flex items-center justify-between relative transition-all cursor-pointer select-none ${
+          className={`h-10 w-10 sm:h-12 sm:w-24 rounded-full border p-1 sm:p-1.5 flex items-center justify-center sm:justify-between relative transition-all cursor-pointer select-none shrink-0 ${
             darkMode
               ? "bg-[#131926] border-[#222B3D]"
               : "bg-white border-[#E2E8F0]"
@@ -294,9 +294,9 @@ export default function StudentHeader({
         >
           {/* Animated Slider Pill with centered icon */}
           <div
-            className={`absolute top-1 bottom-1 w-9 rounded-full transition-transform duration-300 ease-out flex items-center justify-center shadow-xs ${
+            className={`sm:absolute sm:top-1 sm:bottom-1 w-8 h-8 sm:w-9 sm:h-auto rounded-full transition-transform duration-300 ease-out flex items-center justify-center shadow-xs ${
               darkMode
-                ? "translate-x-10 sm:translate-x-12 bg-[#1E2638] border border-[#2B374E] text-[#FBBF24]"
+                ? "translate-x-0 sm:translate-x-12 bg-[#1E2638] border border-[#2B374E] text-[#FBBF24]"
                 : "translate-x-0 bg-[#035BE3] text-white shadow-md shadow-[#035BE3]/20"
             }`}
           >
@@ -304,12 +304,12 @@ export default function StudentHeader({
           </div>
 
           {/* Underlay Sun Placeholder (Centered) */}
-          <div className={`w-9 h-9 rounded-full flex items-center justify-center z-10 transition-colors ${!darkMode ? "opacity-0" : "text-[#64748B]"}`}>
+          <div className={`hidden sm:flex w-9 h-9 rounded-full items-center justify-center z-10 transition-colors ${!darkMode ? "opacity-0" : "text-[#64748B]"}`}>
             <Sun className="w-4 h-4 shrink-0" />
           </div>
 
           {/* Underlay Moon Placeholder (Centered) */}
-          <div className={`w-9 h-9 rounded-full flex items-center justify-center z-10 transition-colors ${darkMode ? "opacity-0" : "text-[#94A3B8]"}`}>
+          <div className={`hidden sm:flex w-9 h-9 rounded-full items-center justify-center z-10 transition-colors ${darkMode ? "opacity-0" : "text-[#94A3B8]"}`}>
             <Moon className="w-4 h-4 shrink-0" />
           </div>
         </button>
@@ -318,7 +318,7 @@ export default function StudentHeader({
         <button
           onClick={onRefresh}
           disabled={isRefreshing}
-          className={`h-12 w-12 rounded-full border flex items-center justify-center transition cursor-pointer ${
+          className={`hidden sm:flex h-10 w-10 sm:h-12 sm:w-12 rounded-full border items-center justify-center transition cursor-pointer shrink-0 ${
             darkMode ? "bg-[#131926] border-[#222B3D] text-[#8A99AD] hover:text-white" : "bg-white border-[#E2E8F0] text-[#64748B] hover:text-[#035BE3]"
           }`}
           title="Refresh course data"

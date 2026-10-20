@@ -159,7 +159,7 @@ export default function AffiliateHeader({
       </div>
 
       {/* Center Search Pill & Referral Capsule with Interactive Dropdown */}
-      <div className="flex-1 max-w-2xl flex items-center gap-2.5 relative" ref={searchBoxRef}>
+      <div className="flex-1 min-w-0 max-w-2xl flex items-center gap-2.5 relative" ref={searchBoxRef}>
         {/* Real-time Search Input */}
         <div
           className={`h-11 flex-1 rounded-full border px-4 flex items-center transition-all focus-within:border-[#035BE3] ${
@@ -178,7 +178,7 @@ export default function AffiliateHeader({
               setIsFocused(true);
             }}
             placeholder={`Search ${activeTab === 'referrals' ? 'referrals & buyers' : activeTab === 'payouts' ? 'payouts & UTR' : activeTab === 'leaderboard' ? 'top partners' : 'affiliate panel'}...`}
-            className={`w-full bg-transparent text-xs font-medium outline-none placeholder-[#8A99AD] ${
+            className={`w-full min-w-0 bg-transparent text-xs font-medium outline-none placeholder-[#8A99AD] ${
               darkMode ? "text-white" : "text-[#0F172A]"
             }`}
           />

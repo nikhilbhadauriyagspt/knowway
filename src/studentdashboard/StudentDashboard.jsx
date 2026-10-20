@@ -432,7 +432,7 @@ export default function StudentDashboard() {
 
   return (
     <div
-      className={`min-h-screen font-sans antialiased transition-colors duration-200 relative isolate ${
+      className={`min-h-screen overflow-x-hidden font-sans antialiased transition-colors duration-200 relative isolate ${
         darkMode ? "dark bg-[#0B0F17] text-[#E2E8F0]" : "bg-[#FBFCFF] text-[#161B29]"
       }`}
     >
@@ -485,7 +485,7 @@ export default function StudentDashboard() {
       />
 
       {/* ================= 2. FULL WIDTH MAIN CONTENT AREA ================= */}
-      <div className="lg:pl-[292px] min-h-screen flex flex-col transition-all duration-300 w-full">
+      <div className="lg:pl-[292px] min-h-screen flex flex-col transition-all duration-300 w-full min-w-0 max-w-full">
 
         {/* Modular Sticky Fixed Header */}
         <StudentHeader
@@ -505,7 +505,7 @@ export default function StudentDashboard() {
         />
 
         {/* ================= 3. RICH DIVERSE TAB CONTENT ================= */}
-        <main className="flex-1 px-4 sm:px-8 lg:px-10 py-5 sm:py-7 space-y-8 w-full">
+        <main className="flex-1 px-4 sm:px-8 lg:px-10 py-5 sm:py-7 space-y-8 w-full min-w-0 max-w-full">
 
           {/* ======================================================== */}
           {/* TAB 1: LEARNING HUB / OVERVIEW */}
