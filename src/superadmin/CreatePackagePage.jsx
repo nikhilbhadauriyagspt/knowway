@@ -288,7 +288,7 @@ export default function CreatePackagePage() {
         faqs: packageData.faqs.filter((faq) => faq.question.trim() !== ""),
         course_ids: packageData.course_ids,
         referral_commission_type: packageData.referral_commission_type || "percentage",
-        referral_commission_value: Number(packageData.referral_commission_value) || 20,
+        referral_commission_value: packageData.referral_commission_value !== "" && packageData.referral_commission_value !== null && packageData.referral_commission_value !== undefined ? Number(packageData.referral_commission_value) : 0,
       };
 
       const res = isEditMode

@@ -731,7 +731,7 @@ export default function CreateCoursePage() {
         what_you_will_learn: courseData.what_you_will_learn.filter((item) => item.trim() !== ""),
         software_required: courseData.software_required,
         referral_commission_type: courseData.referral_commission_type || "percentage",
-        referral_commission_value: Number(courseData.referral_commission_value) || 20,
+        referral_commission_value: courseData.referral_commission_value !== "" && courseData.referral_commission_value !== null && courseData.referral_commission_value !== undefined ? Number(courseData.referral_commission_value) : 0,
         lectures: flattenedLectures,
         quiz_questions: validQuizQuestions,
       };

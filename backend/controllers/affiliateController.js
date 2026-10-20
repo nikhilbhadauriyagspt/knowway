@@ -742,7 +742,7 @@ export const getCommissionRates = async (req, res) => {
     );
 
     const [courses] = await pool.query(
-      "SELECT id, title, slug, regular_price, promo_price, referral_commission_type, referral_commission_value, leadership_commission_type, leadership_commission_value FROM courses WHERE is_published = TRUE ORDER BY id ASC LIMIT 10"
+      "SELECT id, title, slug, regular_price, promo_price, referral_commission_type, referral_commission_value, leadership_commission_type, leadership_commission_value FROM courses WHERE is_published = TRUE ORDER BY id ASC"
     );
 
     return res.status(200).json({
@@ -754,9 +754,9 @@ export const getCommissionRates = async (req, res) => {
         mrp_price: Number(p.mrp_price) || 0,
         promo_price: Number(p.promo_price) || 0,
         commission_type: p.referral_commission_type || "percentage",
-        commission_value: Number(p.referral_commission_value) || 20,
+        commission_value: p.referral_commission_value !== null && p.referral_commission_value !== undefined ? Number(p.referral_commission_value) : 0,
         leadership_commission_type: p.leadership_commission_type || "percentage",
-        leadership_commission_value: Number(p.leadership_commission_value) || 5,
+        leadership_commission_value: p.leadership_commission_value !== null && p.leadership_commission_value !== undefined ? Number(p.leadership_commission_value) : 0,
       })),
       courses: courses.map((c) => ({
         id: c.id,
@@ -765,9 +765,9 @@ export const getCommissionRates = async (req, res) => {
         regular_price: Number(c.regular_price) || 0,
         promo_price: Number(c.promo_price) || 0,
         commission_type: c.referral_commission_type || "percentage",
-        commission_value: Number(c.referral_commission_value) || 20,
+        commission_value: c.referral_commission_value !== null && c.referral_commission_value !== undefined ? Number(c.referral_commission_value) : 0,
         leadership_commission_type: c.leadership_commission_type || "percentage",
-        leadership_commission_value: Number(c.leadership_commission_value) || 5,
+        leadership_commission_value: c.leadership_commission_value !== null && c.leadership_commission_value !== undefined ? Number(c.leadership_commission_value) : 0,
       })),
     });
   } catch (err) {

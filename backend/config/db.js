@@ -1109,10 +1109,10 @@ export const initDB = async () => {
 
     // Backfill default commission values on packages if unassigned
     try {
-      await connection.query("UPDATE packages SET referral_commission_type = 'percentage', referral_commission_value = 20.00, leadership_commission_type = 'percentage', leadership_commission_value = 5.00 WHERE slug = 'pro' AND (referral_commission_value IS NULL OR referral_commission_value = 0)");
-      await connection.query("UPDATE packages SET referral_commission_type = 'percentage', referral_commission_value = 22.00, leadership_commission_type = 'percentage', leadership_commission_value = 6.00 WHERE slug = 'supreme' AND (referral_commission_value IS NULL OR referral_commission_value = 0)");
-      await connection.query("UPDATE packages SET referral_commission_type = 'percentage', referral_commission_value = 25.00, leadership_commission_type = 'percentage', leadership_commission_value = 7.00 WHERE slug = 'premium' AND (referral_commission_value IS NULL OR referral_commission_value = 0)");
-      await connection.query("UPDATE packages SET referral_commission_type = 'percentage', referral_commission_value = 30.00, leadership_commission_type = 'percentage', leadership_commission_value = 8.00 WHERE slug = 'premium-plus' AND (referral_commission_value IS NULL OR referral_commission_value = 0)");
+      await connection.query("UPDATE packages SET referral_commission_type = 'percentage', referral_commission_value = 20.00, leadership_commission_type = 'percentage', leadership_commission_value = 5.00 WHERE slug = 'pro' AND referral_commission_value IS NULL");
+      await connection.query("UPDATE packages SET referral_commission_type = 'percentage', referral_commission_value = 22.00, leadership_commission_type = 'percentage', leadership_commission_value = 6.00 WHERE slug = 'supreme' AND referral_commission_value IS NULL");
+      await connection.query("UPDATE packages SET referral_commission_type = 'percentage', referral_commission_value = 25.00, leadership_commission_type = 'percentage', leadership_commission_value = 7.00 WHERE slug = 'premium' AND referral_commission_value IS NULL");
+      await connection.query("UPDATE packages SET referral_commission_type = 'percentage', referral_commission_value = 30.00, leadership_commission_type = 'percentage', leadership_commission_value = 8.00 WHERE slug = 'premium-plus' AND referral_commission_value IS NULL");
     } catch (_) {}
 
         // 3. Custom / Legal Policy Pages CMS Table

@@ -534,7 +534,7 @@ export const createCourse = async (req, res) => {
         software_required || "",
         lectures.length || 0,
         referral_commission_type === "flat" ? "flat" : "percentage",
-        Number(referral_commission_value) || 20.0,
+        referral_commission_value !== undefined && referral_commission_value !== null && referral_commission_value !== "" ? Number(referral_commission_value) : 0,
       ]
     );
 

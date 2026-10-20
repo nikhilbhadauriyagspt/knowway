@@ -884,7 +884,7 @@ export default function AffiliateDashboard() {
                         const rateLabel =
                           r.commission_type === "flat"
                             ? `₹${r.commission_value} Flat`
-                            : r.commission_value
+                            : r.commission_value !== null && r.commission_value !== undefined && r.commission_value !== ""
                             ? `${r.commission_value}%`
                             : r.commissionRate || "20%";
                         const dateFormatted = r.created_at
@@ -1267,13 +1267,13 @@ export default function AffiliateDashboard() {
                     { name: "Premium Plus", mrp_price: 24800, promo_price: 16999, commission_type: "percentage", commission_value: 30, leadership_commission_type: "percentage", leadership_commission_value: 5 },
                   ]).map((item, idx) => {
                     const isDirectFlat = item.commission_type === "flat";
-                    const directVal = Number(item.commission_value) || 20;
+                    const directVal = item.commission_value !== null && item.commission_value !== undefined ? Number(item.commission_value) : 0;
                     const directEarning = isDirectFlat
                       ? directVal
                       : Math.round(((item.promo_price || 7999) * directVal) / 100);
 
                     const isLeadFlat = item.leadership_commission_type === "flat";
-                    const leadVal = Number(item.leadership_commission_value) || 5;
+                    const leadVal = item.leadership_commission_value !== null && item.leadership_commission_value !== undefined ? Number(item.leadership_commission_value) : 0;
                     const leadEarning = isLeadFlat
                       ? leadVal
                       : Math.round(((item.promo_price || 7999) * leadVal) / 100);
@@ -1308,7 +1308,7 @@ export default function AffiliateDashboard() {
                           }`}>
                             <span className="text-[10.5px] font-bold text-emerald-600 dark:text-emerald-400">🟢 Direct Bonus:</span>
                             <span className="text-xs font-black text-emerald-600 dark:text-emerald-400">
-                              +₹{directEarning.toLocaleString()}
+                              +₹{directEarning.toLocaleString()} ({isDirectFlat ? "Flat" : `${directVal}%`})
                             </span>
                           </div>
 
@@ -1335,15 +1335,15 @@ export default function AffiliateDashboard() {
                     <Sparkles className="w-4 h-4 text-blue-500" /> Individual Course Commissions
                   </h3>
                   <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {commissionCourses.slice(0, 6).map((c, idx) => {
+                    {commissionCourses.map((c, idx) => {
                       const isDirectFlat = c.commission_type === "flat";
-                      const directVal = Number(c.commission_value) || 20;
+                      const directVal = c.commission_value !== null && c.commission_value !== undefined ? Number(c.commission_value) : 0;
                       const directEarning = isDirectFlat
                         ? directVal
                         : Math.round(((c.promo_price || 499) * directVal) / 100);
 
                       const isLeadFlat = c.leadership_commission_type === "flat";
-                      const leadVal = Number(c.leadership_commission_value) || 5;
+                      const leadVal = c.leadership_commission_value !== null && c.leadership_commission_value !== undefined ? Number(c.leadership_commission_value) : 0;
                       const leadEarning = isLeadFlat
                         ? leadVal
                         : Math.round(((c.promo_price || 499) * leadVal) / 100);
@@ -1361,10 +1361,10 @@ export default function AffiliateDashboard() {
                           </div>
                           <div className="text-right">
                             <span className="text-xs font-black text-emerald-500 block">
-                              +₹{directEarning.toLocaleString()} <span className="text-[9px] text-[#8A99AD] font-normal">(Direct Bonus)</span>
+                              +₹{directEarning.toLocaleString()} ({isDirectFlat ? "Flat" : `${directVal}%`}) <span className="text-[9px] text-[#8A99AD] font-normal">(Direct Bonus)</span>
                             </span>
                             <span className="text-[10px] font-bold text-amber-500 block">
-                              +₹{leadEarning.toLocaleString()} <span className="text-[9px] text-[#8A99AD] font-normal">(Leadership Bonus)</span>
+                              +₹{leadEarning.toLocaleString()} ({isLeadFlat ? "Flat" : `${leadVal}%`}) <span className="text-[9px] text-[#8A99AD] font-normal">(Leadership Bonus)</span>
                             </span>
                           </div>
                         </div>
