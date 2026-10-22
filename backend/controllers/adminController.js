@@ -1261,6 +1261,10 @@ export const getAdminAffiliateReferrals = async (req, res) => {
   try {
     const [referrals] = await pool.query(`
       SELECT r.*,
+             COALESCE(NULLIF(r.item_price, 0), p.amount, pkg.promo_price, crs.promo_price, 0) AS sale_amount,
+             COALESCE(NULLIF(r.item_price, 0), p.amount, pkg.promo_price, crs.promo_price, 0) AS item_price,
+             COALESCE(r.commission_value, 0) AS commission_rate_applied,
+             COALESCE(r.commission_value, 0) AS commission_value,
              ref.name AS referrer_name, ref.email AS referrer_email, ref.student_id AS referrer_student_id,
              ref.referral_code AS referrer_referral_code,
              u.name AS buyer_name, u.email AS buyer_email, u.student_id AS referred_student_id,
@@ -1269,6 +1273,9 @@ export const getAdminAffiliateReferrals = async (req, res) => {
       JOIN users ref ON r.referrer_id = ref.id
       JOIN users u ON r.referred_user_id = u.id
       LEFT JOIN users dref ON r.direct_referrer_id = dref.id
+      LEFT JOIN payments p ON r.payment_id = p.id
+      LEFT JOIN packages pkg ON (r.item_type = 'package' AND (r.item_id = pkg.id OR LOWER(r.item_title) = LOWER(pkg.name) OR LOWER(r.item_title) = LOWER(pkg.slug)))
+      LEFT JOIN courses crs ON (r.item_type = 'course' AND (r.item_id = crs.id OR LOWER(r.item_title) = LOWER(crs.title)))
       ORDER BY r.created_at DESC
     `);
 

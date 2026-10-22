@@ -4641,7 +4641,7 @@ export default function SuperAdminDashboard() {
 
                                 <td className="py-4 px-6">
                                   <span className={`font-bold text-xs ${darkMode ? "text-white" : "text-[#0F172A]"}`}>
-                                    ₹{Number(r.sale_amount || 0).toLocaleString("en-IN")}
+                                    ₹{Number(r.sale_amount || r.item_price || 0).toLocaleString("en-IN")}
                                   </span>
                                 </td>
 
@@ -4657,7 +4657,9 @@ export default function SuperAdminDashboard() {
                                       ? "bg-purple-50 dark:bg-purple-950/40 text-purple-600 border-purple-200 dark:border-purple-800"
                                       : "bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 border-emerald-200 dark:border-emerald-800"
                                   }`}>
-                                    {r.commission_type === "percentage" ? `${r.commission_rate_applied}% Share` : `₹${r.commission_rate_applied} Flat`}
+                                    {r.commission_type === "percentage"
+                                      ? `${r.commission_rate_applied ?? r.commission_value ?? 0}% Share`
+                                      : `₹${Number(r.commission_rate_applied ?? r.commission_value ?? 0).toLocaleString("en-IN")} Flat`}
                                   </span>
                                 </td>
 
