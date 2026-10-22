@@ -197,11 +197,11 @@ export const getDashboardStats = async (req, res) => {
     return res.status(200).json({
       success: true,
       stats: {
-        totalStudents: totalStudents || 0,
-        totalPackages: totalPackages || 4,
-        totalCourses: totalCourses || 0,
-        totalMentors: totalMentors || 0,
-        totalRevenue: totalRevenue || (totalStudents || 0) * 499,
+        totalStudents: Number(totalStudents) || 0,
+        totalPackages: Number(totalPackages) || 0,
+        totalCourses: Number(totalCourses) || 0,
+        totalMentors: Number(totalMentors) || 0,
+        totalRevenue: Number(totalRevenue) || 0,
         totalPaidOrders,
         packageOrders,
         courseOrders,

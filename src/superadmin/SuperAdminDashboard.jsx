@@ -2037,7 +2037,15 @@ export default function SuperAdminDashboard() {
               </div>
 
               {/* Multi-Chart Analytics Suite */}
-              <DashboardCharts darkMode={darkMode} usersCount={usersList.length} />
+              <DashboardCharts
+                darkMode={darkMode}
+                usersCount={usersList.length}
+                usersList={usersList}
+                paymentsList={paymentsList}
+                packagesList={packagesList}
+                coursesList={coursesList}
+                stats={stats}
+              />
             </div>
           )}
 
