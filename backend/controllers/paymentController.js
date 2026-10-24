@@ -524,10 +524,53 @@ export const verifyPayment = async (req, res) => {
           const itemTitle = isCourse ? (purchasedItem?.title || "Course") : (purchasedItem?.name || "Package");
           const itemId = isCourse ? (purchasedItem?.id || 1) : (purchasedItem?.id || 1);
 
-          // Level 1: Direct Commission
-          const directCommType = purchasedItem?.referral_commission_type || "percentage";
-          const directCommVal = Number(purchasedItem?.referral_commission_value !== undefined && purchasedItem?.referral_commission_value !== null ? purchasedItem.referral_commission_value : 20.00);
-          let directCalculated = directCommType === "flat" ? directCommVal : (itemPrice * directCommVal) / 100;
+          // Level 1: Direct Commission (with Referrer Package Tier-Capping)
+          // 1A. Fetch Referrer's highest active package to determine their qualified commission cap
+          const [refPkgRows] = await pool.query(
+            `SELECT up.package_id, p.name AS pkg_name, p.slug AS pkg_slug, p.promo_price,
+                    p.referral_commission_type, p.referral_commission_value
+             FROM user_packages up
+             JOIN packages p ON up.package_id = p.id
+             WHERE up.user_id = ? AND up.status = 'active'
+             ORDER BY CAST(p.promo_price AS DECIMAL(10,2)) DESC, p.id DESC
+             LIMIT 1`,
+            [directReferrer.id]
+          );
+
+          let referrerActivePkg = refPkgRows.length > 0 ? refPkgRows[0] : null;
+          // Fallback to entry/lowest package if referrer has no package purchased yet
+          if (!referrerActivePkg) {
+            const [lowestPkgRows] = await pool.query(
+              "SELECT id AS package_id, name AS pkg_name, slug AS pkg_slug, promo_price, referral_commission_type, referral_commission_value FROM packages ORDER BY CAST(promo_price AS DECIMAL(10,2)) ASC LIMIT 1"
+            );
+            if (lowestPkgRows.length > 0) referrerActivePkg = lowestPkgRows[0];
+          }
+
+          const baseDirectType = purchasedItem?.referral_commission_type || "percentage";
+          const baseDirectVal = Number(purchasedItem?.referral_commission_value !== undefined && purchasedItem?.referral_commission_value !== null ? purchasedItem.referral_commission_value : 20.00);
+          const baseDirectAmount = baseDirectType === "flat" ? baseDirectVal : (itemPrice * baseDirectVal) / 100;
+
+          let directCommType = baseDirectType;
+          let directCommVal = baseDirectVal;
+          let directCalculated = baseDirectAmount;
+
+          if (referrerActivePkg && !isCourse) {
+            const capType = referrerActivePkg.referral_commission_type || "percentage";
+            const capVal = Number(referrerActivePkg.referral_commission_value !== undefined && referrerActivePkg.referral_commission_value !== null ? referrerActivePkg.referral_commission_value : 20.00);
+            const capAmount = capType === "flat" ? capVal : (itemPrice * capVal) / 100;
+
+            // Cap the commission to referrer's own active package limit
+            if (baseDirectAmount > capAmount) {
+              directCalculated = capAmount;
+              directCommType = capType;
+              directCommVal = capVal;
+              console.log(`🔒 Direct Commission CAPPED to Referrer's Package [${referrerActivePkg.pkg_name}]: ₹${directCalculated} (Base was ₹${baseDirectAmount})`);
+            } else {
+              directCalculated = baseDirectAmount;
+              directCommType = baseDirectType;
+              directCommVal = baseDirectVal;
+            }
+          }
           directCalculated = Math.round(directCalculated * 100) / 100;
 
           // Insert Level 1 record
@@ -593,9 +636,51 @@ export const verifyPayment = async (req, res) => {
 
             if (uplineUsers.length > 0) {
               const leadershipSponsor = uplineUsers[0];
-              const leadCommType = purchasedItem?.leadership_commission_type || "percentage";
-              const leadCommVal = Number(purchasedItem?.leadership_commission_value !== undefined && purchasedItem?.leadership_commission_value !== null ? purchasedItem.leadership_commission_value : 5.00);
-              let leadCalculated = leadCommType === "flat" ? leadCommVal : (itemPrice * leadCommVal) / 100;
+
+              // Level 2: Leadership Commission (with Sponsor Package Tier-Capping)
+              const [sponsorPkgRows] = await pool.query(
+                `SELECT up.package_id, p.name AS pkg_name, p.slug AS pkg_slug, p.promo_price,
+                        p.leadership_commission_type, p.leadership_commission_value
+                 FROM user_packages up
+                 JOIN packages p ON up.package_id = p.id
+                 WHERE up.user_id = ? AND up.status = 'active'
+                 ORDER BY CAST(p.promo_price AS DECIMAL(10,2)) DESC, p.id DESC
+                 LIMIT 1`,
+                [leadershipSponsor.id]
+              );
+
+              let sponsorActivePkg = sponsorPkgRows.length > 0 ? sponsorPkgRows[0] : null;
+              if (!sponsorActivePkg) {
+                const [lowestLeadPkg] = await pool.query(
+                  "SELECT id AS package_id, name AS pkg_name, slug AS pkg_slug, promo_price, leadership_commission_type, leadership_commission_value FROM packages ORDER BY CAST(promo_price AS DECIMAL(10,2)) ASC LIMIT 1"
+                );
+                if (lowestLeadPkg.length > 0) sponsorActivePkg = lowestLeadPkg[0];
+              }
+
+              const baseLeadType = purchasedItem?.leadership_commission_type || "percentage";
+              const baseLeadVal = Number(purchasedItem?.leadership_commission_value !== undefined && purchasedItem?.leadership_commission_value !== null ? purchasedItem.leadership_commission_value : 5.00);
+              const baseLeadAmount = baseLeadType === "flat" ? baseLeadVal : (itemPrice * baseLeadVal) / 100;
+
+              let leadCommType = baseLeadType;
+              let leadCommVal = baseLeadVal;
+              let leadCalculated = baseLeadAmount;
+
+              if (sponsorActivePkg && !isCourse) {
+                const capLeadType = sponsorActivePkg.leadership_commission_type || "percentage";
+                const capLeadVal = Number(sponsorActivePkg.leadership_commission_value !== undefined && sponsorActivePkg.leadership_commission_value !== null ? sponsorActivePkg.leadership_commission_value : 5.00);
+                const capLeadAmount = capLeadType === "flat" ? capLeadVal : (itemPrice * capLeadVal) / 100;
+
+                if (baseLeadAmount > capLeadAmount) {
+                  leadCalculated = capLeadAmount;
+                  leadCommType = capLeadType;
+                  leadCommVal = capLeadVal;
+                  console.log(`🔒 Leadership Commission CAPPED to Sponsor's Package [${sponsorActivePkg.pkg_name}]: ₹${leadCalculated} (Base was ₹${baseLeadAmount})`);
+                } else {
+                  leadCalculated = baseLeadAmount;
+                  leadCommType = baseLeadType;
+                  leadCommVal = baseLeadVal;
+                }
+              }
               leadCalculated = Math.round(leadCalculated * 100) / 100;
 
               // Insert Level 2 record
