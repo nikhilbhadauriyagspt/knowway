@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useCallback } from "react";
 import {
   TrendingUp,
   Calendar,
@@ -102,11 +102,24 @@ export default function AffiliateIncomeReports({ darkMode, user, setActiveTab })
   const [loading, setLoading] = useState(true);
   const [analytics, setAnalytics] = useState(null);
   const [animateChart, setAnimateChart] = useState(false);
+  const [now, setNow] = useState(() => new Date());
 
-  const fetchAnalytics = async () => {
+  const getIstDateString = (dateObj) =>
+    dateObj.toLocaleDateString("en-GB", {
+      timeZone: "Asia/Kolkata",
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+    });
+
+  const activeDateRef = useRef(getIstDateString(new Date()));
+
+  const fetchAnalytics = useCallback(async (silent = false) => {
     try {
-      setLoading(true);
-      setAnimateChart(false);
+      if (!silent) {
+        setLoading(true);
+        setAnimateChart(false);
+      }
       const res = await getAffiliateIncomeAnalyticsApi();
       if (res?.success && res.analytics) {
         setAnalytics(res.analytics);
@@ -114,15 +127,58 @@ export default function AffiliateIncomeReports({ darkMode, user, setActiveTab })
     } catch (err) {
       console.error("Failed to load income analytics:", err);
     } finally {
-      setLoading(false);
-      // Gentle delay so user sees smooth progress
-      setTimeout(() => setAnimateChart(true), 300);
+      if (!silent) {
+        setLoading(false);
+        setTimeout(() => setAnimateChart(true), 300);
+      } else {
+        setAnimateChart(true);
+      }
     }
-  };
+  }, []);
 
   useEffect(() => {
-    fetchAnalytics();
-  }, []);
+    fetchAnalytics(false);
+
+    // 1. Real-time 1-second clock & automatic midnight date-change rollover
+    const clockTimer = setInterval(() => {
+      const current = new Date();
+      setNow(current);
+
+      const currentIstDate = getIstDateString(current);
+      if (currentIstDate !== activeDateRef.current) {
+        activeDateRef.current = currentIstDate;
+        // Date changed at midnight — auto-refresh all earnings & reset Today's Earnings
+        fetchAnalytics(false);
+      }
+    }, 1000);
+
+    // 2. Automatic background refresh every 30 seconds (no manual refresh needed)
+    const syncTimer = setInterval(() => {
+      fetchAnalytics(true);
+    }, 30000);
+
+    // 3. Auto-refresh when user returns to browser tab
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") {
+        const current = new Date();
+        setNow(current);
+        const currentIstDate = getIstDateString(current);
+        if (currentIstDate !== activeDateRef.current) {
+          activeDateRef.current = currentIstDate;
+          fetchAnalytics(false);
+        } else {
+          fetchAnalytics(true);
+        }
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+
+    return () => {
+      clearInterval(clockTimer);
+      clearInterval(syncTimer);
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+    };
+  }, [fetchAnalytics]);
 
   // Current active period data
   const currentData = analytics ? analytics[period] : { income: 0, conversions: 0, direct: 0, leadership: 0 };
@@ -177,12 +233,21 @@ export default function AffiliateIncomeReports({ darkMode, user, setActiveTab })
   const monthlyGoal = 10000;
   const goalProgress = Math.min(Math.round(((currentData?.income || 0) / monthlyGoal) * 100), 100);
 
-  // Format date range badge like: 10/13/2026 - 10/13/2026
-  const todayFormatted = new Date().toLocaleDateString("en-US", {
-    month: "2-digit",
-    day: "2-digit",
-    year: "numeric",
+  // Real-time IST Date (DD/MM/YYYY), Day Name, and Live Running Clock
+  const liveDateFormatted = getIstDateString(now);
+  const liveDayFormatted = now.toLocaleDateString("en-IN", {
+    timeZone: "Asia/Kolkata",
+    weekday: "long",
   });
+  const liveTimeFormatted = now
+    .toLocaleTimeString("en-IN", {
+      timeZone: "Asia/Kolkata",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+      hour12: true,
+    })
+    .toUpperCase();
 
   const todayIncome = analytics?.today?.income || 0;
   const last7DaysIncome = analytics?.last7Days?.income || 0;
@@ -218,21 +283,34 @@ export default function AffiliateIncomeReports({ darkMode, user, setActiveTab })
             </p>
           </div>
 
-          {/* Date Range Badge with Revise Earning */}
-          <div className="flex flex-col sm:flex-row items-start sm:items-center gap-2 shrink-0">
+          {/* Live Date, Day & Real-Time Clock Badge with Revise Earning */}
+          <div className="flex flex-wrap items-center gap-2 shrink-0">
             <div
-              className={`px-4 py-2 rounded-2xl border flex items-center gap-2 text-xs font-bold ${
+              className={`px-3.5 py-2 rounded-2xl border flex flex-wrap items-center gap-2.5 text-xs font-bold ${
                 darkMode
-                  ? "bg-[#0E1420] border-[#222B3D] text-[#8A99AD]"
-                  : "bg-white border-[#E2E8F0] text-[#64748B] shadow-xs"
+                  ? "bg-[#0E1420] border-[#222B3D] text-[#E2E8F0]"
+                  : "bg-white border-[#E2E8F0] text-[#0F172A] shadow-xs"
               }`}
             >
-              <Calendar className="w-3.5 h-3.5 text-amber-500" />
-              <span className="font-mono text-xs">{todayFormatted} - {todayFormatted}</span>
+              <div className="flex items-center gap-1.5">
+                <Calendar className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                <span className="font-mono text-xs font-black">{liveDateFormatted}</span>
+              </div>
+
+              <span className="text-[#8A99AD]">•</span>
+
+              <span className="text-amber-500 font-extrabold">{liveDayFormatted}</span>
+
+              <span className="text-[#8A99AD]">•</span>
+
+              <div className="flex items-center gap-1.5">
+                <Clock className="w-3.5 h-3.5 text-emerald-500 animate-pulse shrink-0" />
+                <span className="font-mono text-xs font-bold text-emerald-500">{liveTimeFormatted}</span>
+              </div>
             </div>
 
             <button
-              onClick={fetchAnalytics}
+              onClick={() => fetchAnalytics(false)}
               className="px-4 py-2 rounded-2xl text-xs font-black bg-linear-to-r from-amber-500 to-orange-500 text-white shadow-sm hover:opacity-90 transition cursor-pointer flex items-center gap-1.5"
             >
               <RefreshCw className={`w-3.5 h-3.5 ${loading ? "animate-spin" : ""}`} />
@@ -464,7 +542,7 @@ export default function AffiliateIncomeReports({ darkMode, user, setActiveTab })
               </div>
 
               <button
-                onClick={fetchAnalytics}
+                onClick={() => fetchAnalytics(false)}
                 className={`h-9 px-3.5 rounded-xl border text-xs font-bold flex items-center gap-2 cursor-pointer transition ${
                   darkMode
                     ? "border-[#222B3D] text-[#8A99AD] hover:text-white hover:bg-[#1E2638]"

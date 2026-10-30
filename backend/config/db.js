@@ -33,9 +33,15 @@ const pool = mysql.createPool({
   password: DB_PASSWORD,
   database: DB_NAME,
   port: DB_PORT,
+  timezone: "+05:30",
   waitForConnections: true,
   connectionLimit: 10,
   queueLimit: 0,
+});
+
+// Ensure every MySQL connection uses India Standard Time (IST +05:30)
+pool.on("connection", (connection) => {
+  connection.query("SET time_zone = '+05:30';");
 });
 
 // Function to automatically create DB & tables if they don't exist

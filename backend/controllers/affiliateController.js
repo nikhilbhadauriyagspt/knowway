@@ -93,7 +93,10 @@ export const getAffiliateIncomeAnalytics = async (req, res) => {
 
     const userId = decoded.id;
 
-    // 1. Today's Earnings (within last 24 hours or today's date)
+    // Enforce IST (+05:30) session timezone so CURDATE() resets strictly at 12:00 AM IST
+    await pool.query("SET time_zone = '+05:30'");
+
+    // 1. Today's Earnings (strictly today's calendar date in IST - resets at 12:00 AM midnight)
     const [dailyRows] = await pool.query(
       `SELECT 
          COALESCE(SUM(commission_amount), 0) AS total_income,
@@ -101,7 +104,7 @@ export const getAffiliateIncomeAnalytics = async (req, res) => {
          COALESCE(SUM(CASE WHEN commission_tier = 'direct' OR tier_level = 1 THEN commission_amount ELSE 0 END), 0) AS direct_income,
          COALESCE(SUM(CASE WHEN commission_tier = 'leadership' OR tier_level = 2 THEN commission_amount ELSE 0 END), 0) AS leadership_income
        FROM affiliate_referrals
-       WHERE referrer_id = ? AND (DATE(created_at) = CURDATE() OR created_at >= NOW() - INTERVAL 24 HOUR)`,
+       WHERE referrer_id = ? AND DATE(created_at) = CURDATE()`,
       [userId]
     );
 
@@ -113,7 +116,7 @@ export const getAffiliateIncomeAnalytics = async (req, res) => {
          COALESCE(SUM(CASE WHEN commission_tier = 'direct' OR tier_level = 1 THEN commission_amount ELSE 0 END), 0) AS direct_income,
          COALESCE(SUM(CASE WHEN commission_tier = 'leadership' OR tier_level = 2 THEN commission_amount ELSE 0 END), 0) AS leadership_income
        FROM affiliate_referrals
-       WHERE referrer_id = ? AND created_at >= NOW() - INTERVAL 7 DAY`,
+       WHERE referrer_id = ? AND DATE(created_at) >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)`,
       [userId]
     );
 
@@ -125,7 +128,7 @@ export const getAffiliateIncomeAnalytics = async (req, res) => {
          COALESCE(SUM(CASE WHEN commission_tier = 'direct' OR tier_level = 1 THEN commission_amount ELSE 0 END), 0) AS direct_income,
          COALESCE(SUM(CASE WHEN commission_tier = 'leadership' OR tier_level = 2 THEN commission_amount ELSE 0 END), 0) AS leadership_income
        FROM affiliate_referrals
-       WHERE referrer_id = ? AND created_at >= NOW() - INTERVAL 30 DAY`,
+       WHERE referrer_id = ? AND DATE(created_at) >= DATE_SUB(CURDATE(), INTERVAL 29 DAY)`,
       [userId]
     );
 
@@ -149,7 +152,7 @@ export const getAffiliateIncomeAnalytics = async (req, res) => {
          COALESCE(SUM(CASE WHEN commission_tier = 'direct' OR tier_level = 1 THEN commission_amount ELSE 0 END), 0) AS direct_income,
          COALESCE(SUM(CASE WHEN commission_tier = 'leadership' OR tier_level = 2 THEN commission_amount ELSE 0 END), 0) AS leadership_income
        FROM affiliate_referrals
-       WHERE referrer_id = ? AND (YEARWEEK(created_at, 1) = YEARWEEK(CURDATE(), 1) OR created_at >= NOW() - INTERVAL 7 DAY)`,
+       WHERE referrer_id = ? AND DATE(created_at) >= DATE_SUB(CURDATE(), INTERVAL 6 DAY)`,
       [userId]
     );
 
@@ -161,7 +164,7 @@ export const getAffiliateIncomeAnalytics = async (req, res) => {
          COALESCE(SUM(CASE WHEN commission_tier = 'direct' OR tier_level = 1 THEN commission_amount ELSE 0 END), 0) AS direct_income,
          COALESCE(SUM(CASE WHEN commission_tier = 'leadership' OR tier_level = 2 THEN commission_amount ELSE 0 END), 0) AS leadership_income
        FROM affiliate_referrals
-       WHERE referrer_id = ? AND (YEAR(created_at) = YEAR(CURDATE()) AND MONTH(created_at) = MONTH(CURDATE()) OR created_at >= NOW() - INTERVAL 30 DAY)`,
+       WHERE referrer_id = ? AND DATE(created_at) >= DATE_SUB(CURDATE(), INTERVAL 29 DAY)`,
       [userId]
     );
 
@@ -173,7 +176,7 @@ export const getAffiliateIncomeAnalytics = async (req, res) => {
          COALESCE(SUM(CASE WHEN commission_tier = 'direct' OR tier_level = 1 THEN commission_amount ELSE 0 END), 0) AS direct_income,
          COALESCE(SUM(CASE WHEN commission_tier = 'leadership' OR tier_level = 2 THEN commission_amount ELSE 0 END), 0) AS leadership_income
        FROM affiliate_referrals
-       WHERE referrer_id = ? AND (YEAR(created_at) = YEAR(CURDATE()) OR created_at >= NOW() - INTERVAL 365 DAY)`,
+       WHERE referrer_id = ? AND (YEAR(created_at) = YEAR(CURDATE()) OR DATE(created_at) >= DATE_SUB(CURDATE(), INTERVAL 364 DAY))`,
       [userId]
     );
 
